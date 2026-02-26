@@ -8,8 +8,6 @@ export default function Settings() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={{ flex: 1, padding: 16 }}>
-        <Text style={styles.pageTitle}>Settings</Text>
-
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>24-hour format</Text>
@@ -30,16 +28,11 @@ export default function Settings() {
 }
 
 const styles = StyleSheet.create({
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 24,
-  },
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: 'rgba(74, 75, 99, 0.7)',
     padding: 16,
     borderRadius: 8,
   },
@@ -50,11 +43,11 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: '#fff',
   },
   settingHint: {
     fontSize: 13,
-    color: '#666',
+    color: '#9a9bb2',
     marginTop: 4,
   },
 });

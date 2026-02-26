@@ -52,9 +52,12 @@ export function AddCityModal({ visible, onClose, onSelectCity }: AddCityModalPro
     }
 
     const timeoutId = setTimeout(async () => {
-      if (!db) return;
+      if (!db) {
+        return;
+      }
 
       setIsLoading(true);
+
       try {
         const results = await searchCitiesInDb(db as SQLite.SQLiteDatabase, query);
         setCities(results);
@@ -66,7 +69,9 @@ export function AddCityModal({ visible, onClose, onSelectCity }: AddCityModalPro
       }
     }, 300);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [query, visible, db]);
 
   const handleCityPress = (city: CityRow) => {
@@ -138,7 +143,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(62, 63, 86, 0.95)',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -154,24 +159,27 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
+    color: '#fff',
   },
   closeButton: {
     padding: 8,
   },
   closeButtonText: {
-    color: '#007AFF',
+    color: '#9a9bb2',
     fontSize: 16,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: 'rgba(90, 91, 115, 0.8)',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     marginBottom: 16,
+    backgroundColor: 'rgba(74, 75, 99, 0.8)',
+    color: '#fff',
   },
   loading: {
-    color: '#666',
+    color: '#9a9bb2',
     marginBottom: 8,
   },
   resultsList: {
@@ -182,18 +190,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 4,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#4a4b63',
   },
   cityItemPressed: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#4a4b63',
   },
   cityText: {
     fontSize: 16,
     fontWeight: '500',
+    color: '#fff',
   },
   cityTimezone: {
     fontSize: 14,
-    color: '#666',
+    color: '#9a9bb2',
     marginTop: 2,
   },
 });

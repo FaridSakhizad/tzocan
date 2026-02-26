@@ -1,5 +1,5 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
-import { View, ScrollView, Text, StyleSheet, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Pressable } from 'react-native';
+import { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
+import { View, ScrollView, Text, StyleSheet, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Pressable, Animated } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const TICK_WIDTH = 15;
@@ -11,22 +11,101 @@ const TOTAL_TICKS = TOTAL_MINUTES / MINUTES_PER_TICK;
 const NUMBER_OF_DUMMIES = Math.ceil(SCREEN_WIDTH / TICK_WIDTH);
 const RULER_WIDTH = TOTAL_TICKS * TICK_WIDTH + NUMBER_OF_DUMMIES * TICK_WIDTH;
 
+type TimeFormat = '12h' | '24h';
+
 type TimeRulerProps = {
   offsetMinutes: number;
   onOffsetChange: (minutes: number) => void;
+  timeFormat: TimeFormat;
+};
+
+function getLocalTime(timeFormat: TimeFormat, offsetMinutes: number = 0): string {
+  const now = new Date();
+  const shiftedTime = new Date(now.getTime() + offsetMinutes * 60 * 1000);
+  return shiftedTime.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: timeFormat === '12h',
+  });
+}
+
+function formatOffset(minutes: number): string {
+  if (minutes === 0) return '00:00';
+
+  const sign = minutes > 0 ? '+' : '-';
+  const absMinutes = Math.abs(minutes);
+  const hours = Math.floor(absMinutes / 60);
+  const mins = absMinutes % 60;
+
+  if (mins === 0) {
+    return `${sign}${hours}h`;
+  }
+
+  return `${sign}${hours}:${mins.toString().padStart(2, '0')}`;
+}
+
+export type TimeRulerRef = {
+  reset: () => void;
 };
 
 const getScrollXForOffset = (minutes: number) => {
   return RULER_WIDTH / 2 - SCREEN_WIDTH / 2 + TICK_WIDTH / 2;
 };
 
-export function TimeRuler({ offsetMinutes, onOffsetChange }: TimeRulerProps) {
+export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat }, ref) {
   const scrollViewRef = useRef<ScrollView>(null);
   const isScrolling = useRef(false);
   const isProgrammaticScroll = useRef(false);
 
   const [displayOffset, setDisplayOffset] = useState(offsetMinutes);
+  const [, setTick] = useState(0);
   const initialScrollX = getScrollXForOffset(offsetMinutes);
+
+  const leftSlideAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 0 : -30)).current;
+  const rightSlideAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 0 : 30)).current;
+  const topSlideAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 0 : -20)).current;
+  const opacityAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 1 : 0)).current;
+
+  useEffect(() => {
+    const isVisible = offsetMinutes !== 0;
+
+    Animated.parallel([
+      Animated.timing(leftSlideAnim, {
+        toValue: isVisible ? 0 : -30,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rightSlideAnim, {
+        toValue: isVisible ? 0 : 30,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(topSlideAnim, {
+        toValue: isVisible ? 0 : -20,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: isVisible ? 1 : 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [offsetMinutes !== 0]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      handleResetPress();
+    },
+  }));
 
   const calculateOffsetFromScroll = (scrollX: number) => {
     return Math.round(scrollX + SCREEN_WIDTH / 2 - RULER_WIDTH / 2 - TICK_WIDTH / 2);
@@ -97,28 +176,6 @@ export function TimeRuler({ offsetMinutes, onOffsetChange }: TimeRulerProps) {
     scrollViewRef.current?.scrollTo({ x: scrollX, animated: true });
   }
 
-  const getResetButtonStyle = ({ pressed }: { pressed: boolean }) => [
-    styles.resetButton,
-    pressed && styles.resetButtonPressed,
-  ];
-
-  const formatOffset = (minutes: number) => {
-    if (minutes === 0) {
-      return 'Now';
-    }
-
-    const sign = minutes > 0 ? '+' : '-';
-    const absMinutes = Math.abs(minutes);
-    const hours = Math.floor(absMinutes / 60);
-    const mins = absMinutes % 60;
-
-    if (mins === 0) {
-      return `${sign}${hours}h`;
-    }
-
-    return `${sign}${hours}h ${mins}m`;
-  };
-
   const renderTicks = () => {
     const ticks = [];
 
@@ -156,20 +213,46 @@ export function TimeRuler({ offsetMinutes, onOffsetChange }: TimeRulerProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={handleResetPress}
-          style={getResetButtonStyle}
+      <Animated.View
+        style={[
+          styles.resetButton,
+          {
+            opacity: opacityAnim,
+            transform: [{ translateY: topSlideAnim }],
+          },
+        ]}
+      >
+        <Pressable onPress={handleResetPress} style={styles.resetButtonPressable} />
+      </Animated.View>
+      <View style={styles.timeContainer}>
+        <Animated.Text
+          style={[
+            styles.sideText,
+            {
+              opacity: opacityAnim,
+              transform: [{ translateX: leftSlideAnim }],
+            },
+          ]}
         >
-          <Text style={styles.resetButtonText}>
-            Reset
+          {getLocalTime(timeFormat, 0)}
+        </Animated.Text>
+        <Pressable onPress={handleResetPress}>
+          <Text style={styles.localTimeText}>
+            {getLocalTime(timeFormat, offsetMinutes)}
           </Text>
         </Pressable>
-        <Text style={styles.value}>
-          {formatOffset(displayOffset)}
-        </Text>
+        <Animated.Text
+          style={[
+            styles.sideText,
+            {
+              opacity: opacityAnim,
+              transform: [{ translateX: rightSlideAnim }],
+            },
+          ]}
+        >
+          {formatOffset(offsetMinutes)}
+        </Animated.Text>
       </View>
-
       <View style={styles.rulerContainer}>
         <ScrollView
           ref={scrollViewRef}
@@ -195,90 +278,110 @@ export function TimeRuler({ offsetMinutes, onOffsetChange }: TimeRulerProps) {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#f8f8f8',
-    paddingTop: 12,
-    paddingBottom: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    backgroundColor: 'rgba(62, 63, 86, 0)',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  resetButtonContainer: {
+    alignSelf: 'flex-start',
+    minWidth: 70,
     alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 8,
   },
   resetButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 4,
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    backgroundColor: 'rgba(255, 255, 255, 1)',
+    position: 'absolute',
+    top: -10,
+    left: SCREEN_WIDTH / 2 - 10,
   },
-  resetButtonPressed: {
-    backgroundColor: '#d0d0d0',
+  resetButtonPressable: {
+    width: '100%',
+    height: '100%',
   },
   resetButtonText: {
-    fontSize: 14,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
     fontWeight: '500',
-    color: '#333',
   },
-  value: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#007AFF',
+  timeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    paddingBottom: 5,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(62, 63, 86, 0)',
+  },
+  localTimeContainer: {
+    alignItems: 'center',
+  },
+  sideText: {
+    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.7)',
+    minWidth: 70,
+    textAlign: 'center',
+    fontWeight: '300'
+  },
+  localTimeText: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#fff',
+    borderColor: 'red'
   },
   rulerContainer: {
-    height: 50,
+    height: 45,
     position: 'relative',
+    marginBottom: 20,
   },
   scrollContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 50,
+    height: 45,
+    backgroundColor: 'transparent',
   },
   tickDummy: {
     width: TICK_WIDTH,
-    height: 50,
-    backgroundColor: '#e0e0e0',
+    height: 45,
   },
   tickContainer: {
     width: TICK_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 50,
-    backgroundColor: '#666',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#000'
+    height: 45,
   },
   tick: {
     width: 3,
     height: 3,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 1)',
     borderRadius: 3,
   },
   hourTick: {
     height: 5,
     width: 5,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 1)',
     borderRadius: 5,
   },
   zeroTick: {
-    height: 32,
+    height: 13,
     backgroundColor: '#fff',
-    width: 3,
+    width: 5,
     borderRadius: 5,
   },
   centerIndicator: {
     position: 'absolute',
-    left: SCREEN_WIDTH / 2 - 1,
-    top: 0,
-    bottom: 0,
+    left: SCREEN_WIDTH / 2 - 3,
+    top: 7,
     width: 1,
-    backgroundColor: '#fff',
+    height: 0,
+    borderLeftWidth: 3,
+    borderRightWidth: 3,
+    borderTopWidth: 6,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#fff',
   },
 });

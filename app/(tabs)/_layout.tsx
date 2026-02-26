@@ -1,109 +1,261 @@
-import { Tabs } from 'expo-router';
+import React from 'react';
+import { Tabs, useRouter, usePathname } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomTabBar, BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Pressable } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { AddCityModal } from '@/components/add-city-modal';
-import { useSelectedCities } from '@/contexts/selected-cities-context';
 import { useSettings } from '@/contexts/settings-context';
 import { TimeRuler } from '@/components/time-ruler';
 
-function CustomTabBar(props: BottomTabBarProps) {
-  const { timeOffsetMinutes, setTimeOffsetMinutes } = useSettings();
+import IconPlusOutlined from '@/assets/images/icon--plus-1--outlined.svg';
+import IconPlusFilled from '@/assets/images/icon--plus-1--filled.svg';
+
+import IconSettingsOutlined from '@/assets/images/icon--settings-1--outlined.svg';
+import IconSettingsFilled from '@/assets/images/icon--settings-1--filled.svg';
+
+import IconClockOutlined from '@/assets/images/icon--clock-1--outlined.svg';
+import IconClockFilled from '@/assets/images/icon--clock-1--filled.svg';
+
+import IconCalendarOutlined from '@/assets/images/icon--calendar-1--outlined.svg';
+import IconCalendarFilled from '@/assets/images/icon--calendar-1--filled.svg';
+
+import IconNotificationOutlined from '@/assets/images/icon--notification-1--outlined.svg';
+import IconNotificationFilled from '@/assets/images/icon--notification-1--filled.svg';
+
+import IconEditOutlined from '@/assets/images/icon--edit-1--outlined.svg';
+import IconEditFilled from '@/assets/images/icon--edit-1--filled.svg';
+
+import { useEditMode } from '@/contexts/edit-mode-context';
+
+function HeaderButtons() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const insets = useSafeAreaInsets();
+  const { isEditMode, toggleEditMode } = useEditMode();
+
+  const isOnEditablePage = pathname === '/' || pathname === '/index' || pathname === '/notifications' || pathname === '/calendar';
 
   return (
-    <View>
+    <View style={{
+      ...styles.headerButtonsContainer,
+      paddingTop: insets.top + 15,
+    }}>
+      <Pressable
+        onPress={isOnEditablePage ? toggleEditMode : undefined}
+        style={[styles.headerButton, !isOnEditablePage && styles.headerButtonDisabled]}
+      >
+        {isEditMode ? (
+          <IconEditFilled
+            style={styles.headerButtonIcon}
+            fill="white"
+          />
+        ) : (
+          <IconEditOutlined
+            style={styles.headerButtonIcon}
+            fill="white"
+          />
+        )}
+      </Pressable>
+      <Pressable
+        onPress={() => router.push('/add-city')}
+        style={styles.headerButton}
+      >
+        {pathname === '/add-city' ? (
+          <IconPlusFilled
+            style={styles.headerButtonIcon}
+            fill="white"
+          />
+        ) : (
+          <IconPlusOutlined
+            style={styles.headerButtonIcon}
+            fill="white"
+          />
+        )}
+      </Pressable>
+      <Pressable
+        onPress={() => router.push('/settings')}
+        style={styles.headerButton}
+      >
+        {pathname === '/settings' ? (
+          <IconSettingsFilled
+            style={styles.headerButtonIcon}
+            fill="white"
+          />
+        ) : (
+          <IconSettingsOutlined
+            style={styles.headerButtonIcon}
+            fill="white"
+          />
+        )}
+      </Pressable>
+    </View>
+  );
+}
+
+function CustomTabBar(props: BottomTabBarProps) {
+  const { timeFormat, timeOffsetMinutes, setTimeOffsetMinutes } = useSettings();
+  const { isEditMode } = useEditMode();
+
+  return (
+    <View style={styles.bottomBarContainer}>
       <TimeRuler
         offsetMinutes={timeOffsetMinutes}
         onOffsetChange={setTimeOffsetMinutes}
+        timeFormat={timeFormat}
       />
-      <BottomTabBar {...props} />
+      <View style={isEditMode ? styles.tabBarDisabled : undefined} pointerEvents={isEditMode ? 'none' : 'auto'}>
+        <BottomTabBar {...props} />
+      </View>
     </View>
   );
 }
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const { addCity } = useSelectedCities();
-
-  const handleAddCity = (city: Parameters<typeof addCity>[0]) => {
-    addCity(city);
-    setIsAddModalVisible(false);
-  };
 
   return (
-    <>
-      <Tabs
-        tabBar={(props) => <CustomTabBar {...props} />}
-        screenOptions={{
-          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-          headerShown: false,
-          tabBarButton: HapticTab,
-        }}>
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: '',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="globe" color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="add-city"
-          options={{
-            title: '',
-            tabBarButton: () => (
-              <Pressable
-                style={styles.addButton}
-                onPress={() => setIsAddModalVisible(true)}
-              >
-                <IconSymbol size={32} name="plus.circle.fill" color={Colors[colorScheme ?? 'light'].tint} />
-              </Pressable>
-            ),
-          }}
-        />
-        {/*
-          <Tabs.Screen
-            name="index"
-            options={{
-              title: 'Home',
-              tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-            }}
-          />
-          <Tabs.Screen
-            name="explore"
-            options={{
-              title: 'Explore',
-              tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-            }}
-          />
-        */}
-        <Tabs.Screen
-          name="settings"
-          options={{
-            title: 'Settings',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
-          }}
-        />
-      </Tabs>
-      <AddCityModal
-        visible={isAddModalVisible}
-        onClose={() => setIsAddModalVisible(false)}
-        onSelectCity={handleAddCity}
+    <Tabs
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        headerShown: true,
+        header: () => <HeaderButtons />,
+        headerStyle: {
+          shadowOpacity: 0,
+          elevation: 0,
+        },
+        headerTransparent: false,
+        tabBarButton: HapticTab,
+        tabBarStyle: styles.tabBarStyle,
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: '',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={styles.iconBox}>
+              {focused ? (
+                <IconClockFilled
+                  style={styles.icon}
+                  fill="white"
+                />
+              ) : (
+                <IconClockOutlined
+                  style={styles.icon}
+                  fill="white"
+                />
+              )}
+            </View>
+          ),
+        }}
       />
-    </>
+      <Tabs.Screen
+        name="add-city"
+        options={{
+          title: '',
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: '',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={styles.iconBox}>
+              {focused ? (
+                <IconNotificationFilled style={styles.icon} fill="white" />
+              ) : (
+                <IconNotificationOutlined style={styles.icon} fill="white" />
+              )}
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="calendar"
+        options={{
+          title: '',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={styles.iconBox}>
+              {focused ? (
+                <IconCalendarFilled style={styles.icon} fill="white" />
+              ) : (
+                <IconCalendarOutlined style={styles.icon} fill="white" />
+              )}
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: '',
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="edit-city"
+        options={{
+          title: '',
+          href: null,
+        }}
+      />
+    </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  addButton: {
-    flex: 1,
+  bottomBarContainer: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  tabBarStyle: {
+    backgroundColor: 'rgba(62, 63, 86, 0)',
+    borderTopColor: 'rgba(255, 255, 255, 0)',
+    paddingHorizontal: 16,
+  },
+  tabBarDisabled: {
+    opacity: 0.85,
+  },
+  headerButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    backgroundColor: 'rgba(62, 63, 86, 0)',
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 32
+  },
+  headerButton: {
+    width: 30,
+    height: 30,
+    borderWidth: 1,
+    borderColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 4,
   },
+  headerButtonDisabled: {
+    opacity: 0.85,
+  },
+  headerButtonIcon: {
+    width: 30,
+    height: 30,
+  },
+  headerButtonActive: {
+    borderColor: 'white',
+  },
+  iconBox: {
+    width: 40,
+    height: 40,
+  },
+  icon: {
+    width: 40,
+    height: 40
+  }
 });

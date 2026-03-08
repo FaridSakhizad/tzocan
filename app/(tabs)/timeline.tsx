@@ -365,10 +365,21 @@ export default function TimelineScreen() {
   const sidePad = Math.max(0, width / 2 - CELL_W / 2);
   const timelineWidth = totalHours * CELL_W + sidePad * 2;
   const maxX = Math.max(0, timelineWidth - width);
-  const rawMinScrollX = Math.max(0, -minOffset * CELL_W);
-  const rawMaxScrollX = Math.min(maxX, timelineWidth - width - maxOffset * CELL_W);
-  const minScrollX = rawMinScrollX <= rawMaxScrollX ? rawMinScrollX : 0;
-  const maxScrollX = rawMinScrollX <= rawMaxScrollX ? rawMaxScrollX : maxX;
+
+  // Safety bounds: prevent empty gaps for any timezone-shifted row.
+  const safeMinScrollX = Math.max(0, -minOffset * CELL_W);
+  const safeMaxScrollX = Math.min(maxX, timelineWidth - width - maxOffset * CELL_W);
+
+  // UX bounds: allow centering only local-day hours [00..23].
+  const firstLocalHourIndex = leftPadHours;
+  const lastLocalHourIndex = leftPadHours + (DAY_HOURS - 1);
+  const dayMinScrollX = sidePad + (firstLocalHourIndex + 0.5) * CELL_W - width / 2;
+  const dayMaxScrollX = sidePad + (lastLocalHourIndex + 0.5) * CELL_W - width / 2;
+
+  const rawMinScrollX = Math.max(safeMinScrollX, dayMinScrollX);
+  const rawMaxScrollX = Math.min(safeMaxScrollX, dayMaxScrollX);
+  const minScrollX = rawMinScrollX <= rawMaxScrollX ? rawMinScrollX : safeMinScrollX;
+  const maxScrollX = rawMinScrollX <= rawMaxScrollX ? rawMaxScrollX : safeMaxScrollX;
 
   const [dragging, setDragging] = useState(false);
   const [selectedDay, setSelectedDay] = useState(() => {

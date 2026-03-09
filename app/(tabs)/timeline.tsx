@@ -5,6 +5,7 @@ import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flat
 
 import Animated, {
   clamp,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withDecay,
@@ -59,6 +60,8 @@ const CELL_W = 74;
 const DAY_HOURS = 24;
 const DAY_SELECTOR_HEIGHT = 52;
 const EDGE_EXTRA_HOURS = 2;
+const EDGE_RUBBER_MAX_PX = 110;
+const EDGE_SWITCH_THRESHOLD_PX = 45;
 
 type DateParts = {
   year: number;
@@ -184,6 +187,7 @@ interface ITimeLineProps {
   enabled: boolean;
   sidePad: number;
   selectedDay: Date;
+  onEdgeDayShift: (direction: -1 | 1) => void;
   rowOffsetHours: number;
   totalHours: number;
   dayStartIndex: number;
@@ -193,7 +197,7 @@ interface ITimeLineProps {
   width: number;
 }
 
-function Timeline({ x, minX, maxX, enabled, sidePad, selectedDay, rowOffsetHours, totalHours, dayStartIndex, timelineWidth, hourlyCounts, timeFormat, width }: ITimeLineProps) {
+function Timeline({ x, minX, maxX, enabled, sidePad, selectedDay, onEdgeDayShift, rowOffsetHours, totalHours, dayStartIndex, timelineWidth, hourlyCounts, timeFormat, width }: ITimeLineProps) {
   const startX = useSharedValue(0);
 
   const snapToCellCenter = (xNow: number) => {
@@ -203,6 +207,11 @@ function Timeline({ x, minX, maxX, enabled, sidePad, selectedDay, rowOffsetHours
 
     const target = sidePad + (clampedI + 0.5) * CELL_W - width / 2;
     return clamp(target, minX, maxX);
+  };
+
+  const applyRubber = (distance: number) => {
+    "worklet";
+    return (distance * EDGE_RUBBER_MAX_PX) / (distance + EDGE_RUBBER_MAX_PX);
   };
 
   const pan = useMemo(() => {
@@ -218,9 +227,33 @@ function Timeline({ x, minX, maxX, enabled, sidePad, selectedDay, rowOffsetHours
       .onUpdate((e) => {
         // x растёт при свайпе влево
         const next = startX.value - e.translationX;
-        x.value = clamp(next, minX, maxX);
+        if (next < minX) {
+          const over = minX - next;
+          x.value = minX - applyRubber(over);
+          return;
+        }
+
+        if (next > maxX) {
+          const over = next - maxX;
+          x.value = maxX + applyRubber(over);
+          return;
+        }
+
+        x.value = next;
       })
       .onEnd((e) => {
+        if (x.value < minX - EDGE_SWITCH_THRESHOLD_PX) {
+          x.value = withSpring(minX, { duration: 220 });
+          runOnJS(onEdgeDayShift)(-1);
+          return;
+        }
+
+        if (x.value > maxX + EDGE_SWITCH_THRESHOLD_PX) {
+          x.value = withSpring(maxX, { duration: 220 });
+          runOnJS(onEdgeDayShift)(1);
+          return;
+        }
+
         x.value = withDecay(
           { velocity: -e.velocityX, clamp: [minX, maxX] },
           (finished) => {
@@ -231,7 +264,7 @@ function Timeline({ x, minX, maxX, enabled, sidePad, selectedDay, rowOffsetHours
           }
         );
       });
-  }, [enabled, maxX, minX, sidePad, totalHours, width]);
+  }, [enabled, maxX, minX, onEdgeDayShift, sidePad, totalHours, width]);
 
   const style = useAnimatedStyle(() => ({
     transform: [{ translateX: -x.value - rowOffsetHours * CELL_W }],
@@ -380,6 +413,10 @@ export default function TimelineScreen() {
     });
   }, []);
 
+  const handleEdgeDayShift = useCallback((direction: -1 | 1) => {
+    shiftSelectedDay(direction);
+  }, [shiftSelectedDay]);
+
   const resetSelectedDayToToday = useCallback(() => {
     const now = new Date();
     now.setHours(12, 0, 0, 0);
@@ -423,6 +460,7 @@ export default function TimelineScreen() {
           enabled={!dragging}
           sidePad={sidePad}
           selectedDay={selectedDay}
+          onEdgeDayShift={handleEdgeDayShift}
           rowOffsetHours={timezoneOffset}
           totalHours={totalHours}
           dayStartIndex={leftPadHours}

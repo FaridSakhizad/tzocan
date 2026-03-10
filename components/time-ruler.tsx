@@ -1,4 +1,4 @@
-import { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
+import { useRef, useMemo, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
 import { View, ScrollView, Text, StyleSheet, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Pressable, Animated } from 'react-native';
 
 import IconReset from '@/assets/images/icon--reset-1.svg';
@@ -24,11 +24,16 @@ type TimeRulerProps = {
 function getLocalTime(timeFormat: TimeFormat, offsetMinutes: number = 0): string {
   const now = new Date();
   const shiftedTime = new Date(now.getTime() + offsetMinutes * 60 * 1000);
-  return shiftedTime.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: timeFormat === '12h',
-  });
+  const hours24 = shiftedTime.getHours();
+  const minutes = shiftedTime.getMinutes();
+
+  if (timeFormat === '24h') {
+    return `${hours24.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  }
+
+  const period = hours24 >= 12 ? 'PM' : 'AM';
+  const hour12 = hours24 % 12 || 12;
+  return `${hour12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
 function formatOffset(minutes: number): string {
@@ -51,17 +56,18 @@ export type TimeRulerRef = {
 };
 
 const getScrollXForOffset = (minutes: number) => {
-  return RULER_WIDTH / 2 - SCREEN_WIDTH / 2 + TICK_WIDTH / 2;
+  return RULER_WIDTH / 2 - SCREEN_WIDTH / 2 + TICK_WIDTH / 2 + minutes;
 };
 
 export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat }, ref) {
   const scrollViewRef = useRef<ScrollView>(null);
   const isScrolling = useRef(false);
   const isProgrammaticScroll = useRef(false);
+  const displayOffsetRef = useRef(offsetMinutes);
+  const initialScrollXRef = useRef(getScrollXForOffset(offsetMinutes));
 
   const [displayOffset, setDisplayOffset] = useState(offsetMinutes);
   const [, setTick] = useState(0);
-  const initialScrollX = getScrollXForOffset(offsetMinutes);
 
   const leftSlideAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 0 : -30)).current;
   const rightSlideAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 0 : 30)).current;
@@ -69,7 +75,7 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
   const opacityAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 1 : 0)).current;
 
   useEffect(() => {
-    const isVisible = offsetMinutes !== 0;
+    const isVisible = displayOffset !== 0;
 
     Animated.parallel([
       Animated.timing(leftSlideAnim, {
@@ -93,7 +99,19 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
         useNativeDriver: true,
       }),
     ]).start();
-  }, [offsetMinutes !== 0]);
+  }, [displayOffset !== 0]);
+
+  useEffect(() => {
+    if (isScrolling.current || isProgrammaticScroll.current) {
+      return;
+    }
+
+    if (displayOffsetRef.current !== offsetMinutes) {
+      displayOffsetRef.current = offsetMinutes;
+      setDisplayOffset(offsetMinutes);
+      scrollViewRef.current?.scrollTo({ x: getScrollXForOffset(offsetMinutes), animated: false });
+    }
+  }, [offsetMinutes]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -132,7 +150,10 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
       return;
     }
 
-    setDisplayOffset(newOffset);
+    if (displayOffsetRef.current !== newOffset) {
+      displayOffsetRef.current = newOffset;
+      setDisplayOffset(newOffset);
+    }
   };
 
   const handleScrollBeginDrag = () => {
@@ -164,21 +185,25 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
       return;
     }
 
-    setDisplayOffset(newOffset);
+    if (displayOffsetRef.current !== newOffset) {
+      displayOffsetRef.current = newOffset;
+      setDisplayOffset(newOffset);
+    }
     onOffsetChange(newOffset);
   };
 
   const handleResetPress = () => {
     isProgrammaticScroll.current = true;
 
+    displayOffsetRef.current = 0;
     setDisplayOffset(0);
     onOffsetChange(0);
 
     const scrollX = getScrollXForOffset(0);
-    scrollViewRef.current?.scrollTo({ x: scrollX, animated: true });
+    scrollViewRef.current?.scrollTo({ x: scrollX, animated: false });
   }
 
-  const renderTicks = () => {
+  const ticks = useMemo(() => {
     const ticks = [];
 
     const numberOfDummies = Math.ceil(SCREEN_WIDTH / 2 / TICK_WIDTH);
@@ -211,7 +236,7 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
     }
 
     return ticks;
-  };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -242,7 +267,7 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
         </Animated.Text>
         <Pressable onPress={handleResetPress}>
           <Text style={styles.localTimeText}>
-            {getLocalTime(timeFormat, offsetMinutes)}
+            {getLocalTime(timeFormat, displayOffset)}
           </Text>
         </Pressable>
         <Animated.Text
@@ -254,7 +279,7 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
             },
           ]}
         >
-          {formatOffset(offsetMinutes)}
+          {formatOffset(displayOffset)}
         </Animated.Text>
       </View>
       <View style={styles.rulerContainer}>
@@ -268,15 +293,15 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
           onMomentumScrollEnd={handleScrollEnd}
           scrollEventThrottle={16}
           contentContainerStyle={styles.scrollContent}
-          contentOffset={{ x: initialScrollX, y: 0 }}
-          decelerationRate="fast"
+          contentOffset={{ x: initialScrollXRef.current, y: 0 }}
+          decelerationRate={0}
           disableIntervalMomentum
           alwaysBounceHorizontal={false}
           alwaysBounceVertical={false}
           bounces={false}
           overScrollMode="never"
         >
-          {renderTicks()}
+          {ticks}
         </ScrollView>
         <View style={styles.centerIndicator} pointerEvents="none" />
       </View>

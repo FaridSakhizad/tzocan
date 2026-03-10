@@ -250,7 +250,10 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
         ]}
       >
         <Pressable onPress={handleResetPress} style={styles.resetButtonPressable}>
-          <IconReset style={styles.resetButtonIcon} />
+          <IconReset
+            style={styles.resetButtonIcon}
+            fill='rgba(62, 63, 86, 0.6)'
+          />
         </Pressable>
       </Animated.View>
       <View style={styles.timeContainer}>

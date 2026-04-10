@@ -338,6 +338,7 @@ export function NotificationModal({
     }
 
     if (activePicker === 'weekdays') {
+      setRepeat(pickerDraftRepeat === 'none' ? 'weekly' : pickerDraftRepeat);
       setWeekdays(pickerDraftWeekdays.length > 0 ? pickerDraftWeekdays : [new Date().getDay()]);
     }
 

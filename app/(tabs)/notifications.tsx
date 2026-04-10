@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Text, View, StyleSheet, Switch, Pressable, Linking } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,6 +11,7 @@ import { NotificationModal, NotificationFormValues } from '@/components/notifica
 import IconRepeat from '@/assets/images/icon--repeat-1.svg';
 import IconLink from '@/assets/images/icon--link-1.svg';
 import IconEdit from '@/assets/images/icon--edit-2.svg';
+import IconDelete from '@/assets/images/icon--delete-3.svg';
 
 function getDatePartsInTimezone(date: Date, timezone: string) {
   const fmt = new Intl.DateTimeFormat('en-US', {
@@ -182,7 +182,21 @@ function getLocalPreviewForNotification(
 }
 
 function getNotificationScheduleLabel(notification: NonNullable<SelectedCity['notifications']>[number]): string | null {
-  const repeat = notification.repeat || (notification.isDaily ? 'daily' : 'none');
+  const normalizedRepeat = typeof notification.repeat === 'string'
+    ? notification.repeat.toLowerCase()
+    : undefined;
+  const repeat =
+    normalizedRepeat === 'daily' ||
+    normalizedRepeat === 'weekly' ||
+    normalizedRepeat === 'monthly' ||
+    normalizedRepeat === 'yearly' ||
+    normalizedRepeat === 'none'
+      ? normalizedRepeat
+      : notification.isDaily
+        ? 'daily'
+        : notification.weekdays && notification.weekdays.length > 0
+          ? 'weekly'
+          : 'none';
 
   const weekdayLabel = (d: number) => {
     if (d === 0) return 'Sun';
@@ -223,33 +237,14 @@ function getNotificationScheduleLabel(notification: NonNullable<SelectedCity['no
 
 export default function Notifications() {
   const router = useRouter();
-  const { selectedCities, reorderCities, removeCity, toggleNotification, addNotification, updateNotification } = useSelectedCities();
+  const { selectedCities, reorderCities, removeCity, toggleNotification, updateNotification } = useSelectedCities();
   const { timeFormat } = useSettings();
   const { isEditMode } = useEditMode();
 
-  const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
-  const [isNotificationModalVisible, setIsNotificationModalVisible] = useState(false);
   const [editingTarget, setEditingTarget] = useState<{
     city: SelectedCity;
     notification: NonNullable<SelectedCity['notifications']>[number];
   } | null>(null);
-
-  useEffect(() => {
-    if (selectedCities.length === 0) {
-      setSelectedCityId(null);
-      return;
-    }
-
-    if (!selectedCities.some((city) => city.id === selectedCityId)) {
-      setSelectedCityId(selectedCities[0].id);
-    }
-  }, [selectedCities, selectedCityId]);
-
-  const selectedCity = useMemo(() => selectedCities.find((city) => city.id === selectedCityId) || null, [selectedCities, selectedCityId]);
-  const cityOptions = useMemo(
-    () => selectedCities.map((city) => ({ id: city.id, label: city.customName || city.name, hint: city.tz, timezone: city.tz })),
-    [selectedCities]
-  );
 
   const citiesWithNotifications = selectedCities.filter(
     city => city.notifications && city.notifications.length > 0
@@ -282,30 +277,6 @@ export default function Notifications() {
     }
   };
 
-  const handleAddButtonPress = () => {
-    if (selectedCities.length === 0) {
-      return;
-    }
-    setIsNotificationModalVisible(true);
-  };
-
-  const handleSaveNotification = async (values: NotificationFormValues) => {
-    if (!selectedCityId) return;
-
-      await addNotification(
-        selectedCityId,
-        values.hour,
-        values.minute,
-        values.year,
-        values.month,
-        values.day,
-        values.label,
-        values.notes,
-        values.url,
-        values.repeat,
-        values.weekdays
-    );
-  };
   const handleSaveEditedNotification = async (values: NotificationFormValues) => {
     if (!editingTarget) return;
 
@@ -408,7 +379,10 @@ export default function Notifications() {
                     <Pressable onPress={() => handleOpenUrl(notification.url!)}>
                       <View style={styles.notificationUrl}>
                         <View style={styles.notificationUrlIcon}>
-                          <IconLink fill='rgba(62, 63, 86, 1)' style={styles.notificationUrlIconImg} />
+                          <IconLink
+                            fill='rgba(62, 63, 86, 1)'
+                            style={styles.notificationUrlIconImg}
+                          />
                         </View>
                         <Text style={styles.notificationUrlText} numberOfLines={1}>{notification.url}</Text>
                       </View>
@@ -459,28 +433,6 @@ export default function Notifications() {
         )}
       </View>
 
-      <View style={styles.bottomButtonsBar}>
-        <Pressable
-          style={[styles.addButton, selectedCities.length === 0 && styles.addButtonDisabled]}
-          onPress={handleAddButtonPress}
-          disabled={selectedCities.length === 0}
-        >
-          <Text style={styles.addButtonText}>Add Notification</Text>
-        </Pressable>
-      </View>
-
-      <NotificationModal
-        visible={isNotificationModalVisible}
-        cityName={selectedCity ? (selectedCity.customName || selectedCity.name) : ''}
-        mode="add"
-        cityOptions={cityOptions}
-        selectedCityId={selectedCityId}
-        onSelectCityId={setSelectedCityId}
-        initialNotification={null}
-        onClose={() => setIsNotificationModalVisible(false)}
-        onSave={handleSaveNotification}
-      />
-
       <NotificationModal
         visible={Boolean(editingTarget)}
         cityName={editingTarget ? (editingTarget.city.customName || editingTarget.city.name) : ''}
@@ -504,32 +456,6 @@ const styles = StyleSheet.create({
   listContent: {
     paddingTop: 10,
     paddingHorizontal: 10,
-  },
-  bottomButtonsBar: {
-    marginTop: 'auto',
-    height: 60,
-    borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: 10,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  addButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    borderRadius: 8,
-    height: 40,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButtonDisabled: {
-    opacity: 0.5,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 16
   },
   helperText: {
     color: '#9a9bb2',

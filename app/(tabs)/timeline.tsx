@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, Pressable } from 'react-native';
 
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
+import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 
 import Animated, {
   clamp,
@@ -14,11 +14,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 
 import { useSelectedCities, SelectedCity } from '@/contexts/selected-cities-context';
 import { useSettings } from '@/contexts/settings-context';
 import type { CityNotification } from '@/contexts/selected-cities-context';
+import { useEditMode } from '@/contexts/edit-mode-context';
 
 import IconNotification from '@/assets/images/icon--notification-2.svg';
 import IconReset from '@/assets/images/icon--reset-1.svg';
@@ -373,19 +374,28 @@ function Timeline({ x, minX, maxX, enabled, sidePad, selectedDay, onEdgeDayShift
 export default function TimelineScreen() {
   const { selectedCities, reorderCities } = useSelectedCities();
   const { timeFormat } = useSettings();
+  const { isEditMode } = useEditMode();
   const [, setClockTick] = useState(0);
+  const isFocused = useIsFocused();
   const locale = useMemo(
     () => Intl.DateTimeFormat().resolvedOptions().locale || 'en-US',
     []
   );
 
   useEffect(() => {
+    if (!isFocused) {
+      return;
+    }
+
+    // Refresh immediately on focus so the user never sees stale time after returning.
+    setClockTick((t) => t + 1);
+
     const timer = setInterval(() => {
       setClockTick((t) => t + 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [isFocused]);
 
   const { width } = useWindowDimensions();
   const { offsetsMap, minOffset, maxOffset } = useMemo(() => {
@@ -436,7 +446,10 @@ export default function TimelineScreen() {
   const initialScrollValue = sidePad + (leftPadHours + new Date().getHours() + 0.5) * CELL_W - width / 2;
 
   const x = useSharedValue(initialScrollValue);
-  x.value = clamp(x.value, minScrollX, maxScrollX);
+
+  useEffect(() => {
+    x.value = clamp(x.value, minScrollX, maxScrollX);
+  }, [maxScrollX, minScrollX, x]);
 
   useFocusEffect(
     useCallback(() => {
@@ -499,7 +512,7 @@ export default function TimelineScreen() {
     return `${month}, ${day}`;
   }, [locale, selectedDay]);
 
-  const renderItem = ({ item: city }: RenderItemParams<SelectedCity>) => {
+  const renderItem = ({ item: city, drag, isActive }: RenderItemParams<SelectedCity>) => {
     const timezoneOffset = offsetsMap.get(city.id) || 0;
     const hourlyCounts = getHourlyNotificationCounts(city, selectedYmd, selectedWeekday);
 
@@ -514,40 +527,54 @@ export default function TimelineScreen() {
     }
 
     return (
-      <View
-        style={styles.listItem}
-      >
-        <View style={styles.listItemHeader}>
-          <Text style={styles.listItemTitle} numberOfLines={1}>
-            <Text style={styles.listItemTitleCity}>
-              {city.customName || city.name}{city.customName && <> ({city.name})</>}
+      <ScaleDecorator>
+        <Pressable
+          onLongPress={isEditMode ? drag : undefined}
+          delayLongPress={150}
+          style={[styles.listItem, isActive && styles.listItemDragging]}
+        >
+          <View style={styles.listItemHeader}>
+            {isEditMode && (
+              <Pressable
+                onLongPress={drag}
+                delayLongPress={150}
+                style={styles.dragHandle}
+              >
+                <Text style={styles.dragHandleText}>☰</Text>
+              </Pressable>
+            )}
+
+            <Text style={styles.listItemTitle} numberOfLines={1}>
+              <Text style={styles.listItemTitleCity}>
+                {city.customName || city.name}{city.customName && <> ({city.name})</>}
+              </Text>
+              <Text style={styles.listItemTitleTimeOffset}>{timeZoneLabel}</Text>
             </Text>
-            <Text style={styles.listItemTitleTimeOffset}>{timeZoneLabel}</Text>
-          </Text>
 
-          <Text style={styles.listItemCurrentTime} numberOfLines={1}>
-            {getCurrentTimeInTimezone(city.tz, locale, timeFormat)}
-          </Text>
-        </View>
+            <Text style={styles.listItemCurrentTime} numberOfLines={1}>
+              {getCurrentTimeInTimezone(city.tz, locale, timeFormat)}
+            </Text>
+          </View>
 
-        <Timeline
-          x={x}
-          minX={minScrollX}
-          maxX={maxScrollX}
-          enabled={!dragging}
-          sidePad={sidePad}
-          selectedDay={selectedDay}
-          onEdgeDayShift={handleEdgeDayShift}
-          rowOffsetHours={timezoneOffset}
-          totalHours={totalHours}
-          dayStartIndex={leftPadHours}
-          timelineWidth={timelineWidth}
-          hourlyCounts={hourlyCounts}
-          timeFormat={timeFormat}
-          width={width}
-          locale={locale}
-        />
-      </View>
+          <Timeline
+            x={x}
+            minX={minScrollX}
+            maxX={maxScrollX}
+            enabled={!dragging && !isEditMode}
+            sidePad={sidePad}
+            selectedDay={selectedDay}
+            onEdgeDayShift={handleEdgeDayShift}
+            rowOffsetHours={timezoneOffset}
+            totalHours={totalHours}
+            dayStartIndex={leftPadHours}
+            timelineWidth={timelineWidth}
+            hourlyCounts={hourlyCounts}
+            timeFormat={timeFormat}
+            width={width}
+            locale={locale}
+          />
+        </Pressable>
+      </ScaleDecorator>
     )
   };
 
@@ -569,6 +596,7 @@ export default function TimelineScreen() {
             setDragging(false);
           }}
           activationDistance={12}
+          scrollEnabled={!isEditMode || !dragging}
         />
       </Animated.View>
       <View style={styles.resetBar} pointerEvents="box-none">
@@ -641,10 +669,23 @@ const styles = StyleSheet.create({
   listItem: {
     paddingTop: 11,
   },
+  listItemDragging: {
+    backgroundColor: 'rgba(62, 63, 86, 0.16)',
+  },
   listItemHeader: {
     paddingHorizontal: 10,
     paddingBottom: 8,
-    flexDirection: 'row'
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dragHandle: {
+    paddingRight: 10,
+    paddingVertical: 4,
+  },
+  dragHandleText: {
+    fontSize: 20,
+    lineHeight: 20,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   listItemTitle: {
     flex: 1,

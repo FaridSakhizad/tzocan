@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Text, View, TextInput, StyleSheet, Pressable, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { Text, View, TextInput, StyleSheet, Pressable, Modal, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useDatabase } from '@/hooks/use-database';
 import * as SQLite from "expo-sqlite";
 
@@ -30,19 +30,21 @@ async function searchCitiesInDb(db: SQLite.SQLiteDatabase, prefix: string): Prom
 type AddCityModalProps = {
   visible: boolean;
   onClose: () => void;
-  onSelectCity: (city: CityRow) => void;
+  onSave: (city: CityRow) => void;
 };
 
-export function AddCityModal({ visible, onClose, onSelectCity }: AddCityModalProps) {
+export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
   const { db } = useDatabase();
   const [query, setQuery] = useState('');
   const [cities, setCities] = useState<CityRow[]>([]);
+  const [selectedCity, setSelectedCity] = useState<CityRow | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!visible) {
       setQuery('');
       setCities([]);
+      setSelectedCity(null);
       return;
     }
 
@@ -75,9 +77,18 @@ export function AddCityModal({ visible, onClose, onSelectCity }: AddCityModalPro
   }, [query, visible, db]);
 
   const handleCityPress = (city: CityRow) => {
-    onSelectCity(city);
+    setSelectedCity(city);
+  };
+
+  const handleSave = () => {
+    if (!selectedCity) {
+      return;
+    }
+
+    onSave(selectedCity);
     setQuery('');
     setCities([]);
+    setSelectedCity(null);
   };
 
   return (
@@ -112,13 +123,14 @@ export function AddCityModal({ visible, onClose, onSelectCity }: AddCityModalPro
 
           {isLoading && <Text style={styles.loading}>Loading...</Text>}
 
-          <View style={styles.resultsList}>
+          <ScrollView style={styles.resultsList} showsVerticalScrollIndicator={false}>
             {cities.map((city) => (
               <Pressable
                 key={`${city.id}-${city.name}-${city.country}`}
                 onPress={() => handleCityPress(city)}
                 style={({ pressed }) => [
                   styles.cityItem,
+                  selectedCity?.id === city.id && styles.cityItemSelected,
                   pressed && styles.cityItemPressed,
                 ]}
               >
@@ -126,6 +138,19 @@ export function AddCityModal({ visible, onClose, onSelectCity }: AddCityModalPro
                 <Text style={styles.cityTimezone}>{city.tz}</Text>
               </Pressable>
             ))}
+          </ScrollView>
+
+          <View style={styles.footer}>
+            <Pressable style={styles.footerSecondaryButton} onPress={onClose}>
+              <Text style={styles.footerSecondaryButtonText}>Cancel</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.footerPrimaryButton, !selectedCity && styles.footerPrimaryButtonDisabled]}
+              onPress={handleSave}
+              disabled={!selectedCity}
+            >
+              <Text style={styles.footerPrimaryButtonText}>Save</Text>
+            </Pressable>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -195,6 +220,11 @@ const styles = StyleSheet.create({
   cityItemPressed: {
     backgroundColor: '#4a4b63',
   },
+  cityItemSelected: {
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
+  },
   cityText: {
     fontSize: 16,
     fontWeight: '500',
@@ -204,5 +234,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9a9bb2',
     marginTop: 2,
+  },
+  footer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  footerSecondaryButton: {
+    flex: 1,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  footerSecondaryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  footerPrimaryButton: {
+    flex: 1,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  footerPrimaryButtonDisabled: {
+    opacity: 0.5,
+  },
+  footerPrimaryButtonText: {
+    color: 'rgba(62, 63, 86, 1)',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

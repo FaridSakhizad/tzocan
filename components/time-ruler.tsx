@@ -20,6 +20,7 @@ type TimeRulerProps = {
   offsetMinutes: number;
   onOffsetChange: (minutes: number) => void;
   timeFormat: TimeFormat;
+  isActive?: boolean;
 };
 
 function getLocalTime(timeFormat: TimeFormat, offsetMinutes: number = 0): string {
@@ -60,7 +61,7 @@ const getScrollXForOffset = (minutes: number) => {
   return RULER_WIDTH / 2 - SCREEN_WIDTH / 2 + TICK_WIDTH / 2 + minutes;
 };
 
-export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat }, ref) {
+export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive = true }, ref) {
   const scrollViewRef = useRef<ScrollView>(null);
   const isScrolling = useRef(false);
   const isProgrammaticScroll = useRef(false);
@@ -115,12 +116,18 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
   }, [offsetMinutes]);
 
   useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+
+    setTick((t) => t + 1);
+
     const interval = setInterval(() => {
       setTick((t) => t + 1);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive]);
 
   useImperativeHandle(ref, () => ({
     reset: () => {

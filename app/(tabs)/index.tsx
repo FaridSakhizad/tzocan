@@ -9,6 +9,7 @@ import {
 import { useRouter } from 'expo-router';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useIsFocused } from '@react-navigation/native';
 import { useSelectedCities, SelectedCity } from '@/contexts/selected-cities-context';
 import { useSettings, TimeFormat } from '@/contexts/settings-context';
 import { useEditMode } from '@/contexts/edit-mode-context';
@@ -99,6 +100,7 @@ export default function Index() {
   const { selectedCities, reorderCities, removeCity } = useSelectedCities();
   const { timeFormat, timeOffsetMinutes, setTimeOffsetMinutes } = useSettings();
   const { isEditMode } = useEditMode();
+  const isFocused = useIsFocused();
   const [, setTick] = useState(1);
   const deleteButtonsOpacity = useRef(new Animated.Value(isEditMode ? 1 : 0)).current;
   const dragHandleReveal = useRef(new Animated.Value(isEditMode ? 1 : 0)).current;
@@ -116,16 +118,18 @@ export default function Index() {
   });
 
   useEffect(() => {
-    if (selectedCities.length === 0) {
+    if (!isFocused || selectedCities.length === 0) {
       return;
     }
+
+    setTick((t) => t * -1);
 
     const interval = setInterval(() => {
       setTick((t) => t * -1);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [selectedCities.length]);
+  }, [isFocused, selectedCities.length]);
 
   useEffect(() => {
     Animated.parallel([
@@ -275,6 +279,7 @@ export default function Index() {
             offsetMinutes={timeOffsetMinutes}
             onOffsetChange={setTimeOffsetMinutes}
             timeFormat={timeFormat}
+            isActive={isFocused}
           />
         </View>
       </View>

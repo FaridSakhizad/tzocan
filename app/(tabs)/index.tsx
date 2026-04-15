@@ -13,6 +13,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { useSelectedCities, SelectedCity } from '@/contexts/selected-cities-context';
 import { useSettings, TimeFormat } from '@/contexts/settings-context';
 import { useEditMode } from '@/contexts/edit-mode-context';
+import { DeleteCityModal } from '@/components/delete-city-modal';
 import { TimeRuler } from '@/components/time-ruler';
 
 import IconDelete1 from '@/assets/images/icon--delete-1.svg';
@@ -104,6 +105,7 @@ export default function Index() {
   const { isEditMode } = useEditMode();
   const isFocused = useIsFocused();
   const [, setTick] = useState(1);
+  const [cityPendingDelete, setCityPendingDelete] = useState<SelectedCity | null>(null);
   const deleteButtonsOpacity = useRef(new Animated.Value(isEditMode ? 1 : 0)).current;
   const dragHandleReveal = useRef(new Animated.Value(isEditMode ? 1 : 0)).current;
   const dragHandleTranslateX = dragHandleReveal.interpolate({
@@ -154,8 +156,21 @@ export default function Index() {
     }
   };
 
-  const handleDelete = (cityId: number) => {
-    removeCity(cityId);
+  const handleOpenDeleteCityModal = (city: SelectedCity) => {
+    setCityPendingDelete(city);
+  };
+
+  const handleCloseDeleteCityModal = () => {
+    setCityPendingDelete(null);
+  };
+
+  const handleConfirmDeleteCity = () => {
+    if (!cityPendingDelete) {
+      return;
+    }
+
+    removeCity(cityPendingDelete.id);
+    setCityPendingDelete(null);
   };
 
   const renderItem = useCallback(({ item: city, drag, isActive, getIndex }: RenderItemParams<SelectedCity>) => {
@@ -235,7 +250,7 @@ export default function Index() {
               style={[styles.deleteButtonBox, { opacity: deleteButtonsOpacity }]}
             >
               <Pressable
-                onPress={isEditMode ? () => handleDelete(city.id) : undefined}
+                onPress={isEditMode ? () => handleOpenDeleteCityModal(city) : undefined}
                 disabled={!isEditMode}
                 style={styles.deleteButton}
               >
@@ -284,6 +299,13 @@ export default function Index() {
             isActive={isFocused}
           />
         </View>
+
+        <DeleteCityModal
+          visible={Boolean(cityPendingDelete)}
+          cityName={cityPendingDelete?.customName || cityPendingDelete?.name || 'this city'}
+          onClose={handleCloseDeleteCityModal}
+          onConfirm={handleConfirmDeleteCity}
+        />
       </View>
     </GestureHandlerRootView>
   );

@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View, ImageBackground } from 'react-native';
 
 type DeleteNotificationModalProps = {
   visible: boolean;
@@ -13,10 +13,6 @@ export function DeleteNotificationModal({
   onClose,
   onConfirm,
 }: DeleteNotificationModalProps) {
-  const body = notificationTitle
-    ? `Delete notification "${notificationTitle}"?`
-    : 'Delete this notification?';
-
   return (
     <Modal
       visible={visible}
@@ -26,81 +22,108 @@ export function DeleteNotificationModal({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.modalContainer}
+        style={styles.modalWrapper}
       >
-        <Pressable style={styles.modalOverlay} onPress={onClose} />
-        <View style={styles.modalContent}>
-          <Text style={styles.title}>Delete Notification</Text>
-          <Text style={styles.body}>{body}</Text>
+        <ImageBackground
+          source={require('@/assets/images/bg--main-1.jpg')}
+          style={styles.backgroundImage}
+          imageStyle={styles.backgroundImageAsset}
+          resizeMode="cover"
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              {notificationTitle ? (
+                <Text style={styles.modalHeaderText}>Delete notification{'\n'}
+                  <Text style={styles.modalHeaderTextAccent}>&#34;{notificationTitle}&#34;</Text>
+                  ?</Text>
+              ) : (
+                <Text style={styles.modalHeaderText}>Delete this notification?</Text>
+              )}
+            </View>
 
-          <View style={styles.actions}>
-            <Pressable style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </Pressable>
-            <Pressable style={styles.deleteButton} onPress={onConfirm}>
-              <Text style={styles.deleteButtonText}>Delete</Text>
-            </Pressable>
+            <View style={styles.actions}>
+              <Pressable style={[styles.dialogButton, styles.dialogButtonDelete]} onPress={onConfirm}>
+                <Text style={[styles.dialogButtonText, styles.dialogButtonTextDelete]}>Delete</Text>
+              </Pressable>
+              <Pressable style={[styles.dialogButton, styles.dialogButtonSecondary]} onPress={onClose}>
+                <Text style={[styles.dialogButtonText, styles.dialogButtonTextSecondary]}>Cancel</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
+        </ImageBackground>
       </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalContainer: {
+  modalWrapper: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
+    flexDirection: 'column',
+    justifyContent: 'space-evenly',
+    backgroundColor: 'rgba(62, 63, 86, 0.9)',
+    padding: 40,
   },
-  modalOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  modalTop: {
+    flex: 1,
   },
-  modalContent: {
-    backgroundColor: 'rgba(62, 63, 86, 0.98)',
-    borderRadius: 16,
-    padding: 20,
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    margin: 'auto',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
+  backgroundImage: {
+    borderRadius: 36,
+    overflow: 'hidden',
+  },
+  backgroundImageAsset: {
+    transform: [{ scale: 2 }],
+  },
+  modalContainer: {
+    backgroundColor: 'rgba(62, 63, 86, 0.3)',
+    borderRadius: 36,
+    paddingVertical: 20,
+    paddingHorizontal: 23,
+  },
+  modalHeader: {
+    paddingVertical: 12,
+    paddingBottom: 24,
+    minHeight: 100,
+  },
+  modalHeaderText: {
+    textAlign: 'center',
+    fontSize: 16,
+    lineHeight: 26,
     color: '#fff',
-    marginBottom: 8,
   },
-  body: {
-    fontSize: 15,
-    lineHeight: 21,
-    color: '#d4d6df',
-    marginBottom: 20,
+  modalHeaderTextAccent: {
+    fontWeight: 'bold',
   },
   actions: {
-    flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
-  cancelButton: {
-    flex: 1,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    paddingVertical: 14,
+  dialogButton: {
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(62, 63, 86, 0.4)',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  cancelButtonText: {
-    color: '#fff',
+  dialogButtonText: {
     fontSize: 16,
-    fontWeight: '500',
-  },
-  deleteButton: {
-    flex: 1,
-    borderRadius: 10,
-    backgroundColor: '#FF3B30',
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  },
+  dialogButtonDelete: {
+    backgroundColor: 'rgba(62, 63, 86, 0.6)',
+  },
+  dialogButtonTextDelete: {
+    color: 'rgba(255, 255, 204, 1)',
+  },
+  dialogButtonSecondary: {
+    backgroundColor: 'rgba(62, 63, 86, 0.2)',
+  },
+  dialogButtonTextSecondary: {
+    color: 'rgba(255, 255, 255, 0.9)',
   },
 });

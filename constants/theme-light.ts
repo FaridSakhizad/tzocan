@@ -1,0 +1,68 @@
+import { themeBaseScales } from '@/constants/theme-base';
+import type { UiTheme } from '@/constants/ui-theme.types';
+
+export const themeLight: UiTheme = {
+  name: 'light',
+  statusBarStyle: 'light',
+  navigation: {
+    dark: true,
+    colors: {
+      primary: '#0a7ea4',
+      background: 'transparent',
+      card: 'transparent',
+      text: '#ffffff',
+      border: '#4a4b63',
+      notification: '#0a7ea4',
+    },
+  },
+  overlay: {
+    strong: 'rgba(62, 63, 86, 0.9)',
+    medium: 'rgba(62, 63, 86, 0.4)',
+  },
+  surface: {
+    transparent: 'rgba(62, 63, 86, 0)',
+    elevated: 'rgba(62, 63, 86, 0.3)',
+    elevatedSoft: 'rgba(62, 63, 86, 0.15)',
+    elevatedMuted: 'rgba(62, 63, 86, 0.1)',
+    card: 'rgba(74, 75, 99, 0.7)',
+    cardSoft: 'rgba(62, 63, 86, 0.2)',
+    cardAlt: 'rgba(255, 255, 255, 0.1)',
+    cardStrong: 'rgba(62, 63, 86, 0.35)',
+    field: 'rgba(255, 255, 255, 0.05)',
+    fieldStrong: 'rgba(255, 255, 255, 0.1)',
+    fieldSelected: 'rgba(255, 255, 255, 0.3)',
+    successSoft: 'rgba(76, 175, 80, 0.14)',
+    button: {
+      primary: '#fff',
+      subtle: 'rgba(62, 63, 86, 0.4)',
+      subtleStrong: 'rgba(62, 63, 86, 0.6)',
+      subtleWeak: 'rgba(62, 63, 86, 0.2)',
+      danger: '#FF3B30',
+    },
+  },
+  border: {
+    field: 'rgba(255, 255, 255, 1)',
+    subtle: 'rgba(255, 255, 255, 0.5)',
+    faint: 'rgba(255, 255, 255, 0.4)',
+    muted: 'rgba(255, 255, 255, 0.25)',
+    transparent: 'rgba(255, 255, 255, 0)',
+    success: '#4CAF50',
+  },
+  text: {
+    primary: '#fff',
+    secondary: 'rgba(255, 255, 255, 0.7)',
+    muted: '#9a9bb2',
+    helper: 'rgba(255, 255, 255, 0.55)',
+    placeholder: 'rgba(255, 255, 255, 0.5)',
+    accentSoft: '#d4d6df',
+    onLight: 'rgba(62, 63, 86, 1)',
+    warning: 'rgba(255, 255, 204, 1)',
+  },
+  image: {
+    ...themeBaseScales.image,
+    modalBackgroundSource: require('@/assets/images/bg--main-1.jpg'),
+  },
+  radius: themeBaseScales.radius,
+  spacing: themeBaseScales.spacing,
+  typography: themeBaseScales.typography,
+};

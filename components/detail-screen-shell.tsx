@@ -1,5 +1,6 @@
 import { ReactNode, useMemo } from 'react';
-import { KeyboardShouldPersistTaps, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import type { ScrollViewProps } from 'react-native';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 
@@ -7,7 +8,7 @@ type DetailScreenShellProps = {
   title: string;
   subtitle: string;
   children: ReactNode;
-  keyboardShouldPersistTaps?: KeyboardShouldPersistTaps;
+  keyboardShouldPersistTaps?: ScrollViewProps['keyboardShouldPersistTaps'];
 };
 
 export function DetailScreenShell({
@@ -23,11 +24,6 @@ export function DetailScreenShell({
       style={detailScreenStyles.container}
       keyboardShouldPersistTaps={keyboardShouldPersistTaps}
     >
-      <View style={detailScreenStyles.header}>
-        <Text style={detailScreenStyles.title}>{title}</Text>
-        <Text style={detailScreenStyles.subtitle}>{subtitle}</Text>
-      </View>
-
       <View style={detailScreenStyles.section}>
         {children}
       </View>
@@ -56,16 +52,21 @@ function createDetailScreenStyles(theme: UiTheme) {
       lineHeight: theme.typography.screenSubtitle.lineHeight,
       color: theme.text.secondary,
     },
-    section: {
-      paddingHorizontal: theme.spacing.screenX,
-      paddingBottom: theme.spacing.screenBottom,
-      gap: theme.spacing.sectionGap,
+    contactSection: {
+      paddingTop: 22,
+      paddingHorizontal: 20,
     },
+    aboutSection: {
+      paddingTop: 22,
+      paddingHorizontal: 20,
+    },
+    section: {},
     card: {
-      backgroundColor: theme.surface.card,
-      borderRadius: theme.radius.md,
-      paddingHorizontal: theme.spacing.cardX,
-      paddingVertical: theme.spacing.cardY,
+      paddingHorizontal: 20,
+      paddingTop: 19,
+      paddingBottom: 22,
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(255, 255, 255, 0.2)'
     },
     cardWithGap: {
       gap: theme.spacing.sectionGap,
@@ -123,29 +124,18 @@ function createDetailScreenStyles(theme: UiTheme) {
       fontSize: theme.typography.control.fontSize,
       fontWeight: '600',
     },
-    settingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: theme.surface.card,
-      padding: 16,
-      borderRadius: theme.radius.md,
-    },
-    settingInfo: {
-      flex: 1,
-      marginRight: 16,
-    },
+    settingInfo: {},
     settingInfoNoMargin: {
       flex: 1,
     },
     settingLabel: {
-      fontSize: theme.typography.control.fontSize,
-      fontWeight: '500',
+      fontSize: 20,
       color: theme.text.primary,
+      marginBottom: 8,
     },
     settingHint: {
       fontSize: theme.typography.helper.fontSize,
-      color: theme.text.muted,
+      color: theme.text.primary,
       marginTop: 4,
     },
     secondaryActionButton: {
@@ -162,27 +152,30 @@ function createDetailScreenStyles(theme: UiTheme) {
     },
     settingThemeOptions: {
       flexDirection: 'row',
-      gap: theme.spacing.sm,
+      flexWrap: 'wrap',
+      gap: 15,
     },
-    themeOptionButton: {
-      flex: 1,
-      borderRadius: theme.radius.md,
-      backgroundColor: theme.surface.button.subtleWeak,
-      paddingVertical: 12,
-      paddingHorizontal: 12,
+    optionButton: {
+      borderRadius: 15,
+      height: 30,
+      paddingHorizontal: 15,
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.7)',
       alignItems: 'center',
       justifyContent: 'center',
+      minWidth: 95,
     },
-    themeOptionButtonActive: {
-      backgroundColor: theme.surface.button.primary,
+    optionButtonActive: {
+      backgroundColor: 'rgba(62, 63, 86, 0.2)',
+      borderColor: 'rgba(255, 255, 255, 0.75)',
     },
-    themeOptionButtonText: {
+    optionButtonText: {
       color: theme.text.primary,
-      fontSize: 14,
-      fontWeight: '600',
+      fontSize: 15
     },
-    themeOptionButtonTextActive: {
-      color: theme.text.onLight,
+    optionButtonTextActive: {
+      fontWeight: 'bold',
     },
   });
 }

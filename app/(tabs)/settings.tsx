@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Linking, Pressable, Switch, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 import { DetailScreenShell, useDetailScreenStyles } from '@/components/detail-screen-shell';
@@ -10,7 +10,7 @@ import { ThemeName } from '@/constants/ui-theme';
 
 export default function SettingsScreen() {
   const detailScreenStyles = useDetailScreenStyles();
-  const { theme, themeName } = useAppTheme();
+  const { themeName } = useAppTheme();
   const { t, languageCode, setLanguageCode, languageLabels } = useI18n();
   const { timeFormat, setTimeFormat, firstDayOfWeek, setFirstDayOfWeek, setThemeName } = useSettings();
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
@@ -55,48 +55,23 @@ export default function SettingsScreen() {
     { value: 'uk' as const, label: languageLabels.uk },
     { value: 'fr' as const, label: languageLabels.fr },
   ];
+  const timeFormatOptions = [
+    { value: '24h' as const, label: '24h' },
+    { value: '12h' as const, label: '12h (AM/PM)' },
+  ];
+  const firstDayOfWeekOptions = [
+    { value: 'monday' as const, label: t('settings.firstDay.monday') },
+    { value: 'sunday' as const, label: t('settings.firstDay.sunday') },
+  ];
 
   return (
     <DetailScreenShell
       title={t('settings.title')}
       subtitle={t('settings.subtitle')}
     >
-      <View style={detailScreenStyles.settingRow}>
-        <View style={detailScreenStyles.settingInfo}>
-          <Text style={detailScreenStyles.settingLabel}>{t('settings.timeFormat.label')}</Text>
-          <Text style={detailScreenStyles.settingHint}>
-            {timeFormat === '24h' ? t('settings.timeFormat.hint24') : t('settings.timeFormat.hint12')}
-          </Text>
-        </View>
-        <Switch
-          value={timeFormat === '24h'}
-          onValueChange={(value) => setTimeFormat(value ? '24h' : '12h')}
-          trackColor={{ false: theme.surface.button.subtleWeak, true: theme.surface.button.subtleStrong }}
-          thumbColor={theme.surface.button.primary}
-        />
-      </View>
-
-      <View style={detailScreenStyles.settingRow}>
-        <View style={detailScreenStyles.settingInfo}>
-          <Text style={detailScreenStyles.settingLabel}>{t('settings.firstDay.label')}</Text>
-          <Text style={detailScreenStyles.settingHint}>
-            {firstDayOfWeek === 'monday' ? t('settings.firstDay.hintMonday') : t('settings.firstDay.hintSunday')}
-          </Text>
-        </View>
-        <Switch
-          value={firstDayOfWeek === 'sunday'}
-          onValueChange={(value) => setFirstDayOfWeek(value ? 'sunday' : 'monday')}
-          trackColor={{ false: theme.surface.button.subtleWeak, true: theme.surface.button.subtleStrong }}
-          thumbColor={theme.surface.button.primary}
-        />
-      </View>
-
       <View style={[detailScreenStyles.card, detailScreenStyles.cardWithGap]}>
         <View style={detailScreenStyles.settingInfoNoMargin}>
           <Text style={detailScreenStyles.settingLabel}>{t('settings.language.label')}</Text>
-          <Text style={detailScreenStyles.settingHint}>
-            {t('settings.language.hint')}
-          </Text>
         </View>
 
         <View style={detailScreenStyles.settingThemeOptions}>
@@ -107,15 +82,15 @@ export default function SettingsScreen() {
               <Pressable
                 key={option.value}
                 style={[
-                  detailScreenStyles.themeOptionButton,
-                  selected && detailScreenStyles.themeOptionButtonActive,
+                  detailScreenStyles.optionButton,
+                  selected && detailScreenStyles.optionButtonActive,
                 ]}
                 onPress={() => setLanguageCode(option.value)}
               >
                 <Text
                   style={[
-                    detailScreenStyles.themeOptionButtonText,
-                    selected && detailScreenStyles.themeOptionButtonTextActive,
+                    detailScreenStyles.optionButtonText,
+                    selected && detailScreenStyles.optionButtonTextActive,
                   ]}
                 >
                   {option.label}
@@ -129,9 +104,6 @@ export default function SettingsScreen() {
       <View style={[detailScreenStyles.card, detailScreenStyles.cardWithGap]}>
         <View style={detailScreenStyles.settingInfoNoMargin}>
           <Text style={detailScreenStyles.settingLabel}>{t('settings.theme.label')}</Text>
-          <Text style={detailScreenStyles.settingHint}>
-            {t('settings.theme.hint')}
-          </Text>
         </View>
 
         <View style={detailScreenStyles.settingThemeOptions}>
@@ -142,15 +114,79 @@ export default function SettingsScreen() {
               <Pressable
                 key={option.value}
                 style={[
-                  detailScreenStyles.themeOptionButton,
-                  selected && detailScreenStyles.themeOptionButtonActive,
+                  detailScreenStyles.optionButton,
+                  selected && detailScreenStyles.optionButtonActive,
                 ]}
                 onPress={() => setThemeName(option.value)}
               >
                 <Text
                   style={[
-                    detailScreenStyles.themeOptionButtonText,
-                    selected && detailScreenStyles.themeOptionButtonTextActive,
+                    detailScreenStyles.optionButtonText,
+                    selected && detailScreenStyles.optionButtonTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={detailScreenStyles.card}>
+        <View style={detailScreenStyles.settingInfo}>
+          <Text style={detailScreenStyles.settingLabel}>{t('settings.timeFormat.label')}</Text>
+        </View>
+
+        <View style={detailScreenStyles.settingThemeOptions}>
+          {timeFormatOptions.map((option) => {
+            const selected = timeFormat === option.value;
+
+            return (
+              <Pressable
+                key={option.value}
+                style={[
+                  detailScreenStyles.optionButton,
+                  selected && detailScreenStyles.optionButtonActive,
+                ]}
+                onPress={() => setTimeFormat(option.value)}
+              >
+                <Text
+                  style={[
+                    detailScreenStyles.optionButtonText,
+                    selected && detailScreenStyles.optionButtonTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={detailScreenStyles.card}>
+        <View style={detailScreenStyles.settingInfo}>
+          <Text style={detailScreenStyles.settingLabel}>{t('settings.firstDay.label')}</Text>
+        </View>
+
+        <View style={detailScreenStyles.settingThemeOptions}>
+          {firstDayOfWeekOptions.map((option) => {
+            const selected = firstDayOfWeek === option.value;
+
+            return (
+              <Pressable
+                key={option.value}
+                style={[
+                  detailScreenStyles.optionButton,
+                  selected && detailScreenStyles.optionButtonActive,
+                ]}
+                onPress={() => setFirstDayOfWeek(option.value)}
+              >
+                <Text
+                  style={[
+                    detailScreenStyles.optionButtonText,
+                    selected && detailScreenStyles.optionButtonTextActive,
                   ]}
                 >
                   {option.label}

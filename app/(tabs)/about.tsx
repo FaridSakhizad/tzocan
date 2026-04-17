@@ -12,7 +12,7 @@ export default function AboutScreen() {
       title={t('about.title')}
       subtitle={t('about.subtitle')}
     >
-      <View style={detailScreenStyles.card}>
+      <View style={detailScreenStyles.aboutSection}>
         <Text style={detailScreenStyles.bodyText}>{t('about.body')}</Text>
       </View>
     </DetailScreenShell>

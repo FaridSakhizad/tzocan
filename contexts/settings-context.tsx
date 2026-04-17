@@ -44,7 +44,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         if (parsed.timeFormat) setTimeFormatState(parsed.timeFormat);
         if (parsed.firstDayOfWeek === 'monday' || parsed.firstDayOfWeek === 'sunday') setFirstDayOfWeekState(parsed.firstDayOfWeek);
         if (typeof parsed.timeOffsetMinutes === 'number') setTimeOffsetMinutesState(parsed.timeOffsetMinutes);
-        if (parsed.languageCode === 'en' || parsed.languageCode === 'ru' || parsed.languageCode === 'uk' || parsed.languageCode === 'fr') {
+        if (parsed.languageCode === 'en' || parsed.languageCode === 'es' || parsed.languageCode === 'ru' || parsed.languageCode === 'uk' || parsed.languageCode === 'fr') {
           setLanguageCodeState(parsed.languageCode);
         }
         if (parsed.themeName === 'dark' || parsed.themeName === 'light') {

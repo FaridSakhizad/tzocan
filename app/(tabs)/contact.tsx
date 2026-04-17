@@ -36,7 +36,7 @@ export default function ContactScreen() {
       subtitle={t('contact.subtitle')}
       keyboardShouldPersistTaps="handled"
     >
-      <View>
+      <View style={detailScreenStyles.contactSection}>
         <View style={detailFormStyles.fieldBlock}>
           <DetailTextField
             placeholder={t('contact.emailPlaceholder')}

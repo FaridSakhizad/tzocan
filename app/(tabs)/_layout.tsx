@@ -267,18 +267,44 @@ function HeaderButtons() {
         )}
 
         {(isContactScreen || isSettingsScreen || isAboutScreen) && (
-          <Pressable
-            onPress={handleBackFromEditCity}
-            style={[
-              styles.headerButton,
-              styles.headerButtonBack,
-            ]}
-          >
-            <IconBack
-              style={styles.headerButtonIcon}
-              fill={theme.text.primary}
-            />
-          </Pressable>
+          <>
+            <Pressable
+              onPress={handleBackFromEditCity}
+              style={[
+                styles.headerButton,
+                styles.headerButtonBack,
+              ]}
+            >
+              <IconBack
+                style={styles.headerButtonIcon}
+                fill={theme.text.primary}
+              />
+            </Pressable>
+
+            {(isContactScreen || isSettingsScreen || isAboutScreen) && (
+              <Pressable
+                onPress={handleOpenMainMenuModal}
+                disabled={isEditMode}
+                style={[
+                  styles.headerButton,
+                  isEditMode && styles.headerButtonDisabled,
+                  styles.headerButtonSettings,
+                ]}
+              >
+                {isMainMenuModalVisible ? (
+                  <IconMainMenuFilled
+                    style={styles.headerButtonIcon}
+                    fill={theme.text.primary}
+                  />
+                ) : (
+                  <IconMainMenuOutlined
+                    style={styles.headerButtonIcon}
+                    fill={theme.text.primary}
+                  />
+                )}
+              </Pressable>
+            )}
+          </>
         )}
 
         {!isDetailScreen && (

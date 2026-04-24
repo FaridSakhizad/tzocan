@@ -43,7 +43,7 @@ import IconAddNotification from '@/assets/images/icon--notification-3--outlined.
 
 const NOTIFICATIONS_CITY_TIME_REFRESH_INTERVAL_MS = 5000;
 const NOTIFICATION_SWITCH_THUMB_TRAVEL = 16;
-const CITY_SORT_SECTION_HEIGHT = 220;
+const CITY_SORT_SECTION_HEIGHT = 148;
 
 function NotificationToggleSwitch({
   enabled,
@@ -1206,80 +1206,84 @@ export default function Notifications() {
         onApply={handleApplySortMode}
       >
         <View style={styles.sortPickerContent}>
-          <Text style={styles.sortPickerSectionTitle}>
-            {t('notifications.grouping')}
-          </Text>
-          <Pressable
-            onPress={handleToggleDraftGrouping}
-            style={[
-              styles.sortPickerItem,
-              draftSortState.groupByCity && styles.sortPickerItemActive,
-            ]}
-          >
-            <Text
+          <View style={styles.sortPickerSection}>
+            <Pressable
+              onPress={handleToggleDraftGrouping}
               style={[
-                styles.sortPickerItemText,
-                draftSortState.groupByCity && styles.sortPickerItemTextActive,
+                styles.sortPickerItem,
+                draftSortState.groupByCity && styles.sortPickerItemActive,
               ]}
             >
-              {t('notifications.groupByCity')}
-            </Text>
-          </Pressable>
+              <Text
+                style={[
+                  styles.sortPickerItemText,
+                  draftSortState.groupByCity && styles.sortPickerItemTextActive,
+                ]}
+              >
+                {t('notifications.groupByCity')}
+              </Text>
+            </Pressable>
+          </View>
 
-          <Text style={styles.sortPickerSectionTitle}>
-            {t('notifications.notificationOrder')}
-          </Text>
-          <Pressable
-            onPress={() => handleToggleDraftNotificationOrder('trigger')}
-            style={[
-              styles.sortPickerItem,
-              draftSortState.notificationOrder.startsWith('trigger') && styles.sortPickerItemActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.sortPickerItemText,
-                draftSortState.notificationOrder.startsWith('trigger') && styles.sortPickerItemTextActive,
-              ]}
-            >
-              {getDirectionalLabel(
-                t('notifications.sortNotificationsByTime'),
-                getNotificationOrderDirection(
-                  draftSortState.notificationOrder.startsWith('trigger')
-                    ? draftSortState.notificationOrder
-                    : 'none'
-                )
-              )}
-            </Text>
-          </Pressable>
+          <View style={styles.sortPickerSectionSeparator}></View>
 
-          <Pressable
-            onPress={() => handleToggleDraftNotificationOrder('created')}
-            style={[
-              styles.sortPickerItem,
-              draftSortState.notificationOrder.startsWith('created') && styles.sortPickerItemActive,
-            ]}
-          >
-            <Text
+          <View style={styles.sortPickerSection}>
+            <Text style={styles.sortPickerSectionTitle}>
+              {t('notifications.notificationOrder')}
+            </Text>
+
+            <Pressable
+              onPress={() => handleToggleDraftNotificationOrder('trigger')}
               style={[
-                styles.sortPickerItemText,
-                draftSortState.notificationOrder.startsWith('created') && styles.sortPickerItemTextActive,
+                styles.sortPickerItem,
+                draftSortState.notificationOrder.startsWith('trigger') && styles.sortPickerItemActive,
               ]}
             >
-              {getDirectionalLabel(
-                t('notifications.sortNotificationsByDateAdded'),
-                getNotificationOrderDirection(
-                  draftSortState.notificationOrder.startsWith('created')
-                    ? draftSortState.notificationOrder
-                    : 'none'
-                )
-              )}
-            </Text>
-          </Pressable>
+              <Text
+                style={[
+                  styles.sortPickerItemText,
+                  draftSortState.notificationOrder.startsWith('trigger') && styles.sortPickerItemTextActive,
+                ]}
+              >
+                {getDirectionalLabel(
+                  t('notifications.sortNotificationsByTime'),
+                  getNotificationOrderDirection(
+                    draftSortState.notificationOrder.startsWith('trigger')
+                      ? draftSortState.notificationOrder
+                      : 'none'
+                  )
+                )}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => handleToggleDraftNotificationOrder('created')}
+              style={[
+                styles.sortPickerItem,
+                draftSortState.notificationOrder.startsWith('created') && styles.sortPickerItemActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.sortPickerItemText,
+                  draftSortState.notificationOrder.startsWith('created') && styles.sortPickerItemTextActive,
+                ]}
+              >
+                {getDirectionalLabel(
+                  t('notifications.sortNotificationsByDateAdded'),
+                  getNotificationOrderDirection(
+                    draftSortState.notificationOrder.startsWith('created')
+                      ? draftSortState.notificationOrder
+                      : 'none'
+                  )
+                )}
+              </Text>
+            </Pressable>
+          </View>
 
           <Animated.View
             pointerEvents={draftSortState.groupByCity ? 'auto' : 'none'}
-            style={[styles.sortPickerAnimatedSection, citySortSectionStyle]}
+            style={[styles.sortPickerSection, styles.sortPickerAnimatedSection, citySortSectionStyle]}
           >
               <Text style={styles.sortPickerSectionTitle}>
                 {t('notifications.cityOrder')}
@@ -1358,330 +1362,337 @@ export default function Notifications() {
 
 function createStyles(theme: UiTheme) {
   return StyleSheet.create({
-  rootContainer: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  listContent: {},
-  timeSortedList: {
-    flex: 1,
-  },
-  timeSortedListContent: {
-    paddingBottom: 12,
-  },
-  sortPickerContent: {
-    paddingHorizontal: theme.spacing.screenX,
-    paddingBottom: theme.spacing.modalInnerY,
-    gap: 12,
-  },
-  sortPickerSectionTitle: {
-    color: theme.text.secondary,
-    fontSize: 13,
-    fontWeight: '700',
-    marginTop: 4,
-  },
-  sortPickerAnimatedSection: {
-    overflow: 'hidden',
-    gap: 12,
-  },
-  sortPickerItem: {
-    minHeight: 48,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: 14,
-    backgroundColor: theme.surface.button.subtleWeak,
-    borderWidth: 1,
-    borderColor: theme.border.strong,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  sortPickerItemActive: {
-    backgroundColor: theme.surface.button.subtleStrong,
-  },
-  sortPickerItemText: {
-    color: theme.text.primary,
-    fontSize: 15,
-  },
-  sortPickerItemTextActive: {
-    fontWeight: '700',
-  },
-  helperButtonRow: {
-    paddingTop: 6,
-    paddingLeft: 16,
-  },
-  helperButton: {
-    alignSelf: 'flex-start',
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.surface.button.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-  },
-  helperButtonText: {
-    color: theme.text.onLight,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyStateButton: {
-    alignItems: 'center',
-  },
-  emptyStateButtonDisabled: {
-    opacity: 0.5,
-  },
-  emptyStateButtonIcon: {
-    width: 20,
-    height: 20,
-    marginBottom: 20,
-  },
-  emptyStateButtonText: {
-    fontSize: 16,
-    color: theme.text.primary,
-  },
-  cityGroup: {
-    borderBottomColor: theme.surface.button.subtleStrong,
-    borderBottomWidth: 2,
-  },
-  cityGroupDragging: {
-    backgroundColor: theme.surface.cardStrong,
-  },
-  cityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 17,
-    backgroundColor: theme.surface.cardSoft,
-    marginBottom: 1,
-  },
-  dragHandle: {
-    padding: 4,
-    marginRight: 8,
-  },
-  dragHandleText: {
-    fontSize: 18,
-    color: theme.text.primary,
-  },
-  cityName: {
-    flex: 1,
-    fontSize: 20,
-    lineHeight: 26,
-    fontWeight: 'bold',
-    color: theme.text.primary,
-    paddingHorizontal: 2,
-  },
-  cityHeaderTime: {
-    fontSize: 20,
-    lineHeight: 26,
-    color: theme.text.primary,
-    marginLeft: 12
-  },
-  deleteCityButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: theme.text.warning,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 10,
-  },
-  deleteButtonIcon: {},
-  notificationItem: {
-    paddingTop: 17,
-    paddingBottom: 22,
-    paddingHorizontal: 20,
-    backgroundColor: theme.surface.cardSoft,
-  },
-  notificationItemEven: {
-    backgroundColor: theme.surface.cardAlt,
-  },
-  notificationDetails: {
-    flexDirection: 'column',
-    gap: 4,
-    marginBottom: 18,
-    paddingHorizontal: 2,
-  },
-  notificationParentCity: {
-    fontSize: 13,
-    lineHeight: 16,
-    fontWeight: '600',
-    color: theme.text.secondary,
-    marginBottom: 2,
-  },
-  notificationLabel: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: '600',
-    color: theme.text.primary,
-  },
-  notificationLabelEmpty: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: '300',
-    color: theme.text.primary,
-  },
-  notificationNotes: {
-    fontSize: 15,
-    lineHeight: 18,
-    color: theme.text.primary,
-  },
-  notificationUrl: {
-    fontSize: 15,
-    lineHeight: 18,
-    color: theme.text.warning,
-    textDecorationLine: 'underline',
-  },
-  notificationDateTime: {
-    flexDirection: 'column',
-    gap: 18,
-    paddingHorizontal: 2,
-  },
-  notificationTime: {
-    flexDirection: 'column',
-    gap: 5,
-  },
-  notificationCityTime: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  notificationCityTimeIcon: {
-    width: 16,
-    height: 16,
-  },
-  notificationCityTimeText: {
-    fontSize: 15,
-    color: theme.text.primary,
-  },
-  notificationLocalTime: {
-    flexDirection: 'row',
-    gap: 3,
-  },
-  notificationLocalTimeLabel: {
-    fontSize: 13,
-    color: theme.text.secondary,
-  },
-  notificationLocalTimeText: {
-    fontSize: 13,
-    color: theme.text.primary,
-  },
-  notificationLocalDayShiftText: {
-    fontSize: 11,
-    paddingHorizontal: 7,
-    height: 14,
-    borderRadius: theme.radius.pillSm,
-    lineHeight: 13,
-    backgroundColor: theme.surface.button.primary,
-    color: theme.text.onLight,
-    marginBottom: -2,
-    marginLeft: 7,
-  },
-  notificationDate: {
-    flexDirection: 'column',
-    gap: 5,
-  },
-  notificationCityDate: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  notificationCityDateIcon: {
-    width: 14,
-    height: 14,
-    margin: 1,
-  },
-  notificationCityDateText: {
-    fontSize: 15,
-    color: theme.text.primary,
-  },
-  notificationLocalDate: {
-    flexDirection: 'row',
-    gap: 3,
-  },
-  notificationLocalDateLabel: {
-    fontSize: 13,
-    color: theme.text.secondary,
-  },
-  notificationLocalDateText: {
-    fontSize: 13,
-    color: theme.text.primary,
-  },
-  notificationLocalDateShiftText: {
-    fontSize: 11,
-    paddingHorizontal: 7,
-    height: 14,
-    borderRadius: theme.radius.pillSm,
-    lineHeight: 13,
-    backgroundColor: theme.surface.button.primary,
-    color: theme.text.onLight,
-    marginBottom: -2,
-    marginLeft: 7,
-  },
-  notificationLocalDateShiftTextYear: {
-    backgroundColor: theme.text.warning,
-  },
-  notificationRepeat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  notificationRepeatIcon: {
-    width: 17,
-    height: 15,
-  },
-  notificationRepeatText: {
-    fontSize: 15,
-    color: theme.text.primary,
-  },
-  notificationActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingTop: 20,
-  },
-  editNotificationButton: {
-    width: 30,
-    height: 24,
-    backgroundColor: theme.surface.button.subtle,
-    borderRadius: 15,
-  },
-  editNotificationIcon: {
-    width: 12,
-    height: 12,
-    margin: 'auto',
-  },
-  toggleNotificationSwitch: {
-    width: 33,
-    height: 17,
-    borderRadius: 9,
-    backgroundColor: theme.surface.button.subtle,
-    padding: 3,
-  },
-  toggleNotificationSwitchThumb: {
-    width: 11,
-    height: 11,
-    backgroundColor: theme.surface.button.primary,
-    borderRadius: 6,
-    position: 'absolute',
-    top: 3,
-    left: 3,
-  },
-  deleteNotificationButton: {
-    width: 30,
-    height: 24,
-    backgroundColor: theme.surface.button.subtle,
-    borderRadius: 15,
-  },
-  deleteNotificationIcon: {
-    width: 12,
-    height: 12,
-    margin: 'auto',
-  },
+    rootContainer: {
+      flex: 1,
+    },
+    container: {
+      flex: 1,
+    },
+    listContent: {},
+    timeSortedList: {
+      flex: 1,
+    },
+    timeSortedListContent: {
+      paddingBottom: 12,
+    },
+    sortPickerContent: {
+      padding: 20,
+      gap: 20,
+    },
+    sortPickerSectionSeparator: {
+      height: 1,
+      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    },
+    sortPickerSection: {
+      gap: 14,
+    },
+    sortPickerAnimatedSection: {
+      overflow: 'hidden'
+    },
+    sortPickerSectionTitle: {
+      color: theme.text.primary,
+      fontSize: 13,
+      lineHeight: 15,
+      textAlign: 'center',
+    },
+    sortPickerItem: {
+      maxWidth: 280,
+      minHeight: 30,
+      borderRadius: 15,
+      paddingHorizontal: 8,
+      paddingVertical: 6,
+      backgroundColor: 'rgba(62, 63, 86, 0.2)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    sortPickerItemActive: {
+      backgroundColor: 'rgba(62, 63, 86, 0.3)',
+    },
+    sortPickerItemText: {
+      textAlign: 'center',
+      color: theme.text.primary,
+      fontSize: 14,
+      lineHeight: 18,
+    },
+    sortPickerItemTextActive: {
+      fontWeight: 'bold',
+    },
+    helperButtonRow: {
+      paddingTop: 6,
+      paddingLeft: 16,
+    },
+    helperButton: {
+      alignSelf: 'flex-start',
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.surface.button.primary,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+    },
+    helperButtonText: {
+      color: theme.text.onLight,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyStateButton: {
+      alignItems: 'center',
+    },
+    emptyStateButtonDisabled: {
+      opacity: 0.5,
+    },
+    emptyStateButtonIcon: {
+      width: 20,
+      height: 20,
+      marginBottom: 20,
+    },
+    emptyStateButtonText: {
+      fontSize: 16,
+      color: theme.text.primary,
+    },
+    cityGroup: {
+      borderBottomColor: theme.surface.button.subtleStrong,
+      borderBottomWidth: 2,
+    },
+    cityGroupDragging: {
+      backgroundColor: theme.surface.cardStrong,
+    },
+    cityHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 18,
+      paddingBottom: 17,
+      backgroundColor: theme.surface.cardSoft,
+      marginBottom: 1,
+    },
+    dragHandle: {
+      padding: 4,
+      marginRight: 8,
+    },
+    dragHandleText: {
+      fontSize: 18,
+      color: theme.text.primary,
+    },
+    cityName: {
+      flex: 1,
+      fontSize: 20,
+      lineHeight: 26,
+      fontWeight: 'bold',
+      color: theme.text.primary,
+      paddingHorizontal: 2,
+    },
+    cityHeaderTime: {
+      fontSize: 20,
+      lineHeight: 26,
+      color: theme.text.primary,
+      marginLeft: 12
+    },
+    deleteCityButton: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: theme.text.warning,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 10,
+    },
+    deleteButtonIcon: {},
+    notificationItem: {
+      paddingTop: 17,
+      paddingBottom: 22,
+      paddingHorizontal: 20,
+      backgroundColor: theme.surface.cardSoft,
+    },
+    notificationItemEven: {
+      backgroundColor: theme.surface.cardAlt,
+    },
+    notificationDetails: {
+      flexDirection: 'column',
+      gap: 4,
+      marginBottom: 18,
+      paddingHorizontal: 2,
+    },
+    notificationParentCity: {
+      fontSize: 13,
+      lineHeight: 16,
+      fontWeight: '600',
+      color: theme.text.secondary,
+      marginBottom: 2,
+    },
+    notificationLabel: {
+      fontSize: 16,
+      lineHeight: 22,
+      fontWeight: '600',
+      color: theme.text.primary,
+    },
+    notificationLabelEmpty: {
+      fontSize: 16,
+      lineHeight: 22,
+      fontWeight: '300',
+      color: theme.text.primary,
+    },
+    notificationNotes: {
+      fontSize: 15,
+      lineHeight: 18,
+      color: theme.text.primary,
+    },
+    notificationUrl: {
+      fontSize: 15,
+      lineHeight: 18,
+      color: theme.text.warning,
+      textDecorationLine: 'underline',
+    },
+    notificationDateTime: {
+      flexDirection: 'column',
+      gap: 18,
+      paddingHorizontal: 2,
+    },
+    notificationTime: {
+      flexDirection: 'column',
+      gap: 5,
+    },
+    notificationCityTime: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+    },
+    notificationCityTimeIcon: {
+      width: 16,
+      height: 16,
+    },
+    notificationCityTimeText: {
+      fontSize: 15,
+      color: theme.text.primary,
+    },
+    notificationLocalTime: {
+      flexDirection: 'row',
+      gap: 3,
+    },
+    notificationLocalTimeLabel: {
+      fontSize: 13,
+      color: theme.text.secondary,
+    },
+    notificationLocalTimeText: {
+      fontSize: 13,
+      color: theme.text.primary,
+    },
+    notificationLocalDayShiftText: {
+      fontSize: 11,
+      paddingHorizontal: 7,
+      height: 14,
+      borderRadius: theme.radius.pillSm,
+      lineHeight: 13,
+      backgroundColor: theme.surface.button.primary,
+      color: theme.text.onLight,
+      marginBottom: -2,
+      marginLeft: 7,
+    },
+    notificationDate: {
+      flexDirection: 'column',
+      gap: 5,
+    },
+    notificationCityDate: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+    },
+    notificationCityDateIcon: {
+      width: 14,
+      height: 14,
+      margin: 1,
+    },
+    notificationCityDateText: {
+      fontSize: 15,
+      color: theme.text.primary,
+    },
+    notificationLocalDate: {
+      flexDirection: 'row',
+      gap: 3,
+    },
+    notificationLocalDateLabel: {
+      fontSize: 13,
+      color: theme.text.secondary,
+    },
+    notificationLocalDateText: {
+      fontSize: 13,
+      color: theme.text.primary,
+    },
+    notificationLocalDateShiftText: {
+      fontSize: 11,
+      paddingHorizontal: 7,
+      height: 14,
+      borderRadius: theme.radius.pillSm,
+      lineHeight: 13,
+      backgroundColor: theme.surface.button.primary,
+      color: theme.text.onLight,
+      marginBottom: -2,
+      marginLeft: 7,
+    },
+    notificationLocalDateShiftTextYear: {
+      backgroundColor: theme.text.warning,
+    },
+    notificationRepeat: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    notificationRepeatIcon: {
+      width: 17,
+      height: 15,
+    },
+    notificationRepeatText: {
+      fontSize: 15,
+      color: theme.text.primary,
+    },
+    notificationActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      paddingTop: 20,
+    },
+    editNotificationButton: {
+      width: 30,
+      height: 24,
+      backgroundColor: theme.surface.button.subtle,
+      borderRadius: 15,
+    },
+    editNotificationIcon: {
+      width: 12,
+      height: 12,
+      margin: 'auto',
+    },
+    toggleNotificationSwitch: {
+      width: 33,
+      height: 17,
+      borderRadius: 9,
+      backgroundColor: theme.surface.button.subtle,
+      padding: 3,
+    },
+    toggleNotificationSwitchThumb: {
+      width: 11,
+      height: 11,
+      backgroundColor: theme.surface.button.primary,
+      borderRadius: 6,
+      position: 'absolute',
+      top: 3,
+      left: 3,
+    },
+    deleteNotificationButton: {
+      width: 30,
+      height: 24,
+      backgroundColor: theme.surface.button.subtle,
+      borderRadius: 15,
+    },
+    deleteNotificationIcon: {
+      width: 12,
+      height: 12,
+      margin: 'auto',
+    },
   });
 }

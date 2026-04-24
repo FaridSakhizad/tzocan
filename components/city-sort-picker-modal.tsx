@@ -67,9 +67,7 @@ export function CitySortPickerModal({
     const nextDirection = getNextDirectionalMode(currentDirection);
 
     onChangeCityOrder(
-      nextDirection === 'none'
-        ? 'none'
-        : `${sortFamily}-${nextDirection}` as CityOrderMode
+      nextDirection === 'none' ? 'none' : `${sortFamily}-${nextDirection}` as CityOrderMode
     );
   };
 
@@ -81,14 +79,16 @@ export function CitySortPickerModal({
       onApply={onApply}
     >
       <View style={styles.content}>
-        <Pressable
-          onPress={() => onChangeCityOrder('none')}
-          style={[styles.item, cityOrder === 'none' && styles.itemActive]}
-        >
-          <Text style={[styles.itemText, cityOrder === 'none' && styles.itemTextActive]}>
-            {t('notifications.customCityOrder')}
-          </Text>
-        </Pressable>
+        <View style={styles.section}>
+          <Pressable
+            onPress={() => onChangeCityOrder('none')}
+            style={[styles.item, cityOrder === 'none' && styles.itemActive]}
+          >
+            <Text style={[styles.itemText, cityOrder === 'none' && styles.itemTextActive]}>
+              {t('notifications.customCityOrder')}
+            </Text>
+          </Pressable>
+        </View>
 
         <Pressable
           onPress={() => handleToggleCityOrder('name')}
@@ -121,29 +121,31 @@ export function CitySortPickerModal({
 function createStyles(theme: UiTheme) {
   return StyleSheet.create({
     content: {
-      paddingHorizontal: theme.spacing.screenX,
-      paddingBottom: theme.spacing.modalInnerY,
-      gap: 12,
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+      gap: 14,
+    },
+    section: {
+      flexDirection: 'column',
     },
     item: {
-      minHeight: 48,
-      borderRadius: theme.radius.md,
+      minWidth: 260,
+      minHeight: 30,
+      borderRadius: 15,
       paddingHorizontal: 14,
-      backgroundColor: theme.surface.button.subtleWeak,
-      borderWidth: 1,
-      borderColor: theme.border.strong,
-      alignItems: 'flex-start',
+      backgroundColor: 'rgba(62, 63, 86, 0.2)',
+      alignItems: 'center',
       justifyContent: 'center',
     },
     itemActive: {
-      backgroundColor: theme.surface.button.subtleStrong,
+      backgroundColor: 'rgba(62, 63, 86, 0.3)',
     },
     itemText: {
       color: theme.text.primary,
-      fontSize: 15,
+      fontSize: 14,
     },
     itemTextActive: {
-      fontWeight: '700',
+      fontWeight: 'bold',
     },
   });
 }

@@ -19,7 +19,7 @@ type NotificationsSortContextValue = {
 
 const DEFAULT_SORT_STATE: NotificationsSortState = {
   groupByCity: true,
-  notificationOrder: 'none',
+  notificationOrder: 'created-asc',
   cityOrder: 'none',
 };
 

@@ -511,7 +511,6 @@ export default function TabLayout() {
         name="index"
         options={{
           title: '',
-          freezeOnBlur: true,
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconBox}>
               {(focused || pathname === '/edit-city') ? (
@@ -533,7 +532,6 @@ export default function TabLayout() {
         name="timeline"
         options={{
           title: '',
-          freezeOnBlur: true,
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconBox}>
               {focused ? (
@@ -549,7 +547,6 @@ export default function TabLayout() {
         name="notifications"
         options={{
           title: '',
-          freezeOnBlur: true,
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconBox}>
               {focused ? (

@@ -32,7 +32,6 @@ type TimelineHourStripProps = {
   timelineWidth: number;
   timeFormat: string;
   width: number;
-  focusedDayStartHourIndex: number;
   onUserInteraction?: () => void;
   onScrollSettled?: (focusedHourIndex: number) => void;
   onNavigateDayBackward: () => void;
@@ -229,7 +228,6 @@ function TimelineHourStripComponent({
   timelineWidth,
   timeFormat,
   width,
-  focusedDayStartHourIndex,
   onUserInteraction,
   onScrollSettled,
   onNavigateDayBackward,
@@ -251,9 +249,6 @@ function TimelineHourStripComponent({
         ? getMidnightLabelForTimezone(hourDate, city.tz, locale)
         : null;
       const notificationCount = getNotificationCountForHour(city, hourIndex, now);
-      const isNeighborDay =
-        hourIndex < focusedDayStartHourIndex ||
-        hourIndex >= focusedDayStartHourIndex + 24;
 
       return {
         key: `${city.id}-${hourIndex}`,
@@ -262,14 +257,13 @@ function TimelineHourStripComponent({
         midnightLabel,
         notificationCount,
         isMidnight,
-        isNeighborDay,
       };
     });
-  }, [city, focusedDayStartHourIndex, hourIndices, locale, timeFormat]);
+  }, [city, hourIndices, locale, timeFormat]);
 
-  const startHourIndex = hourIndices[0] ?? focusedDayStartHourIndex;
-  const minFocusableHourIndex = hourIndices[0] ?? focusedDayStartHourIndex;
-  const maxFocusableHourIndex = hourIndices[hourIndices.length - 1] ?? focusedDayStartHourIndex;
+  const startHourIndex = hourIndices[0] ?? 0;
+  const minFocusableHourIndex = hourIndices[0] ?? 0;
+  const maxFocusableHourIndex = hourIndices[hourIndices.length - 1] ?? 0;
 
   const pan = useMemo(() => {
     return Gesture.Pan()
@@ -351,7 +345,6 @@ function TimelineHourStripComponent({
                   styles.hourBlock,
                   timeFormat === '12h' && styles.hourBlock12hFormat,
                   cell.isMidnight && styles.hourBlockMidnight,
-                  cell.isNeighborDay && styles.hourBlockNeighborDay,
                 ]}
               >
                 {cell.isMidnight && cell.midnightLabel ? (
@@ -410,7 +403,6 @@ export const TimelineHourStrip = React.memo(
     prevProps.timelineWidth === nextProps.timelineWidth &&
     prevProps.timeFormat === nextProps.timeFormat &&
     prevProps.width === nextProps.width &&
-    prevProps.focusedDayStartHourIndex === nextProps.focusedDayStartHourIndex &&
     prevProps.onUserInteraction === nextProps.onUserInteraction &&
     prevProps.onScrollSettled === nextProps.onScrollSettled &&
     prevProps.onNavigateDayBackward === nextProps.onNavigateDayBackward &&
@@ -457,9 +449,6 @@ function createStyles(theme: UiTheme) {
     hourBlockMidnight: {
       borderWidth: 1,
       borderColor: theme.border.subtle,
-    },
-    hourBlockNeighborDay: {
-      opacity: 0.58,
     },
     midnightWeekday: {
       fontSize: 14,

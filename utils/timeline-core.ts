@@ -1,7 +1,6 @@
 export const TIMELINE_HOUR_MS = 60 * 60 * 1000;
 export const TIMELINE_DAY_HOURS = 24;
-export const TIMELINE_EDGE_HOURS = 2;
-export const TIMELINE_VISIBLE_HOURS = TIMELINE_DAY_HOURS + TIMELINE_EDGE_HOURS * 2;
+export const TIMELINE_VISIBLE_HOURS = TIMELINE_DAY_HOURS;
 export const TIMELINE_CELL_WIDTH = 74;
 export const TIMELINE_NAV_LEADING_CELLS = 1;
 
@@ -27,11 +26,10 @@ export function shiftLocalDay(date: Date, offsetDays: number) {
 
 export function getTimelineHourIndicesForDay(day: Date) {
   const dayStartHourIndex = getHourIndexForDate(getLocalDayStart(day));
-  const startHourIndex = dayStartHourIndex - TIMELINE_EDGE_HOURS;
 
   return Array.from(
     { length: TIMELINE_VISIBLE_HOURS },
-    (_, index) => startHourIndex + index
+    (_, index) => dayStartHourIndex + index
   );
 }
 
@@ -59,4 +57,3 @@ export function getScrollOffsetForHourIndex(
   const localSlotIndex = hourIndex - startHourIndex + TIMELINE_NAV_LEADING_CELLS;
   return sidePad + (localSlotIndex + 0.5) * cellWidth - viewportWidth / 2;
 }
-

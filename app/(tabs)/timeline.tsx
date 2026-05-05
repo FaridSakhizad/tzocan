@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -43,6 +43,7 @@ import IconReset from '@/assets/images/icon--reset-1.svg';
 
 const TIMELINE_CLOCK_REFRESH_INTERVAL_MS = 5000;
 const DAY_SELECTOR_HEIGHT = 60;
+const DAY_TRANSITION_DURATION_MS = 200;
 
 function clampOffset(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -114,6 +115,9 @@ export default function TimelineScreen() {
   const [isAddCityModalVisible, setIsAddCityModalVisible] = useState(false);
   const [cityPendingDelete, setCityPendingDelete] = useState<SelectedCity | null>(null);
   const [draftCityOrder, setDraftCityOrder] = useState<CityOrderMode>(sortState.cityOrder);
+  const [isDayTransitioning, setIsDayTransitioning] = useState(false);
+  const contentOpacity = useRef(new Animated.Value(1)).current;
+  const isDayTransitioningRef = useRef(false);
 
   const nowDate = useMemo(() => new Date(nowMs), [nowMs]);
   const localizedCityNames = useLocalizedCityNames(selectedCities.map((city) => city.cityId));
@@ -164,8 +168,8 @@ export default function TimelineScreen() {
   const focusedDayStartHourIndex = getHourIndexForDate(selectedDay);
   const sidePad = Math.max(0, width / 2 - TIMELINE_CELL_WIDTH / 2);
   const timelineWidth = (hourIndices.length + 2) * TIMELINE_CELL_WIDTH + sidePad * 2;
-  const firstFocusableHourIndex = hourIndices[0] ?? focusedDayStartHourIndex;
-  const lastFocusableHourIndex = hourIndices[hourIndices.length - 1] ?? focusedDayStartHourIndex;
+  const firstFocusableHourIndex = focusedDayStartHourIndex;
+  const lastFocusableHourIndex = focusedDayStartHourIndex + 23;
   const minScrollX = clampOffset(
     getScrollOffsetForHourIndex(firstFocusableHourIndex, startHourIndex, width, sidePad, TIMELINE_CELL_WIDTH),
     0,
@@ -250,20 +254,61 @@ export default function TimelineScreen() {
     setFocusedHourIndex(clampedHourIndex);
   }, [firstFocusableHourIndex, lastFocusableHourIndex]);
 
+  const runDayTransition = useCallback((updateDay: () => void) => {
+    if (isDayTransitioningRef.current) {
+      return;
+    }
+
+    isDayTransitioningRef.current = true;
+    setIsDayTransitioning(true);
+
+    Animated.timing(contentOpacity, {
+      toValue: 0,
+      duration: DAY_TRANSITION_DURATION_MS,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (!finished) {
+        isDayTransitioningRef.current = false;
+        setIsDayTransitioning(false);
+        contentOpacity.setValue(1);
+        return;
+      }
+
+      updateDay();
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          Animated.timing(contentOpacity, {
+            toValue: 1,
+            duration: DAY_TRANSITION_DURATION_MS,
+            useNativeDriver: true,
+          }).start(() => {
+            isDayTransitioningRef.current = false;
+            setIsDayTransitioning(false);
+          });
+        });
+      });
+    });
+  }, [contentOpacity]);
+
   const handleResetTimeline = useCallback(() => {
-    const today = getLocalDayStart(new Date());
-    setSelectedDay(today);
-    setFocusedHourIndex(getHourIndexForDate(new Date()));
-  }, []);
+    runDayTransition(() => {
+      const today = getLocalDayStart(new Date());
+      setSelectedDay(today);
+      setFocusedHourIndex(getHourIndexForDate(new Date()));
+    });
+  }, [runDayTransition]);
 
   const shiftDayBy = useCallback((offsetDays: number) => {
-    const nextDay = shiftLocalDay(selectedDay, offsetDays);
-    const currentOffsetWithinDay = focusedHourIndex - getHourIndexForDate(selectedDay);
-    const nextFocusedHourIndex = getHourIndexForDate(nextDay) + currentOffsetWithinDay;
+    runDayTransition(() => {
+      const nextDay = shiftLocalDay(selectedDay, offsetDays);
+      const currentOffsetWithinDay = focusedHourIndex - getHourIndexForDate(selectedDay);
+      const nextFocusedHourIndex = getHourIndexForDate(nextDay) + currentOffsetWithinDay;
 
-    setSelectedDay(nextDay);
-    setFocusedHourIndex(nextFocusedHourIndex);
-  }, [focusedHourIndex, selectedDay]);
+      setSelectedDay(nextDay);
+      setFocusedHourIndex(nextFocusedHourIndex);
+    });
+  }, [focusedHourIndex, runDayTransition, selectedDay]);
 
   const handleApplyCitySort = useCallback(() => {
     setSortState({
@@ -354,7 +399,6 @@ export default function TimelineScreen() {
               timelineWidth={timelineWidth}
               timeFormat={timeFormat}
               width={width}
-              focusedDayStartHourIndex={focusedDayStartHourIndex}
               onUserInteraction={handleTimelineInteraction}
               onScrollSettled={handleTimelineScrollSettled}
               onNavigateDayBackward={() => shiftDayBy(-1)}
@@ -366,7 +410,6 @@ export default function TimelineScreen() {
     },
     [
       dragging,
-      focusedDayStartHourIndex,
       handleOpenDeleteCityModal,
       handleTimelineInteraction,
       handleTimelineScrollSettled,
@@ -422,59 +465,70 @@ export default function TimelineScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <View style={styles.listContentContainer}>
-        <View
-          style={[
-            styles.middleMarker,
-            {
-              left: width / 2 - TIMELINE_CELL_WIDTH / 2,
-            },
-          ]}
-        />
-
+      <Animated.View style={[styles.timelineContent, { opacity: contentOpacity }]}>
+        <View style={styles.listContentContainer}>
         {sortState.cityOrder === 'none' ? (
           <DraggableFlatList
             contentContainerStyle={styles.listContent}
             data={selectedCities}
-            keyExtractor={(city) => `${city.id}`}
-            renderItem={renderItem}
-            onDragBegin={() => setDragging(true)}
-            onDragEnd={({ data }) => {
-              reorderCities(data);
-              setDragging(false);
-            }}
-            activationDistance={12}
-            scrollEnabled={!isEditMode || !dragging}
-          />
-        ) : (
-          <ScrollView contentContainerStyle={styles.listContent}>
-            {displayedCities.map((city) => (
-              <View key={`sorted-city-${city.id}`}>{renderCityRow(city)}</View>
-            ))}
-          </ScrollView>
-        )}
-      </View>
-
-      <View style={styles.resetBar} pointerEvents="box-none">
-        <Pressable style={styles.resetButtonPressable} onPress={handleResetTimeline}>
-          <View style={styles.resetButton}>
-            <IconReset
-              style={styles.resetButtonIcon}
-              fill={theme.surface.button.subtleStrong}
+              keyExtractor={(city) => `${city.id}`}
+              renderItem={renderItem}
+              onDragBegin={() => setDragging(true)}
+              onDragEnd={({ data }) => {
+                reorderCities(data);
+                setDragging(false);
+              }}
+              activationDistance={12}
+              scrollEnabled={!isEditMode || !dragging}
             />
-          </View>
-        </Pressable>
-      </View>
+          ) : (
+            <ScrollView contentContainerStyle={styles.listContent}>
+              {displayedCities.map((city) => (
+                <View key={`sorted-city-${city.id}`}>{renderCityRow(city)}</View>
+              ))}
+            </ScrollView>
+          )}
+
+          <View
+            pointerEvents="none"
+            style={[
+              styles.middleMarker,
+              {
+                left: width / 2 - TIMELINE_CELL_WIDTH / 2,
+              },
+            ]}
+          />
+        </View>
+
+        <View style={styles.resetBar} pointerEvents="box-none">
+          <Pressable style={styles.resetButtonPressable} onPress={handleResetTimeline}>
+            <View style={styles.resetButton}>
+              <IconReset
+                style={styles.resetButtonIcon}
+                fill={theme.surface.button.subtleStrong}
+              />
+            </View>
+          </Pressable>
+        </View>
+      </Animated.View>
 
       <View style={styles.daySelectorBar}>
         <View style={styles.daySelector}>
-          <Pressable style={styles.daySelectorButton} onPress={() => shiftDayBy(-1)}>
+          <Pressable
+            style={styles.daySelectorButton}
+            onPress={() => shiftDayBy(-1)}
+            disabled={isDayTransitioning}
+          >
             <Arrow1
               style={[styles.daySelectorButtonIcon, styles.daySelectorButtonIconRight]}
               fill={theme.text.primary}
             />
           </Pressable>
-          <Pressable style={styles.daySelectorCenter} onPress={handleResetTimeline}>
+          <Pressable
+            style={styles.daySelectorCenter}
+            onPress={handleResetTimeline}
+            disabled={isDayTransitioning}
+          >
             <Text style={styles.daySelectorWeekdayText}>
               {focusedDateTime.toLocaleDateString(locale, {
                 weekday: 'long',
@@ -482,7 +536,11 @@ export default function TimelineScreen() {
             </Text>
             <Text style={styles.daySelectorDateText}>{selectedDayMonthDay}</Text>
           </Pressable>
-          <Pressable style={styles.daySelectorButton} onPress={() => shiftDayBy(1)}>
+          <Pressable
+            style={styles.daySelectorButton}
+            onPress={() => shiftDayBy(1)}
+            disabled={isDayTransitioning}
+          >
             <Arrow1 style={styles.daySelectorButtonIcon} fill={theme.text.primary} />
           </Pressable>
         </View>
@@ -538,22 +596,30 @@ function createStyles(theme: UiTheme) {
     container: {
       flex: 1,
     },
+    timelineContent: {
+      flex: 1,
+    },
     listContentContainer: {
       flex: 1,
       overflow: 'hidden',
+      position: 'relative',
     },
     listContent: {
+      position: 'relative',
+      zIndex: 20,
+      elevation: 20,
       paddingTop: 0,
-      paddingBottom: 0,
+      paddingBottom: 0
     },
     middleMarker: {
       position: 'absolute',
+      zIndex: 10,
+      elevation: 10,
       top: 0,
       bottom: DAY_SELECTOR_HEIGHT,
       width: TIMELINE_CELL_WIDTH,
       height: 3000,
       backgroundColor: theme.surface.elevatedSoft,
-      zIndex: 10,
     },
     listItem: {
       paddingTop: 11,

@@ -1,3 +1,3 @@
-import Notifications from '@/features/Notifications/Notifications';
+import Notifications from '@/features/Notifications';
 
 export default Notifications

@@ -2,10 +2,9 @@ import React, { useEffect } from 'react';
 import { Tabs, usePathname, useGlobalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomTabBar, BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { StyleSheet, View, Pressable } from 'react-native';
+import { View, Pressable } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import type { UiTheme } from '@/constants/ui-theme.types';
 
 import IconAddLocationOutlined from '@/assets/images/icon--add-location-1--outlined.svg';
 import IconAddLocationFilled from '@/assets/images/icon--add-location-1--filled.svg';
@@ -45,6 +44,8 @@ import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import { getCityDisplayName } from '@/utils/city-display';
 import IconDelete1 from '@/assets/images/icon--delete-2--outlined.svg';
 import { RouteNames, RouteNamePaths } from '@/types/router';
+
+import { createStyles } from './styles';
 
 function HeaderButtons() {
   const router = useRouter();
@@ -604,90 +605,4 @@ export default function TabLayout() {
       />
     </Tabs>
   );
-}
-
-function createStyles(theme: UiTheme) {
-  return StyleSheet.create({
-    bottomBarContainer: {
-      borderTopWidth: 1,
-      borderTopColor: theme.border.faint,
-      paddingTop: 40,
-    },
-    bottomBarContainerCitiesList: {
-      paddingTop: 18,
-      borderTopWidth: 0,
-    },
-    tabBarStyle: {
-      backgroundColor: theme.surface.transparent,
-      borderTopColor: theme.border.transparent,
-      paddingHorizontal: 16,
-    },
-    tabBarDisabled: {
-      opacity: 0.5,
-    },
-    headerButtonsContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-around',
-      backgroundColor: theme.surface.transparent,
-      paddingBottom: 15,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border.faint,
-      paddingHorizontal: theme.spacing.screenX,
-    },
-    headerButton: {
-      width: 30,
-      height: 30,
-      borderWidth: 1,
-      borderColor: theme.border.transparent,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginHorizontal: 15,
-    },
-    headerButtonEditCitiesList: {
-      marginLeft: 0,
-      marginRight: 'auto'
-    },
-    headerButtonSettings: {
-      marginLeft: 'auto',
-      marginRight: 0
-    },
-    headerButtonSort: {
-      width: 'auto',
-      minWidth: 44,
-      paddingHorizontal: 8,
-      marginHorizontal: 8,
-    },
-    headerButtonSortText: {
-      color: theme.text.primary,
-      fontSize: 15,
-      fontWeight: '600',
-    },
-    headerButtonDelete: {
-      marginLeft: 'auto',
-      marginRight: 0
-    },
-    headerButtonBack: {
-      marginLeft: 0,
-      marginRight: 'auto'
-    },
-    headerButtonDisabled: {
-      opacity: 0.5,
-    },
-    headerButtonIcon: {
-      width: 30,
-      height: 30,
-    },
-    headerButtonActive: {
-      borderColor: theme.border.field,
-    },
-    iconBox: {
-      width: 40,
-      height: 40,
-    },
-    icon: {
-      width: 40,
-      height: 40
-    }
-  });
 }

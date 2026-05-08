@@ -389,7 +389,7 @@ function TimelineHourStripComponent({
   );
 }
 
-export const TimelineHourStrip = React.memo(
+export const HourStrip = React.memo(
   TimelineHourStripComponent,
   (prevProps, nextProps) =>
     prevProps.x === nextProps.x &&

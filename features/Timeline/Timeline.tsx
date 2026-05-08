@@ -15,7 +15,7 @@ import { useSharedValue } from 'react-native-reanimated';
 import { AddCityModal, type CityRow } from '@/components/add-city-modal';
 import { CitySortPickerModal } from '@/components/city-sort-picker-modal';
 import { DeleteCityModal } from '@/components/delete-city-modal';
-import { TimelineHourStrip } from '@/features/Timeline/TimelineHourStrip';
+import { HourStrip } from '@/features/Timeline/HourStrip';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useEditMode } from '@/contexts/edit-mode-context';
 import { CityOrderMode, useNotificationsSort } from '@/contexts/notifications-sort-context';
@@ -391,7 +391,7 @@ export default function TimelineScreen() {
           </View>
 
           <View style={styles.timelineRowContainer}>
-            <TimelineHourStrip
+            <HourStrip
               x={x}
               minX={minScrollX}
               maxX={maxScrollX}

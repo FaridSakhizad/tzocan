@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Text, View, TextInput, StyleSheet, Pressable, Modal, KeyboardAvoidingView, Platform, ScrollView, ImageBackground } from 'react-native';
+import { Text, View, TextInput, StyleSheet, Pressable, Modal, KeyboardAvoidingView, Platform, ScrollView, ImageBackground, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SQLite from "expo-sqlite";
 
@@ -100,14 +100,12 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [query, setQuery] = useState('');
   const [cities, setCities] = useState<SearchCityRow[]>([]);
-  const [selectedCity, setSelectedCity] = useState<SearchCityRow | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!visible) {
       setQuery('');
       setCities([]);
-      setSelectedCity(null);
       return;
     }
 
@@ -139,20 +137,12 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
     };
   }, [query, visible, db, languageCode]);
 
-  const handleCityPress = (city: SearchCityRow) => {
-    setSelectedCity(city);
-  };
-
-  const handleSave = () => {
-    if (!selectedCity) {
-      return;
-    }
-
-    const { id, name, country, admin1, tz, lat, lon, pop } = selectedCity;
+  const handleSave = (city: SearchCityRow) => {
+    const { id, name, country, admin1, tz, lat, lon, pop } = city;
+    Keyboard.dismiss();
     onSave({ id, name, country, admin1, tz, lat, lon, pop });
     setQuery('');
     setCities([]);
-    setSelectedCity(null);
   };
 
   return (
@@ -191,15 +181,11 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
 
                   <Text style={styles.title}>{t('common.addCity')}</Text>
 
-                  <Pressable
-                    style={[styles.confirmButton, !selectedCity && styles.confirmButtonDisabled]}
-                    onPress={handleSave}
-                    disabled={!selectedCity}
-                  >
+                  <View style={styles.confirmButtonPlaceholder}>
                     <IconConfirmOutlined
-                      fill={theme.text.primary}
+                      fill={theme.text.placeholder}
                     />
-                  </Pressable>
+                  </View>
                 </View>
 
                 <TextInput
@@ -209,8 +195,8 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                   value={query}
                   onChangeText={(value) => {
                     setQuery(value);
-                    setSelectedCity(null);
                   }}
+                  onBlur={() => Keyboard.dismiss()}
                   autoCapitalize="none"
                   autoCorrect={false}
                   autoFocus
@@ -233,10 +219,9 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                     {cities.map((city) => (
                       <Pressable
                         key={`${city.id}-${city.name}-${city.country}`}
-                        onPress={() => handleCityPress(city)}
+                        onPress={() => handleSave(city)}
                         style={({ pressed }) => [
                           styles.cityItem,
-                          selectedCity?.id === city.id && styles.cityItemSelected,
                           pressed && styles.cityItemPressed,
                         ]}
                       >
@@ -300,8 +285,10 @@ function createStyles(theme: UiTheme) {
       width: 30,
       height: 30,
     },
-    confirmButtonDisabled: {
-      opacity: 0.5
+    confirmButtonPlaceholder: {
+      width: 30,
+      height: 30,
+      opacity: 0,
     },
     input: {
       borderWidth: 1,
@@ -339,9 +326,6 @@ function createStyles(theme: UiTheme) {
     },
     cityItemPressed: {
       backgroundColor: theme.overlay.strong,
-    },
-    cityItemSelected: {
-      backgroundColor: theme.surface.fieldSelected,
     },
     cityText: {
       fontSize: theme.typography.control.fontSize,

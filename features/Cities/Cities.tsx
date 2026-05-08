@@ -17,7 +17,7 @@ import { useSettings, TimeFormat } from '@/contexts/settings-context';
 import { useEditMode } from '@/contexts/edit-mode-context';
 import { DeleteCityModal } from '@/components/delete-city-modal';
 import { CitySortPickerModal } from '@/components/city-sort-picker-modal';
-import { TimeRuler } from '@/components/time-ruler';
+import { TimeRuler } from '@/features/Cities/TimeRuler';
 import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import type { UiTheme } from '@/constants/ui-theme.types';
@@ -110,7 +110,7 @@ function getTimezoneOffset(timezone: string, sameLabel: string): string {
   return `${prefix}${wholeHours}:${mins.toString().padStart(2, '0')}`;
 }
 
-export default function Index() {
+export default function Cities() {
   const router = useRouter();
   const { theme } = useAppTheme();
   const { t, locale } = useI18n();

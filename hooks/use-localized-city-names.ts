@@ -9,19 +9,42 @@ type CityAliasRow = {
   name: string;
 };
 
+function areLocalizedNameMapsEqual(
+  left: Record<number, string>,
+  right: Record<number, string>
+) {
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+
+  if (leftKeys.length !== rightKeys.length) {
+    return false;
+  }
+
+  return leftKeys.every((key) => left[Number(key)] === right[Number(key)]);
+}
+
 export function useLocalizedCityNames(cityIds: number[]) {
   const { db } = useDatabase();
   const { languageCode } = useI18n();
   const [localizedNames, setLocalizedNames] = useState<Record<number, string>>({});
 
-  const normalizedCityIds = useMemo(
-    () => Array.from(new Set(cityIds)).sort((a, b) => a - b),
+  const normalizedCityIdsKey = useMemo(
+    () => Array.from(new Set(cityIds)).sort((a, b) => a - b).join(','),
     [cityIds]
+  );
+  const normalizedCityIds = useMemo(
+    () =>
+      normalizedCityIdsKey.length > 0
+        ? normalizedCityIdsKey.split(',').map((value) => Number(value))
+        : [],
+    [normalizedCityIdsKey]
   );
 
   useEffect(() => {
     if (!db || normalizedCityIds.length === 0) {
-      setLocalizedNames({});
+      setLocalizedNames((current) =>
+        Object.keys(current).length === 0 ? current : {}
+      );
       return;
     }
 
@@ -51,11 +74,15 @@ export function useLocalizedCityNames(cityIds: number[]) {
           }
         });
 
-        setLocalizedNames(nextMap);
+        setLocalizedNames((current) =>
+          areLocalizedNameMapsEqual(current, nextMap) ? current : nextMap
+        );
       } catch (error) {
         if (!cancelled) {
           console.error('Failed to load localized city names:', error);
-          setLocalizedNames({});
+          setLocalizedNames((current) =>
+            Object.keys(current).length === 0 ? current : {}
+          );
         }
       }
     })();
@@ -63,7 +90,7 @@ export function useLocalizedCityNames(cityIds: number[]) {
     return () => {
       cancelled = true;
     };
-  }, [db, languageCode, normalizedCityIds]);
+  }, [db, languageCode, normalizedCityIdsKey]);
 
   return localizedNames;
 }

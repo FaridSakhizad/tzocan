@@ -1,11 +1,12 @@
-import { ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { ImageBackground, StyleSheet, Text, TextInput } from 'react-native';
-import { useFonts } from 'expo-font';
-import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { ImageBackground, Text, TextInput } from 'react-native';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+
+import { ThemeProvider } from '@react-navigation/native';
 
 import { DatabaseProvider } from '@/hooks/use-database';
 import { SelectedCitiesProvider } from '@/contexts/selected-cities-context';
@@ -29,6 +30,7 @@ const setDefaultFont = () => {
 
   (Text as any).render = function (...args: any[]) {
     const origin = oldTextRender.call(this, ...args);
+
     return {
       ...origin,
       props: {
@@ -61,7 +63,7 @@ function AppShell() {
   return (
     <ImageBackground
       source={theme.image.modalBackgroundSource}
-      style={styles.backgroundImage}
+      style={{ flex: 1 }}
       resizeMode="cover"
     >
       <ThemeProvider value={navigationTheme}>
@@ -110,9 +112,3 @@ export default function RootLayout() {
     </DatabaseProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1
-  },
-});

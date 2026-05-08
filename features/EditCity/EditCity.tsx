@@ -17,6 +17,7 @@ import { useSettings, TimeFormat, FirstDayOfWeek } from '@/contexts/settings-con
 import { NotificationModal, NotificationFormValues } from '@/components/notification-modal';
 import { DeleteNotificationModal } from '@/components/delete-notification-modal';
 import { getCountryName } from '@/constants/country-names';
+import { TIME_REFRESH_INTERVAL_MS } from '@/constants/app-config';
 import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import type { UiTheme } from '@/constants/ui-theme.types';
@@ -31,7 +32,6 @@ import RepeatIcon from '../../assets/images/icon--repeat-1.svg';
 
 import { createStyles } from './styles';
 
-const EDIT_CITY_TIME_REFRESH_INTERVAL_MS = 5000;
 const NOTIFICATION_SWITCH_THUMB_TRAVEL = 16;
 
 function NotificationToggleSwitch({
@@ -543,7 +543,7 @@ export default function EditCity() {
 
     const interval = setInterval(() => {
       setClockTick((value) => value + 1);
-    }, EDIT_CITY_TIME_REFRESH_INTERVAL_MS);
+    }, TIME_REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, [isFocused]);

@@ -6,7 +6,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+
+import { Animated, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -27,10 +28,8 @@ import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
 import { sortCitiesByOrder } from '@/utils/city-sorting';
 
-import {
-  DAY_TRANSITION_DURATION_MS,
-  TIMELINE_CLOCK_REFRESH_INTERVAL_MS,
-} from '@/features/Timeline/constants';
+import { TIME_REFRESH_INTERVAL_MS } from '@/constants/app-config';
+import { DAY_TRANSITION_DURATION_MS } from './constants';
 
 import {
   getFocusedDateTimeFromHourIndex,
@@ -156,7 +155,7 @@ export default function TimelineScreen() {
 
     const timer = setInterval(() => {
       setNowMs(Date.now());
-    }, TIMELINE_CLOCK_REFRESH_INTERVAL_MS);
+    }, TIME_REFRESH_INTERVAL_MS);
 
     return () => clearInterval(timer);
   }, [isFocused]);

@@ -27,6 +27,7 @@ import {
 } from '@/contexts/notifications-sort-context';
 import { CityNotification, useSelectedCities, SelectedCity } from '@/contexts/selected-cities-context';
 import { useSettings, TimeFormat, FirstDayOfWeek } from '@/contexts/settings-context';
+import { TIME_REFRESH_INTERVAL_MS } from '@/constants/app-config';
 import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import type { UiTheme } from '@/constants/ui-theme.types';
@@ -41,7 +42,6 @@ import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
 import IconAddNotification from '@/assets/images/icon--notification-3--outlined.svg';
 import { createStyles } from './styles';
 
-const NOTIFICATIONS_CITY_TIME_REFRESH_INTERVAL_MS = 5000;
 const NOTIFICATION_SWITCH_THUMB_TRAVEL = 16;
 const CITY_SORT_SECTION_HEIGHT = 148;
 
@@ -611,7 +611,7 @@ export default function Notifications() {
 
     const interval = setInterval(() => {
       setClockTick((value) => value + 1);
-    }, NOTIFICATIONS_CITY_TIME_REFRESH_INTERVAL_MS);
+    }, TIME_REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, [isFocused]);

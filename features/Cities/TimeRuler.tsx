@@ -1,22 +1,19 @@
 import { useRef, useMemo, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
-import { View, ScrollView, Text, StyleSheet, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Pressable, Animated } from 'react-native';
+import { View, ScrollView, Text, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Pressable, Animated } from 'react-native';
 
 import IconReset from '@/assets/images/icon--reset-1.svg';
+import { TIME_REFRESH_INTERVAL_MS } from '@/constants/app-config';
 import { useI18n } from '@/hooks/use-i18n';
-import type { UiTheme } from '@/constants/ui-theme.types';
+
 import { useAppTheme } from '@/contexts/app-theme-context';
+import { HOURS_RANGE, MINUTES_PER_TICK, TICK_WIDTH, TOTAL_MINUTES, SNAP_TO_ZERO_THRESHOLD } from '@/features/Cities/constants';
+import { createStyles } from '@/features/Cities/TimeRuler.styles';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const TICK_WIDTH = 15;
-const MINUTES_PER_TICK = 15;
-const HOURS_RANGE = 24;
-const TOTAL_MINUTES = HOURS_RANGE * 2 * 60;
 
 const TOTAL_TICKS = TOTAL_MINUTES / MINUTES_PER_TICK;
 const NUMBER_OF_DUMMIES = Math.ceil(SCREEN_WIDTH / TICK_WIDTH);
 const RULER_WIDTH = TOTAL_TICKS * TICK_WIDTH + NUMBER_OF_DUMMIES * TICK_WIDTH;
-const SNAP_TO_ZERO_THRESHOLD = 3;
-const TIME_RULER_REFRESH_INTERVAL_MS = 5000;
 
 type TimeFormat = '12h' | '24h';
 
@@ -29,7 +26,9 @@ type TimeRulerProps = {
 
 function getLocalTime(locale: string, timeFormat: TimeFormat, offsetMinutes: number = 0): string {
   const now = new Date();
+
   const shiftedTime = new Date(now.getTime() + offsetMinutes * 60 * 1000);
+
   return new Intl.DateTimeFormat(locale, {
     hour: '2-digit',
     minute: '2-digit',
@@ -38,7 +37,9 @@ function getLocalTime(locale: string, timeFormat: TimeFormat, offsetMinutes: num
 }
 
 function formatOffset(minutes: number): string {
-  if (minutes === 0) return '00:00';
+  if (minutes === 0) {
+    return '00:00';
+  }
 
   const sign = minutes > 0 ? '+' : '-';
   const absMinutes = Math.abs(minutes);
@@ -63,7 +64,9 @@ const getScrollXForOffset = (minutes: number) => {
 export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive = true }, ref) {
   const { theme } = useAppTheme();
   const { locale } = useI18n();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+
+  const styles = useMemo(() => createStyles(theme, SCREEN_WIDTH), [theme]);
+
   const scrollViewRef = useRef<ScrollView>(null);
   const isScrolling = useRef(false);
   const isProgrammaticScroll = useRef(false);
@@ -125,7 +128,7 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
 
     const interval = setInterval(() => {
       setTick((t) => t + 1);
-    }, TIME_RULER_REFRESH_INTERVAL_MS);
+    }, TIME_REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, [isActive]);
@@ -275,6 +278,7 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
           />
         </Pressable>
       </Animated.View>
+
       <View style={styles.timeContainer}>
         <Animated.Text
           style={[
@@ -304,6 +308,7 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
           {formatOffset(displayOffset)}
         </Animated.Text>
       </View>
+
       <View style={styles.rulerContainer}>
         <ScrollView
           ref={scrollViewRef}
@@ -325,117 +330,12 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
         >
           {ticks}
         </ScrollView>
-        <View style={styles.centerIndicator} pointerEvents="none" />
+
+        <View
+          style={styles.centerIndicator}
+          pointerEvents="none"
+        />
       </View>
     </View>
   );
 });
-
-function createStyles(theme: UiTheme) {
-  return StyleSheet.create({
-    container: {
-      borderTopWidth: 1,
-      borderTopColor: theme.border.faint,
-      backgroundColor: theme.surface.transparent,
-    },
-    resetButtonContainer: {
-      alignSelf: 'flex-start',
-      minWidth: 70,
-      alignItems: 'center',
-    },
-    resetButton: {
-      borderRadius: 10,
-      width: 20,
-      height: 20,
-      backgroundColor: theme.surface.button.primary,
-      position: 'absolute',
-      top: -10,
-      left: SCREEN_WIDTH / 2 - 10,
-    },
-    resetButtonPressable: {
-      width: '100%',
-      height: '100%',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    resetButtonIcon: {
-      width: 12,
-      height: 12,
-    },
-    timeContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: 10,
-      paddingBottom: 5,
-      paddingHorizontal: 16,
-      backgroundColor: theme.surface.transparent,
-    },
-    localTimeContainer: {
-      alignItems: 'center',
-    },
-    sideText: {
-      fontSize: 18,
-      color: theme.text.secondary,
-      minWidth: 70,
-      textAlign: 'center',
-      fontWeight: '300'
-    },
-    localTimeText: {
-      fontSize: 18,
-      fontWeight: '500',
-      color: theme.text.primary,
-    },
-    rulerContainer: {
-      height: 45,
-      position: 'relative',
-    },
-    scrollContent: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: 45,
-      backgroundColor: 'transparent',
-    },
-    tickDummy: {
-      width: TICK_WIDTH,
-      height: 45,
-    },
-    tickContainer: {
-      width: TICK_WIDTH,
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: 45,
-    },
-    tick: {
-      width: 3,
-      height: 3,
-      backgroundColor: theme.border.field,
-      borderRadius: 3,
-    },
-    hourTick: {
-      height: 5,
-      width: 5,
-      backgroundColor: theme.border.field,
-      borderRadius: 5,
-    },
-    zeroTick: {
-      height: 13,
-      backgroundColor: theme.surface.button.primary,
-      width: 5,
-      borderRadius: 5,
-    },
-    centerIndicator: {
-      position: 'absolute',
-      left: SCREEN_WIDTH / 2 - 3,
-      top: 7,
-      width: 1,
-      height: 0,
-      borderLeftWidth: 3,
-      borderRightWidth: 3,
-      borderTopWidth: 6,
-      borderLeftColor: 'transparent',
-      borderRightColor: 'transparent',
-      borderTopColor: theme.surface.button.primary,
-    },
-  });
-}

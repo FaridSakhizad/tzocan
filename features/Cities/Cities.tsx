@@ -17,6 +17,7 @@ import { useEditMode } from '@/contexts/edit-mode-context';
 import { DeleteCityModal } from '@/components/delete-city-modal';
 import { CitySortPickerModal } from '@/components/city-sort-picker-modal';
 import { TimeRuler } from '@/features/Cities/TimeRuler';
+import { TIME_REFRESH_INTERVAL_MS } from '@/constants/app-config';
 import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import { useAppTheme } from '@/contexts/app-theme-context';
@@ -30,8 +31,6 @@ import IconNotificationsMultiple from '@/assets/images/icon--notifications-multi
 
 import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
 import { createStyles } from './styles';
-
-const INDEX_CLOCK_REFRESH_INTERVAL_MS = 5000;
 
 function getLocalTime(timezone: string, locale: string, timeFormat: TimeFormat, offsetMinutes: number = 0): string {
   const now = new Date();
@@ -148,7 +147,7 @@ export default function Cities() {
 
     const interval = setInterval(() => {
       setTick((t) => t * -1);
-    }, INDEX_CLOCK_REFRESH_INTERVAL_MS);
+    }, TIME_REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, [isFocused, selectedCities.length]);

@@ -356,16 +356,10 @@ export default function Cities() {
                 onDragEnd={({data}) => reorderCities(data)}
                 keyExtractor={(item) => `city-${item.id}`}
                 renderItem={renderItem}
-                bounces={false}
-                overScrollMode="never"
-                alwaysBounceVertical={false}
               />
             ) : (
               <ScrollView
                 style={styles.citiesList}
-                bounces={false}
-                overScrollMode="never"
-                alwaysBounceVertical={false}
               >
                 {displayedCities.map((city, index) => (
                   <View key={`sorted-city-${city.id}`}>

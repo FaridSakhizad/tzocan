@@ -1,4 +1,4 @@
-import { useRef, useMemo, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { View, ScrollView, Text, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Pressable, Animated } from 'react-native';
 
 import IconReset from '@/assets/images/icon--reset-1.svg';
@@ -53,15 +53,11 @@ function formatOffset(minutes: number): string {
   return `${sign}${hours}:${mins.toString().padStart(2, '0')}`;
 }
 
-export type TimeRulerRef = {
-  reset: () => void;
-};
-
 const getScrollXForOffset = (minutes: number) => {
   return RULER_WIDTH / 2 - SCREEN_WIDTH / 2 + TICK_WIDTH / 2 + minutes;
 };
 
-export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive = true }, ref) {
+export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive = true }: TimeRulerProps) {
   const { theme } = useAppTheme();
   const { locale } = useI18n();
 
@@ -132,12 +128,6 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
 
     return () => clearInterval(interval);
   }, [isActive]);
-
-  useImperativeHandle(ref, () => ({
-    reset: () => {
-      handleResetPress();
-    },
-  }));
 
   const calculateOffsetFromScroll = (scrollX: number) => {
     return Math.round(scrollX + SCREEN_WIDTH / 2 - RULER_WIDTH / 2 - TICK_WIDTH / 2);
@@ -338,4 +328,4 @@ export const TimeRuler = forwardRef<TimeRulerRef, TimeRulerProps>(function TimeR
       </View>
     </View>
   );
-});
+}

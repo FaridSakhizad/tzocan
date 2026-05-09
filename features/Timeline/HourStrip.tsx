@@ -365,7 +365,7 @@ function TimelineHourStripComponent({
                   <View style={styles.notificationCountBadge}>
                     <IconNotification
                       style={styles.notificationCountIcon}
-                      fill={theme.surface.button.subtleWeak}
+                      fill={theme.surface.button.subtleMedium}
                     />
                     {cell.notificationCount > 1 && (
                       <Text style={styles.notificationCountText}>{cell.notificationCount}</Text>
@@ -443,23 +443,22 @@ function createStyles(theme: UiTheme) {
       transform: [{ rotate: '180deg' }],
     },
     hourBlock12hFormat: {
-      paddingTop: 8,
+      paddingTop: 11,
       justifyContent: 'flex-start',
     },
     hourBlockMidnight: {
-      borderWidth: 1,
-      borderColor: theme.border.subtle,
+      paddingTop: 0,
+      justifyContent: 'center',
     },
     midnightWeekday: {
       fontSize: 14,
       lineHeight: 16,
-      color: theme.text.secondary,
+      color: theme.text.primary,
       textTransform: 'capitalize',
     },
     midnightMonthDay: {
-      fontSize: 18,
-      lineHeight: 22,
-      fontWeight: '700',
+      fontSize: 14,
+      lineHeight: 16,
       color: theme.text.primary,
       textTransform: 'capitalize',
     },
@@ -474,6 +473,7 @@ function createStyles(theme: UiTheme) {
       lineHeight: 14,
       color: theme.text.primary,
       top: -3,
+      textTransform: 'uppercase',
     },
     notificationCountBadge: {
       position: 'absolute',
@@ -494,10 +494,9 @@ function createStyles(theme: UiTheme) {
       height: 9,
     },
     notificationCountText: {
-      fontSize: 9,
-      lineHeight: 9,
-      fontWeight: '700',
-      color: theme.surface.button.subtleWeak,
+      fontSize: 12,
+      lineHeight: 13,
+      color: theme.surface.button.subtleMedium,
     },
   });
 }

@@ -36,6 +36,7 @@ export const themeDark: UiTheme = {
       primary: '#fff',
       subtle: 'rgba(62, 63, 86, 0.4)',
       subtleStrong: 'rgba(62, 63, 86, 0.6)',
+      subtleMedium: 'rgba(62, 63, 86, 0.5)',
       subtleWeak: 'rgba(62, 63, 86, 0.2)',
       danger: '#FF3B30',
     },

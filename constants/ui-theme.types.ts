@@ -35,6 +35,7 @@ export type UiTheme = {
       primary: string;
       subtle: string;
       subtleStrong: string;
+      subtleMedium: string;
       subtleWeak: string;
       danger: string;
     };

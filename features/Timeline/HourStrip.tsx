@@ -7,14 +7,17 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+
 import type { SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import type { SelectedCity } from '@/contexts/selected-cities-context';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import type { UiTheme } from '@/constants/ui-theme.types';
+import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 import IconNotification from '@/assets/images/icon--notification-2.svg';
 import Arrow1 from '@/assets/images/icon--arrow-1.svg';
+
 import {
   getFocusedDateTimeFromHourIndex,
   TIMELINE_CELL_WIDTH,
@@ -87,7 +90,7 @@ function isSameYmd(
 }
 
 function getRepeatMode(notification: NonNullable<SelectedCity['notifications']>[number]) {
-  return notification.repeat || (notification.isDaily ? 'daily' : 'none');
+  return getEffectiveRepeatMode(notification);
 }
 
 function shouldNotificationTriggerAtHour(
@@ -109,11 +112,11 @@ function shouldNotificationTriggerAtHour(
   const currentCityParts = getDatePartsInTimezone(now, cityTimezone);
   const repeat = getRepeatMode(notification);
 
-  if (repeat === 'daily') {
+  if (repeat === RepeatMode.daily) {
     return true;
   }
 
-  if (repeat === 'weekly') {
+  if (repeat === RepeatMode.weekly) {
     const fallbackWeekday = new Date(
       currentCityParts.year,
       currentCityParts.month - 1,
@@ -128,12 +131,12 @@ function shouldNotificationTriggerAtHour(
     );
   }
 
-  if (repeat === 'monthly') {
+  if (repeat === RepeatMode.monthly) {
     const dayOfMonth = notification.day ?? currentCityParts.day;
     return slotParts.day === dayOfMonth;
   }
 
-  if (repeat === 'yearly') {
+  if (repeat === RepeatMode.yearly) {
     const month = notification.month ?? currentCityParts.month;
     const day = notification.day ?? currentCityParts.day;
     return slotParts.month === month && slotParts.day === day;
@@ -449,16 +452,17 @@ function createStyles(theme: UiTheme) {
     hourBlockMidnight: {
       paddingTop: 0,
       justifyContent: 'center',
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
     midnightWeekday: {
-      fontSize: 14,
-      lineHeight: 16,
+      fontSize: 16,
+      lineHeight: 18,
       color: theme.text.primary,
       textTransform: 'capitalize',
     },
     midnightMonthDay: {
-      fontSize: 14,
-      lineHeight: 16,
+      fontSize: 16,
+      lineHeight: 18,
       color: theme.text.primary,
       textTransform: 'capitalize',
     },

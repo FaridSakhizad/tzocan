@@ -32,6 +32,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { getCityDisplayName } from '@/utils/city-display';
+import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 
 import ClockIcon from '../../assets/images/icon--clock-2--outlined.svg';
 import CalendarIcon from '../../assets/images/icon--calendar-2--outlined.svg';
@@ -136,23 +137,9 @@ function getNotificationRepeatLabel(
   weekdayShortLabels: Record<number, string>,
   t: (key: string) => string
 ) {
-  const normalizedRepeat = typeof notification.repeat === 'string'
-    ? notification.repeat.toLowerCase()
-    : undefined;
-  const repeat =
-    normalizedRepeat === 'daily' ||
-    normalizedRepeat === 'weekly' ||
-    normalizedRepeat === 'monthly' ||
-    normalizedRepeat === 'yearly' ||
-    normalizedRepeat === 'none'
-      ? normalizedRepeat
-      : notification.isDaily
-        ? 'daily'
-        : notification.weekdays && notification.weekdays.length > 0
-          ? 'weekly'
-          : 'none';
+  const repeat = getEffectiveRepeatMode(notification);
 
-  if (repeat === 'weekly') {
+  if (repeat === RepeatMode.weekly) {
     const order = firstDayOfWeek === 'sunday'
       ? [0, 1, 2, 3, 4, 5, 6]
       : [1, 2, 3, 4, 5, 6, 0];
@@ -165,15 +152,15 @@ function getNotificationRepeatLabel(
     return days.length > 0 ? `${days.join(', ')}` : t('common.weekly');
   }
 
-  if (repeat === 'daily') {
+  if (repeat === RepeatMode.daily) {
     return t('common.daily');
   }
 
-  if (repeat === 'monthly') {
+  if (repeat === RepeatMode.monthly) {
     return t('common.monthly');
   }
 
-  if (repeat === 'yearly') {
+  if (repeat === RepeatMode.yearly) {
     return t('common.yearly');
   }
 

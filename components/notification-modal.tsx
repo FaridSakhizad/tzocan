@@ -19,6 +19,7 @@ import { useSettings } from '@/contexts/settings-context';
 import { useI18n } from '@/hooks/use-i18n';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
+import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 import IconCancelOutlined from '@/assets/images/icon--x-1--outlined.svg';
 import IconConfirmOutlined from '@/assets/images/icon--checkmark-1--outlined.svg';
 
@@ -37,7 +38,7 @@ export type NotificationFormValues = {
   day?: number;
   hour: number;
   minute: number;
-  repeat: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  repeat: RepeatMode;
   weekdays?: number[]; // JS: 0=Sun ... 6=Sat
   label?: string;
   notes?: string;
@@ -103,7 +104,7 @@ export function NotificationModal({
   });
   const [hasDate, setHasDate] = useState(false);
   const [isTimeSelected, setIsTimeSelected] = useState(false);
-  const [repeat, setRepeat] = useState<'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'>('none');
+  const [repeat, setRepeat] = useState<RepeatMode>(RepeatMode.none);
   const [weekdays, setWeekdays] = useState<number[]>([]);
   const [activePicker, setActivePicker] = useState<'city' | 'time' | 'date' | 'repeat' | 'weekdays' | null>(null);
   const [notificationLabel, setNotificationLabel] = useState('');
@@ -112,7 +113,7 @@ export function NotificationModal({
   const [isSaving, setIsSaving] = useState(false);
   const [pickerDraftTime, setPickerDraftTime] = useState(new Date());
   const [pickerDraftDate, setPickerDraftDate] = useState(new Date());
-  const [pickerDraftRepeat, setPickerDraftRepeat] = useState<'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'>('none');
+  const [pickerDraftRepeat, setPickerDraftRepeat] = useState<RepeatMode>(RepeatMode.none);
   const [pickerDraftWeekdays, setPickerDraftWeekdays] = useState<number[]>([]);
   const [pickerDraftCityId, setPickerDraftCityId] = useState<number | null>(null);
 
@@ -294,7 +295,7 @@ export function NotificationModal({
     }
     setNotificationTime(time);
     setIsTimeSelected(Boolean(source));
-    setRepeat(source?.repeat || (source?.isDaily ? 'daily' : 'none'));
+    setRepeat(source ? getEffectiveRepeatMode(source) : RepeatMode.none);
     setWeekdays(source?.weekdays || []);
 
     setHasDate(hasDateInSource);
@@ -308,7 +309,7 @@ export function NotificationModal({
     }
     setPickerDraftTime(initialPickerTime);
     setPickerDraftDate(hasDateInSource && source?.year && source?.month && source?.day ? new Date(source.year, source.month - 1, source.day) : new Date());
-    setPickerDraftRepeat(source?.repeat || (source?.isDaily ? 'daily' : 'none'));
+    setPickerDraftRepeat(source ? getEffectiveRepeatMode(source) : RepeatMode.none);
     setPickerDraftWeekdays(source?.weekdays || []);
     setPickerDraftCityId(selectedCityId ?? null);
   }, [visible, initialNotification, selectedCityId]);
@@ -380,19 +381,19 @@ export function NotificationModal({
         .join(', ');
     }
 
-    if (repeat === 'none') {
+    if (repeat === RepeatMode.none) {
       return null;
     }
 
-    if (repeat === 'daily') {
+    if (repeat === RepeatMode.daily) {
       return REPEAT_LABELS.daily;
     }
 
-    if (repeat === 'weekly') {
+    if (repeat === RepeatMode.weekly) {
       return REPEAT_LABELS.weekly;
     }
 
-    if (repeat === 'monthly') {
+    if (repeat === RepeatMode.monthly) {
       return REPEAT_LABELS.monthly;
     }
 
@@ -523,9 +524,9 @@ export function NotificationModal({
   };
 
   const clearRepeat = () => {
-    setRepeat('none');
+    setRepeat(RepeatMode.none);
     setWeekdays([]);
-    setPickerDraftRepeat('none');
+    setPickerDraftRepeat(RepeatMode.none);
     setPickerDraftWeekdays([]);
   };
 
@@ -538,9 +539,9 @@ export function NotificationModal({
     if (activePicker === 'date') {
       setNotificationDate(pickerDraftDate);
       setHasDate(true);
-      setRepeat('none');
+      setRepeat(RepeatMode.none);
       setWeekdays([]);
-      setPickerDraftRepeat('none');
+      setPickerDraftRepeat(RepeatMode.none);
       setPickerDraftWeekdays([]);
     }
 
@@ -552,7 +553,7 @@ export function NotificationModal({
 
     if (activePicker === 'weekdays') {
       setHasDate(false);
-      setRepeat('weekly');
+      setRepeat(RepeatMode.weekly);
       setWeekdays(pickerDraftWeekdays);
     }
 
@@ -851,67 +852,67 @@ export function NotificationModal({
         {activePicker === 'repeat' && (
           <View style={styles.repeatPickerList}>
             <Pressable
-              style={[styles.repeatPickerItem, pickerDraftRepeat === 'none' && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemActive]}
+              style={[styles.repeatPickerItem, pickerDraftRepeat === RepeatMode.none && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemActive]}
               onPress={() => {
-                setPickerDraftRepeat('none');
+                setPickerDraftRepeat(RepeatMode.none);
                 setPickerDraftWeekdays([]);
               }}
             >
               <Text style={[
                 styles.repeatPickerItemText,
-                pickerDraftRepeat === 'none' && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemTextActive
+                pickerDraftRepeat === RepeatMode.none && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemTextActive
               ]}>{REPEAT_LABELS.todayOnly}</Text>
             </Pressable>
 
             <Pressable
-              style={[styles.repeatPickerItem, pickerDraftRepeat === 'daily' && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemActive]}
+              style={[styles.repeatPickerItem, pickerDraftRepeat === RepeatMode.daily && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemActive]}
               onPress={() => {
-                setPickerDraftRepeat('daily');
+                setPickerDraftRepeat(RepeatMode.daily);
                 setPickerDraftWeekdays([]);
               }}
             >
               <Text style={[
                 styles.repeatPickerItemText,
-                pickerDraftRepeat === 'daily' && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemTextActive
+                pickerDraftRepeat === RepeatMode.daily && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemTextActive
               ]}>{REPEAT_LABELS.daily}</Text>
             </Pressable>
 
             <Pressable
-              style={[styles.repeatPickerItem, pickerDraftRepeat === 'weekly' && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemActive]}
+              style={[styles.repeatPickerItem, pickerDraftRepeat === RepeatMode.weekly && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemActive]}
               onPress={() => {
-                setPickerDraftRepeat('weekly');
+                setPickerDraftRepeat(RepeatMode.weekly);
                 setPickerDraftWeekdays([]);
               }}
             >
               <Text style={[
                 styles.repeatPickerItemText,
-                pickerDraftRepeat === 'weekly' && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemTextActive
+                pickerDraftRepeat === RepeatMode.weekly && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemTextActive
               ]}>{REPEAT_LABELS.weekly}</Text>
             </Pressable>
 
             <Pressable
-              style={[styles.repeatPickerItem, pickerDraftRepeat === 'monthly' && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemActive]}
+              style={[styles.repeatPickerItem, pickerDraftRepeat === RepeatMode.monthly && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemActive]}
               onPress={() => {
-                setPickerDraftRepeat('monthly');
+                setPickerDraftRepeat(RepeatMode.monthly);
                 setPickerDraftWeekdays([]);
               }}
             >
               <Text style={[
                 styles.repeatPickerItemText,
-                pickerDraftRepeat === 'monthly' && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemTextActive
+                pickerDraftRepeat === RepeatMode.monthly && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemTextActive
               ]}>{REPEAT_LABELS.monthly}</Text>
             </Pressable>
 
             <Pressable
-              style={[styles.repeatPickerItem, pickerDraftRepeat === 'yearly' && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemActive]}
+              style={[styles.repeatPickerItem, pickerDraftRepeat === RepeatMode.yearly && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemActive]}
               onPress={() => {
-                setPickerDraftRepeat('yearly');
+                setPickerDraftRepeat(RepeatMode.yearly);
                 setPickerDraftWeekdays([]);
               }}
             >
               <Text style={[
                 styles.repeatPickerItemText,
-                pickerDraftRepeat === 'yearly' && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemTextActive
+                pickerDraftRepeat === RepeatMode.yearly && pickerDraftWeekdays.length === 0 && styles.repeatPickerItemTextActive
               ]}>{REPEAT_LABELS.yearly}</Text>
             </Pressable>
 

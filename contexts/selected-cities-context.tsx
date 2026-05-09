@@ -3,8 +3,7 @@ import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { CityRow } from '@/components/add-city-modal';
-
-type RepeatMode = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 
 export type CityNotification = {
   id: string;
@@ -110,9 +109,9 @@ function isPastExplicitOneTimeNotification(
   year?: number,
   month?: number,
   day?: number,
-  repeat: RepeatMode = 'none'
+  repeat: RepeatMode = RepeatMode.none
 ) {
-  if (repeat !== 'none' || !year || !month || !day) {
+  if (repeat !== RepeatMode.none || !year || !month || !day) {
     return false;
   }
 
@@ -131,7 +130,7 @@ async function scheduleNotification(
   label?: string,
   notes?: string,
   url?: string,
-  repeat: RepeatMode = 'none',
+  repeat: RepeatMode = RepeatMode.none,
   weekdays: number[] = []
 ): Promise<string[] | null> {
   if (hour === undefined || minute === undefined) {
@@ -173,7 +172,7 @@ async function scheduleNotification(
   const body = notes ? `It's ${timeString} in ${cityName}\n${notes}` : `It's ${timeString} in ${cityName}`;
   const title = label || cityName;
 
-  if (repeat === 'none') {
+  if (repeat === RepeatMode.none) {
     if (anchorTrigger.getTime() <= Date.now()) {
       if (!hasExplicitDate) {
         const next = new Date(anchorYear, anchorMonth - 1, anchorDay + 1);
@@ -202,7 +201,7 @@ async function scheduleNotification(
     return [notificationId];
   }
 
-  if (repeat === 'daily') {
+  if (repeat === RepeatMode.daily) {
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title,
@@ -219,7 +218,7 @@ async function scheduleNotification(
     return [notificationId];
   }
 
-  if (repeat === 'weekly') {
+  if (repeat === RepeatMode.weekly) {
     const targetCityWeekdays = weekdays.length > 0 ? weekdays : [new Date().getDay()];
     const cityTodayWeekday = new Date(anchorYear, anchorMonth - 1, anchorDay).getDay();
     const uniqueTriggers = new Map<string, { weekday: number; hour: number; minute: number }>();
@@ -266,7 +265,7 @@ async function scheduleNotification(
     return ids;
   }
 
-  if (repeat === 'monthly') {
+  if (repeat === RepeatMode.monthly) {
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title,
@@ -444,7 +443,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
           notification.label,
           notification.notes,
           notification.url,
-          notification.repeat || (notification.isDaily ? 'daily' : 'none'),
+          getEffectiveRepeatMode(notification),
           notification.weekdays || []
         );
 
@@ -456,7 +455,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
             notification.year,
             notification.month,
             notification.day,
-            notification.repeat || (notification.isDaily ? 'daily' : 'none')
+            getEffectiveRepeatMode(notification)
           )
             ? 'past'
             : notification.inactiveReason;
@@ -512,7 +511,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     return () => subscription.remove();
   }, [isLoaded]);
 
-  const addNotification = async (cityId: number, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat: RepeatMode = 'none', weekdays: number[] = []) => {
+  const addNotification = async (cityId: number, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat: RepeatMode = RepeatMode.none, weekdays: number[] = []) => {
     const city = selectedCitiesRef.current.find(c => c.id === cityId);
     if (!city) return false;
 
@@ -561,7 +560,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       inactiveReason,
       notificationId: notificationIds?.[0],
       notificationIds: notificationIds || undefined,
-      isDaily: repeat === 'daily',
+      isDaily: repeat === RepeatMode.daily,
     };
 
     setSelectedCities((prev) => {
@@ -583,7 +582,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
-  const updateNotification = async (cityId: number, notificationId: string, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat: RepeatMode = 'none', weekdays: number[] = []) => {
+  const updateNotification = async (cityId: number, notificationId: string, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat: RepeatMode = RepeatMode.none, weekdays: number[] = []) => {
     const city = selectedCitiesRef.current.find(c => c.id === cityId);
     const notification = city?.notifications?.find(n => n.id === notificationId);
 
@@ -645,7 +644,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
                     inactiveReason,
                     notificationId: newSystemNotificationIds?.[0],
                     notificationIds: newSystemNotificationIds || undefined,
-                    isDaily: repeat === 'daily',
+                    isDaily: repeat === RepeatMode.daily,
                   }
                 : n
             ),
@@ -701,7 +700,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
         notification.year,
         notification.month,
         notification.day,
-        notification.repeat || (notification.isDaily ? 'daily' : 'none')
+        getEffectiveRepeatMode(notification)
       );
 
       let newNotificationId: string[] | null = null;
@@ -723,7 +722,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
             notification.label,
             notification.notes,
             notification.url,
-            notification.repeat || (notification.isDaily ? 'daily' : 'none'),
+            getEffectiveRepeatMode(notification),
             notification.weekdays || []
           );
 

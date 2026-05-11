@@ -28,10 +28,15 @@ import {
   getMidnightLabelForTimezone,
   getNotificationCountForHour,
 } from '@/features/Timeline/helpers';
+import {
+  TIMELINE_EDGE_PULL_MAX,
+  TIMELINE_EDGE_PULL_TRIGGER,
+} from '@/features/Timeline/constants';
 import { createStyles } from '@/features/Timeline/HourStrip.styles';
 
 type TimelineHourStripProps = {
   x: SharedValue<number>;
+  edgePull: SharedValue<number>;
   minX: number;
   maxX: number;
   enabled: boolean;
@@ -46,10 +51,13 @@ type TimelineHourStripProps = {
   onScrollSettled?: (focusedHourIndex: number) => void;
   onNavigateDayBackward: () => void;
   onNavigateDayForward: () => void;
+  onEdgeNavigateDayBackward?: () => void;
+  onEdgeNavigateDayForward?: () => void;
 };
 
 function TimelineHourStripComponent({
   x,
+  edgePull,
   minX,
   maxX,
   enabled,
@@ -64,6 +72,8 @@ function TimelineHourStripComponent({
   onScrollSettled,
   onNavigateDayBackward,
   onNavigateDayForward,
+  onEdgeNavigateDayBackward,
+  onEdgeNavigateDayForward,
 }: TimelineHourStripProps) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -109,11 +119,33 @@ function TimelineHourStripComponent({
         }
 
         startX.value = x.value;
+        edgePull.value = 0;
       })
       .onUpdate((event) => {
-        x.value = clamp(startX.value - event.translationX, minX, maxX);
+        const rawOffset = startX.value - event.translationX;
+        const clampedOffset = clamp(rawOffset, minX, maxX);
+        const overflow = rawOffset - clampedOffset;
+
+        x.value = clampedOffset;
+        edgePull.value = clamp(-overflow * 0.35, -TIMELINE_EDGE_PULL_MAX, TIMELINE_EDGE_PULL_MAX);
       })
       .onEnd((event) => {
+        const pullOffset = edgePull.value;
+        const shouldGoPrevious = x.value <= minX && pullOffset >= TIMELINE_EDGE_PULL_TRIGGER;
+        const shouldGoNext = x.value >= maxX && pullOffset <= -TIMELINE_EDGE_PULL_TRIGGER;
+
+        edgePull.value = withSpring(0, { duration: 220 });
+
+        if (shouldGoPrevious) {
+          runOnJS(onEdgeNavigateDayBackward || onNavigateDayBackward)();
+          return;
+        }
+
+        if (shouldGoNext) {
+          runOnJS(onEdgeNavigateDayForward || onNavigateDayForward)();
+          return;
+        }
+
         const projectedOffset = clamp(x.value - event.velocityX * 0.12, minX, maxX);
         const localHourIndex = Math.round(
           (projectedOffset + width / 2 - sidePad - TIMELINE_CELL_WIDTH / 2) / TIMELINE_CELL_WIDTH
@@ -136,9 +168,14 @@ function TimelineHourStripComponent({
         });
       });
   }, [
+    edgePull,
     enabled,
     maxX,
     minX,
+    onNavigateDayBackward,
+    onNavigateDayForward,
+    onEdgeNavigateDayBackward,
+    onEdgeNavigateDayForward,
     onScrollSettled,
     onUserInteraction,
     sidePad,
@@ -151,7 +188,7 @@ function TimelineHourStripComponent({
   ]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: -x.value }],
+    transform: [{ translateX: -x.value + edgePull.value }],
   }));
 
   return (
@@ -225,6 +262,7 @@ export const HourStrip = React.memo(
   TimelineHourStripComponent,
   (prevProps, nextProps) =>
     prevProps.x === nextProps.x &&
+    prevProps.edgePull === nextProps.edgePull &&
     prevProps.minX === nextProps.minX &&
     prevProps.maxX === nextProps.maxX &&
     prevProps.enabled === nextProps.enabled &&
@@ -238,5 +276,7 @@ export const HourStrip = React.memo(
   prevProps.onUserInteraction === nextProps.onUserInteraction &&
   prevProps.onScrollSettled === nextProps.onScrollSettled &&
   prevProps.onNavigateDayBackward === nextProps.onNavigateDayBackward &&
-  prevProps.onNavigateDayForward === nextProps.onNavigateDayForward
+  prevProps.onNavigateDayForward === nextProps.onNavigateDayForward &&
+  prevProps.onEdgeNavigateDayBackward === nextProps.onEdgeNavigateDayBackward &&
+  prevProps.onEdgeNavigateDayForward === nextProps.onEdgeNavigateDayForward
 );

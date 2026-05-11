@@ -198,6 +198,7 @@ export default function TimelineScreen() {
   );
 
   const x = useSharedValue(0);
+  const edgePull = useSharedValue(0);
   const hasInitializedScrollRef = useRef(false);
 
   const applyScrollOffsetForHourIndex = useCallback(
@@ -325,6 +326,26 @@ export default function TimelineScreen() {
       setFocusedHourIndex(nextFocusedHourIndex);
     });
   }, [focusedHourIndex, runDayTransition, selectedDay]);
+
+  const handleEdgeNavigateDayBackward = useCallback(() => {
+    runDayTransition(() => {
+      const nextDay = shiftLocalDay(selectedDay, -1);
+      const nextFocusedHourIndex = getHourIndexForDate(nextDay) + 23;
+
+      setSelectedDay(nextDay);
+      setFocusedHourIndex(nextFocusedHourIndex);
+    });
+  }, [runDayTransition, selectedDay]);
+
+  const handleEdgeNavigateDayForward = useCallback(() => {
+    runDayTransition(() => {
+      const nextDay = shiftLocalDay(selectedDay, 1);
+      const nextFocusedHourIndex = getHourIndexForDate(nextDay);
+
+      setSelectedDay(nextDay);
+      setFocusedHourIndex(nextFocusedHourIndex);
+    });
+  }, [runDayTransition, selectedDay]);
 
   const handleOpenDayPicker = useCallback(() => {
     if (isDayTransitioningRef.current) {
@@ -455,6 +476,7 @@ export default function TimelineScreen() {
           <View style={styles.timelineRowContainer}>
             <HourStrip
               x={x}
+              edgePull={edgePull}
               minX={minScrollX}
               maxX={maxScrollX}
               enabled={!dragging && !isEditMode}
@@ -469,6 +491,8 @@ export default function TimelineScreen() {
               onScrollSettled={handleTimelineScrollSettled}
               onNavigateDayBackward={() => shiftDayBy(-1)}
               onNavigateDayForward={() => shiftDayBy(1)}
+              onEdgeNavigateDayBackward={handleEdgeNavigateDayBackward}
+              onEdgeNavigateDayForward={handleEdgeNavigateDayForward}
             />
           </View>
         </Pressable>
@@ -524,6 +548,7 @@ export default function TimelineScreen() {
           <View style={styles.timelineRowContainer}>
             <LocalReferenceStrip
               x={x}
+              edgePull={edgePull}
               minX={minScrollX}
               maxX={maxScrollX}
               enabled={!dragging && !isEditMode}
@@ -538,6 +563,8 @@ export default function TimelineScreen() {
               onScrollSettled={handleTimelineScrollSettled}
               onNavigateDayBackward={() => shiftDayBy(-1)}
               onNavigateDayForward={() => shiftDayBy(1)}
+              onEdgeNavigateDayBackward={handleEdgeNavigateDayBackward}
+              onEdgeNavigateDayForward={handleEdgeNavigateDayForward}
             />
           </View>
         </View>

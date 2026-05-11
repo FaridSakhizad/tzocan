@@ -49,6 +49,8 @@ import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
 import IconDelete from '@/assets/images/icon--delete-3.svg';
 import IconReset from '@/assets/images/icon--reset-1.svg';
 
+import IconCalendar from '@/assets/images/icon--calendar-2--outlined.svg';
+
 import { createStyles } from './Timeline.styles';
 
 function clampOffset(value: number, min: number, max: number) {
@@ -583,54 +585,59 @@ export default function TimelineScreen() {
             },
           ]}
         />
-
-        <View style={styles.resetBar} pointerEvents="box-none">
-          <Pressable style={styles.resetButtonPressable} onPress={handleResetTimeline}>
-            <View style={styles.resetButton}>
-              <IconReset
-                style={styles.resetButtonIcon}
-                fill={theme.surface.button.subtleStrong}
-              />
-            </View>
-          </Pressable>
-        </View>
       </Animated.View>
 
       <View style={styles.daySelectorBar}>
-        <View style={styles.daySelector}>
-          <Pressable
-            style={styles.daySelectorButton}
-            onPress={() => shiftDayBy(-1)}
-            disabled={isDayTransitioning}
-          >
-            <Arrow1
-              style={[styles.daySelectorButtonIcon, styles.daySelectorButtonIconRight]}
-              fill={theme.text.primary}
-            />
-          </Pressable>
-          <Pressable
-            style={styles.daySelectorCenter}
-            onPress={handleOpenDayPicker}
-            disabled={isDayTransitioning}
-          >
-            <Text style={styles.daySelectorWeekdayText}>
-              {focusedDateTime.toLocaleDateString(locale, {
-                weekday: 'long',
-              })}
-            </Text>
-            <Text style={styles.daySelectorDateText}>{selectedDayLabel.monthDay}</Text>
-            {selectedDayLabel.year ? (
-              <Text style={styles.daySelectorYearText}>{selectedDayLabel.year}</Text>
-            ) : null}
-          </Pressable>
-          <Pressable
-            style={styles.daySelectorButton}
-            onPress={() => shiftDayBy(1)}
-            disabled={isDayTransitioning}
-          >
-            <Arrow1 style={styles.daySelectorButtonIcon} fill={theme.text.primary} />
-          </Pressable>
-        </View>
+        <Pressable
+          style={styles.daySwitchButton}
+          onPress={() => shiftDayBy(-1)}
+          disabled={isDayTransitioning}
+        >
+          <Arrow1
+            style={[styles.daySelectorButtonIcon, styles.daySelectorButtonIconRight]}
+            fill={theme.text.primary}
+          />
+        </Pressable>
+
+        <Pressable style={styles.resetButton} onPress={handleResetTimeline}>
+          <IconReset
+            style={styles.resetButtonIcon}
+            fill={theme.text.primary}
+          />
+        </Pressable>
+
+        <Pressable
+          style={styles.daySelectorCenter}
+          onPress={handleOpenDayPicker}
+          disabled={isDayTransitioning}
+        >
+          <Text style={styles.daySelectorWeekdayText}>
+            {focusedDateTime.toLocaleDateString(locale, {
+              weekday: 'long',
+            })}
+          </Text>
+          <Text style={styles.daySelectorDateText}>{selectedDayLabel.monthDay}</Text>
+          {selectedDayLabel.year && (<Text style={styles.daySelectorYearText}>{selectedDayLabel.year}</Text>)}
+        </Pressable>
+
+        <Pressable
+          style={styles.selectDayButton}
+          onPress={handleOpenDayPicker}
+          disabled={isDayTransitioning}
+        >
+          <IconCalendar
+            style={styles.selectDayButtonIcon}
+            fill={theme.text.primary}
+          />
+        </Pressable>
+
+        <Pressable
+          style={styles.daySwitchButton}
+          onPress={() => shiftDayBy(1)}
+          disabled={isDayTransitioning}
+        >
+          <Arrow1 style={styles.daySelectorButtonIcon} fill={theme.text.primary} />
+        </Pressable>
       </View>
 
       <AddCityModal

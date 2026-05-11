@@ -11,6 +11,48 @@ export function createStyles(theme: UiTheme) {
     timelineContent: {
       flexDirection: 'row',
     },
+    sidePad: {
+      flexDirection: 'row',
+      alignItems: 'center'
+    },
+    sidePadLeft: {
+      paddingRight: 5,
+    },
+    sidePadRight: {
+      paddingLeft: 5,
+    },
+    navBlock: {
+      flexDirection: 'row',
+      borderWidth: 1,
+      borderColor: theme.border.muted,
+      height: 24,
+      flex: 1,
+    },
+    navBlockLeft: {
+      justifyContent: 'flex-end',
+      borderTopRightRadius: 10,
+      borderBottomRightRadius: 10,
+      borderLeftWidth: 0,
+    },
+    navBlockRight: {
+      justifyContent: 'flex-start',
+      borderTopLeftRadius: 10,
+      borderBottomLeftRadius: 10,
+      borderRightWidth: 0,
+    },
+    navBlockIconBox: {
+      width: 64,
+      height: 22,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    navArrow: {
+      width: 18,
+      height: 18
+    },
+    navArrowLeft: {
+      transform: [{ rotate: '180deg' }],
+    },
     hourBox: {
       width: TIMELINE_CELL_WIDTH,
       alignItems: 'center',
@@ -24,14 +66,6 @@ export function createStyles(theme: UiTheme) {
       borderColor: theme.border.muted,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    navBlock: {},
-    navArrow: {
-      width: 16,
-      height: 16,
-    },
-    navArrowLeft: {
-      transform: [{ rotate: '180deg' }],
     },
     hourLabelRow: {
       flexDirection: 'row',

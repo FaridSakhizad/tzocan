@@ -177,7 +177,7 @@ export default function TimelineScreen() {
   const startHourIndex = hourIndices[0] ?? getHourIndexForDate(selectedDay);
   const focusedDayStartHourIndex = getHourIndexForDate(selectedDay);
   const sidePad = Math.max(0, width / 2 - TIMELINE_CELL_WIDTH / 2);
-  const timelineWidth = (hourIndices.length + 2) * TIMELINE_CELL_WIDTH + sidePad * 2;
+  const timelineWidth = hourIndices.length * TIMELINE_CELL_WIDTH + sidePad * 2;
   const firstFocusableHourIndex = focusedDayStartHourIndex;
   const lastFocusableHourIndex = focusedDayStartHourIndex + 23;
   const minScrollX = clampOffset(

@@ -117,16 +117,14 @@ function TimelineHourStripComponent({
         const projectedOffset = clamp(x.value - event.velocityX * 0.12, minX, maxX);
         const localHourIndex = Math.round(
           (projectedOffset + width / 2 - sidePad - TIMELINE_CELL_WIDTH / 2) / TIMELINE_CELL_WIDTH
-        ) - 1;
+        );
         const rawFocusedHourIndex = startHourIndex + localHourIndex;
         const focusedHourIndex = Math.max(
           minFocusableHourIndex,
           Math.min(maxFocusableHourIndex, rawFocusedHourIndex)
         );
         const targetOffset = clamp(
-          sidePad +
-            ((focusedHourIndex - startHourIndex + 1) + 0.5) * TIMELINE_CELL_WIDTH -
-            width / 2,
+          sidePad + (focusedHourIndex - startHourIndex + 0.5) * TIMELINE_CELL_WIDTH - width / 2,
           minX,
           maxX
         );
@@ -160,14 +158,15 @@ function TimelineHourStripComponent({
     <GestureDetector gesture={pan}>
       <View style={styles.timelineViewport}>
         <Animated.View style={[styles.timelineContent, { width: timelineWidth }, animatedStyle]}>
-          <View style={{ width: sidePad }} />
 
-          <View style={styles.hourBox}>
-            <Pressable onPress={onNavigateDayBackward} style={[styles.hourBlock, styles.navBlock]}>
-              <Arrow1
-                style={[styles.navArrow, styles.navArrowLeft]}
-                fill={theme.text.primary}
-              />
+          <View style={[styles.sidePad, styles.sidePadLeft, { width: sidePad }]}>
+            <Pressable onPress={onNavigateDayBackward} style={[styles.navBlock, styles.navBlockLeft]}>
+              <View style={styles.navBlockIconBox}>
+                <Arrow1
+                  style={[styles.navArrow, styles.navArrowLeft]}
+                  fill={theme.text.primary}
+                />
+              </View>
             </Pressable>
           </View>
 
@@ -209,13 +208,13 @@ function TimelineHourStripComponent({
             </View>
           ))}
 
-          <View style={styles.hourBox}>
-            <Pressable onPress={onNavigateDayForward} style={[styles.hourBlock, styles.navBlock]}>
-              <Arrow1 style={styles.navArrow} fill={theme.text.primary} />
+          <View style={[styles.sidePad, styles.sidePadRight, { width: sidePad }]}>
+            <Pressable onPress={onNavigateDayForward} style={[styles.navBlock, styles.navBlockRight]}>
+              <View style={styles.navBlockIconBox}>
+                <Arrow1 style={styles.navArrow} fill={theme.text.primary} />
+              </View>
             </Pressable>
           </View>
-
-          <View style={{ width: sidePad }} />
         </Animated.View>
       </View>
     </GestureDetector>

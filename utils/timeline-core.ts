@@ -2,7 +2,6 @@ export const TIMELINE_HOUR_MS = 60 * 60 * 1000;
 export const TIMELINE_DAY_HOURS = 24;
 export const TIMELINE_VISIBLE_HOURS = TIMELINE_DAY_HOURS;
 export const TIMELINE_CELL_WIDTH = 74;
-export const TIMELINE_NAV_LEADING_CELLS = 1;
 
 export function getHourIndexForDate(date: Date) {
   return Math.floor(date.getTime() / TIMELINE_HOUR_MS);
@@ -42,7 +41,7 @@ export function getFocusedHourIndexFromScrollOffset(
 ) {
   const localHourIndex = Math.round(
     (scrollOffset + viewportWidth / 2 - sidePad - cellWidth / 2) / cellWidth
-  ) - TIMELINE_NAV_LEADING_CELLS;
+  );
 
   return startHourIndex + localHourIndex;
 }
@@ -54,6 +53,6 @@ export function getScrollOffsetForHourIndex(
   sidePad: number,
   cellWidth = TIMELINE_CELL_WIDTH
 ) {
-  const localSlotIndex = hourIndex - startHourIndex + TIMELINE_NAV_LEADING_CELLS;
+  const localSlotIndex = hourIndex - startHourIndex;
   return sidePad + (localSlotIndex + 0.5) * cellWidth - viewportWidth / 2;
 }

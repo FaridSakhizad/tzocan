@@ -17,7 +17,7 @@ import { AddCityModal, type CityRow } from '@/components/add-city-modal';
 import { CitySortPickerModal } from '@/components/city-sort-picker-modal';
 import { DeleteCityModal } from '@/components/delete-city-modal';
 import { HourStrip } from '@/features/Timeline/HourStrip';
-import { LocalReferenceRow } from '@/features/Timeline/LocalReferenceRow';
+import { LocalReferenceStrip } from '@/features/Timeline/LocalReferenceStrip';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useEditMode } from '@/contexts/edit-mode-context';
 import { CityOrderMode, useNotificationsSort } from '@/contexts/notifications-sort-context';
@@ -454,25 +454,37 @@ export default function TimelineScreen() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <Animated.View style={[styles.timelineContent, { opacity: contentOpacity }]}>
-        <LocalReferenceRow
-          x={x}
-          minX={minScrollX}
-          maxX={maxScrollX}
-          enabled={!dragging && !isEditMode}
-          locale={locale}
-          sidePad={sidePad}
-          hourIndices={hourIndices}
-          timelineWidth={timelineWidth}
-          timeFormat={timeFormat}
-          width={width}
-          currentTimeText={getCurrentTimeInTimezone(localTimezone, locale, timeFormat, nowDate)}
-          title={t('common.yourTime')}
-          timezone={localTimezone}
-          onUserInteraction={handleTimelineInteraction}
-          onScrollSettled={handleTimelineScrollSettled}
-          onNavigateDayBackward={() => shiftDayBy(-1)}
-          onNavigateDayForward={() => shiftDayBy(1)}
-        />
+        <View style={styles.referenceRow}>
+          <View style={styles.referenceRowHeader}>
+            <Text style={styles.referenceRowTitle} numberOfLines={1}>
+              {t('common.yourTime')}
+            </Text>
+
+            <Text style={styles.referenceRowCurrentTime} numberOfLines={1}>
+              {getCurrentTimeInTimezone(localTimezone, locale, timeFormat, nowDate)}
+            </Text>
+          </View>
+
+          <View style={styles.timelineRowContainer}>
+            <LocalReferenceStrip
+              x={x}
+              minX={minScrollX}
+              maxX={maxScrollX}
+              enabled={!dragging && !isEditMode}
+              locale={locale}
+              sidePad={sidePad}
+              hourIndices={hourIndices}
+              timelineWidth={timelineWidth}
+              timeFormat={timeFormat}
+              timezone={localTimezone}
+              width={width}
+              onUserInteraction={handleTimelineInteraction}
+              onScrollSettled={handleTimelineScrollSettled}
+              onNavigateDayBackward={() => shiftDayBy(-1)}
+              onNavigateDayForward={() => shiftDayBy(1)}
+            />
+          </View>
+        </View>
 
         <View style={styles.listContentContainer}>
           {selectedCities.length < 1 ? (

@@ -33,6 +33,33 @@ export function createStyles(theme: UiTheme) {
       flex: 1,
       position: 'relative',
     },
+    referenceRow: {
+      backgroundColor: theme.surface.elevatedMuted,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border.muted,
+      paddingBottom: 10,
+      paddingTop: 3,
+      position: 'relative',
+      zIndex: 100,
+    },
+    referenceRowHeader: {
+      paddingHorizontal: 22,
+      paddingBottom: 3,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    referenceRowTitle: {
+      flex: 1,
+      fontSize: 14,
+      lineHeight: 20,
+      color: theme.text.primary,
+    },
+    referenceRowCurrentTime: {
+      fontSize: 14,
+      lineHeight: 20,
+      color: theme.text.primary,
+      textAlign: 'right',
+    },
     listContentContainer: {
       flex: 1,
       overflow: 'hidden',

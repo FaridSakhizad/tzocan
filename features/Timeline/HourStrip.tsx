@@ -248,7 +248,10 @@ function TimelineHourStripComponent({
           <View style={[styles.sidePad, styles.sidePadRight, { width: sidePad }]}>
             <Pressable onPress={onNavigateDayForward} style={[styles.navBlock, styles.navBlockRight]}>
               <View style={styles.navBlockIconBox}>
-                <Arrow1 style={styles.navArrow} fill={theme.text.primary} />
+                <Arrow1
+                  style={styles.navArrow}
+                  fill={theme.text.primary}
+                />
               </View>
             </Pressable>
           </View>

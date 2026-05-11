@@ -52,6 +52,7 @@ export function createStyles(theme: UiTheme) {
       lineHeight: 16,
       color: theme.text.warning,
       textTransform: 'capitalize',
+      paddingHorizontal: 10,
     },
     sideDateTextLeft: {
       textAlign: 'right',

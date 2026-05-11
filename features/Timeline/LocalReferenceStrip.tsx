@@ -217,15 +217,13 @@ function LocalReferenceStripComponent({
         <Animated.View style={[styles.timelineContent, { width: timelineWidth }, animatedStyle]}>
           <View style={[styles.sidePad, styles.sidePadLeft, { width: sidePad }]}>
             <Pressable onPress={onNavigateDayBackward} style={[styles.navBlock, styles.navBlockLeft]}>
+              <Arrow1
+                style={[styles.navArrow, styles.navArrowLeft]}
+                fill={theme.text.warning}
+              />
               <Text style={[styles.sideDateText, styles.sideDateTextLeft]} numberOfLines={1}>
                 {sideDates.previous}
               </Text>
-              <View style={styles.navBlockIconBox}>
-                <Arrow1
-                  style={[styles.navArrow, styles.navArrowLeft]}
-                  fill={theme.text.warning}
-                />
-              </View>
             </Pressable>
           </View>
 
@@ -255,15 +253,13 @@ function LocalReferenceStripComponent({
 
           <View style={[styles.sidePad, styles.sidePadRight, { width: sidePad }]}>
             <Pressable onPress={onNavigateDayForward} style={[styles.navBlock, styles.navBlockRight]}>
-              <View style={styles.navBlockIconBox}>
-                <Arrow1
-                  style={styles.navArrow}
-                  fill={theme.text.warning}
-                />
-              </View>
               <Text style={[styles.sideDateText, styles.sideDateTextRight]} numberOfLines={1}>
                 {sideDates.next}
               </Text>
+              <Arrow1
+                style={styles.navArrow}
+                fill={theme.text.warning}
+              />
             </Pressable>
           </View>
         </Animated.View>

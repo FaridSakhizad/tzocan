@@ -1,4 +1,3 @@
-export const DAY_SELECTOR_HEIGHT = 60;
 export const TIMELINE_CELL_WIDTH = 74;
 
 export const DAY_TRANSITION_DURATION_MS = 200;

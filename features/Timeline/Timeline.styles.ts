@@ -2,10 +2,7 @@ import type { UiTheme } from '@/constants/ui-theme.types';
 
 import { StyleSheet } from 'react-native';
 
-import {
-  DAY_SELECTOR_HEIGHT,
-  TIMELINE_CELL_WIDTH
-} from './constants';
+import { TIMELINE_CELL_WIDTH } from './constants';
 
 export function createStyles(theme: UiTheme) {
   return StyleSheet.create({

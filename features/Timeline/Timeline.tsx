@@ -46,7 +46,7 @@ import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
 import IconDelete from '@/assets/images/icon--delete-3.svg';
 import IconReset from '@/assets/images/icon--reset-1.svg';
 
-import { createStyles } from './styles';
+import { createStyles } from './Timeline.styles';
 
 function clampOffset(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));

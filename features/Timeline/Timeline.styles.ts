@@ -124,7 +124,7 @@ export function createStyles(theme: UiTheme) {
       justifyContent: 'center',
     },
     resetButton: {
-      borderRadius: theme.radius.lg,
+      borderRadius: 10,
       width: 20,
       height: 20,
       backgroundColor: theme.surface.button.primary,

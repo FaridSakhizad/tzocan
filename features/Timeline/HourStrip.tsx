@@ -22,6 +22,7 @@ import {
   getFocusedDateTimeFromHourIndex,
   TIMELINE_CELL_WIDTH,
 } from '@/utils/timeline-core';
+import { createStyles } from '@/features/Timeline/HourStrip.styles';
 
 type TimelineHourStripProps = {
   x: SharedValue<number>;
@@ -411,96 +412,3 @@ export const HourStrip = React.memo(
     prevProps.onNavigateDayBackward === nextProps.onNavigateDayBackward &&
     prevProps.onNavigateDayForward === nextProps.onNavigateDayForward
 );
-
-function createStyles(theme: UiTheme) {
-  return StyleSheet.create({
-    timelineViewport: {
-      overflow: 'hidden',
-      paddingBottom: 11,
-    },
-    timelineContent: {
-      flexDirection: 'row',
-    },
-    hourBox: {
-      width: TIMELINE_CELL_WIDTH,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    hourBlock: {
-      width: 64,
-      height: 64,
-      paddingTop: 4,
-      borderRadius: theme.radius.lg,
-      backgroundColor: theme.surface.fieldStrong,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    navBlock: {
-      paddingTop: 0,
-    },
-    navArrow: {
-      width: 18,
-      height: 18,
-    },
-    navArrowLeft: {
-      transform: [{ rotate: '180deg' }],
-    },
-    hourBlock12hFormat: {
-      paddingTop: 11,
-      justifyContent: 'flex-start',
-    },
-    hourBlockMidnight: {
-      paddingTop: 0,
-      justifyContent: 'center',
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    },
-    midnightWeekday: {
-      fontSize: 16,
-      lineHeight: 18,
-      color: theme.text.primary,
-      textTransform: 'capitalize',
-    },
-    midnightMonthDay: {
-      fontSize: 16,
-      lineHeight: 18,
-      color: theme.text.primary,
-      textTransform: 'capitalize',
-    },
-    hourBlockHour: {
-      fontSize: 36,
-      lineHeight: 36,
-      fontWeight: '300',
-      color: theme.text.primary,
-    },
-    hourBlockAmPm: {
-      fontSize: 14,
-      lineHeight: 14,
-      color: theme.text.primary,
-      top: -3,
-      textTransform: 'uppercase',
-    },
-    notificationCountBadge: {
-      position: 'absolute',
-      bottom: -8,
-      minWidth: 18,
-      height: 15,
-      borderRadius: 8,
-      paddingHorizontal: 5,
-      flexDirection: 'row',
-      gap: 2,
-      alignSelf: 'center',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.surface.button.primary,
-    },
-    notificationCountIcon: {
-      width: 9,
-      height: 9,
-    },
-    notificationCountText: {
-      fontSize: 12,
-      lineHeight: 13,
-      color: theme.surface.button.subtleMedium,
-    },
-  });
-}

@@ -65,6 +65,8 @@ export function createStyles(theme: UiTheme) {
       flex: 1,
       overflow: 'hidden',
       position: 'relative',
+      zIndex: 20,
+      elevation: 20,
     },
     listContent: {
       position: 'relative',
@@ -75,8 +77,8 @@ export function createStyles(theme: UiTheme) {
     },
     middleMarker: {
       position: 'absolute',
-      zIndex: 10,
-      elevation: 10,
+      zIndex: 1,
+      elevation: 1,
       top: 0,
       bottom: 0,
       width: TIMELINE_CELL_WIDTH,
@@ -200,10 +202,20 @@ export function createStyles(theme: UiTheme) {
     daySelectorWeekdayText: {
       color: theme.text.primary,
       fontSize: 14,
+      lineHeight: 18,
     },
     daySelectorDateText: {
       color: theme.text.primary,
       fontSize: 18,
+      lineHeight: 18,
+    },
+    daySelectorYearText: {
+      color: theme.text.primary,
+      fontSize: 14,
+      lineHeight: 18,
+    },
+    datePicker: {
+      height: 140,
     },
   });
 }

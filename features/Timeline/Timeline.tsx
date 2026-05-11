@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Animated, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
@@ -16,6 +17,7 @@ import { useSharedValue } from 'react-native-reanimated';
 import { AddCityModal, type CityRow } from '@/components/add-city-modal';
 import { CitySortPickerModal } from '@/components/city-sort-picker-modal';
 import { DeleteCityModal } from '@/components/delete-city-modal';
+import { NotificationPickerModal } from '@/components/notification-picker-modal';
 import { HourStrip } from '@/features/Timeline/HourStrip';
 import { LocalReferenceStrip } from '@/features/Timeline/LocalReferenceStrip';
 import { useAppTheme } from '@/contexts/app-theme-context';
@@ -120,6 +122,8 @@ export default function TimelineScreen() {
   const [cityPendingDelete, setCityPendingDelete] = useState<SelectedCity | null>(null);
   const [draftCityOrder, setDraftCityOrder] = useState<CityOrderMode>(sortState.cityOrder);
   const [isDayTransitioning, setIsDayTransitioning] = useState(false);
+  const [isDayPickerVisible, setIsDayPickerVisible] = useState(false);
+  const [pickerDraftDay, setPickerDraftDay] = useState(() => getLocalDayStart(new Date()));
   const contentOpacity = useRef(new Animated.Value(1)).current;
   const isDayTransitioningRef = useRef(false);
 
@@ -320,6 +324,49 @@ export default function TimelineScreen() {
     });
   }, [focusedHourIndex, runDayTransition, selectedDay]);
 
+  const handleOpenDayPicker = useCallback(() => {
+    if (isDayTransitioningRef.current) {
+      return;
+    }
+
+    setPickerDraftDay(selectedDay);
+    setIsDayPickerVisible(true);
+  }, [selectedDay]);
+
+  const handleCloseDayPicker = useCallback(() => {
+    setIsDayPickerVisible(false);
+  }, []);
+
+  const handlePickerDayChange = useCallback(
+    (_event: DateTimePickerEvent, nextDate?: Date) => {
+      if (!nextDate) {
+        return;
+      }
+
+      setPickerDraftDay(getLocalDayStart(nextDate));
+    },
+    []
+  );
+
+  const handleApplyPickedDay = useCallback(() => {
+    const nextDay = getLocalDayStart(pickerDraftDay);
+    const currentDay = getLocalDayStart(selectedDay);
+
+    setIsDayPickerVisible(false);
+
+    if (nextDay.getTime() === currentDay.getTime()) {
+      return;
+    }
+
+    runDayTransition(() => {
+      const currentOffsetWithinDay = focusedHourIndex - getHourIndexForDate(selectedDay);
+      const nextFocusedHourIndex = getHourIndexForDate(nextDay) + currentOffsetWithinDay;
+
+      setSelectedDay(nextDay);
+      setFocusedHourIndex(nextFocusedHourIndex);
+    });
+  }, [focusedHourIndex, pickerDraftDay, runDayTransition, selectedDay]);
+
   const handleApplyCitySort = useCallback(() => {
     setSortState({
       ...sortState,
@@ -333,16 +380,23 @@ export default function TimelineScreen() {
     [focusedHourIndex]
   );
 
-  const selectedDayMonthDay = useMemo(() => {
+  const selectedDayLabel = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const includeYear = focusedDateTime.getFullYear() !== currentYear;
     const parts = new Intl.DateTimeFormat(locale, {
       month: 'long',
       day: 'numeric',
+      ...(includeYear ? { year: 'numeric' } : {}),
     }).formatToParts(focusedDateTime);
 
     const month = parts.find((part) => part.type === 'month')?.value ?? '';
     const day = parts.find((part) => part.type === 'day')?.value ?? '';
+    const year = parts.find((part) => part.type === 'year')?.value ?? '';
 
-    return `${month}, ${day}`;
+    return {
+      monthDay: `${month}, ${day}`,
+      year: includeYear && year ? year : null,
+    };
   }, [focusedDateTime, locale]);
 
   const renderCityRow = useCallback(
@@ -556,7 +610,7 @@ export default function TimelineScreen() {
           </Pressable>
           <Pressable
             style={styles.daySelectorCenter}
-            onPress={handleResetTimeline}
+            onPress={handleOpenDayPicker}
             disabled={isDayTransitioning}
           >
             <Text style={styles.daySelectorWeekdayText}>
@@ -564,7 +618,10 @@ export default function TimelineScreen() {
                 weekday: 'long',
               })}
             </Text>
-            <Text style={styles.daySelectorDateText}>{selectedDayMonthDay}</Text>
+            <Text style={styles.daySelectorDateText}>{selectedDayLabel.monthDay}</Text>
+            {selectedDayLabel.year ? (
+              <Text style={styles.daySelectorYearText}>{selectedDayLabel.year}</Text>
+            ) : null}
           </Pressable>
           <Pressable
             style={styles.daySelectorButton}
@@ -600,6 +657,22 @@ export default function TimelineScreen() {
         onClose={closeSortPicker}
         onApply={handleApplyCitySort}
       />
+
+      <NotificationPickerModal
+        visible={isDayPickerVisible}
+        title={t('timeline.chooseDay')}
+        onClose={handleCloseDayPicker}
+        onApply={handleApplyPickedDay}
+      >
+        <DateTimePicker
+          value={pickerDraftDay}
+          mode="date"
+          display="spinner"
+          onChange={handlePickerDayChange}
+          style={styles.datePicker}
+          textColor={theme.text.primary}
+        />
+      </NotificationPickerModal>
     </GestureHandlerRootView>
   );
 }

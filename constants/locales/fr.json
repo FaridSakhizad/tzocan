@@ -73,6 +73,7 @@
   "index.emptyHint": "Touchez le bouton + pour ajouter une ville.",
   "city.fallbackName": "cette ville",
   "cities.sortTitle": "Trier les villes",
+  "timeline.chooseDay": "Choisir le jour",
   "addCity.searchPlaceholder": "Saisissez le nom de la ville...",
   "addCity.databaseUnavailable": "La recherche de villes est temporairement indisponible.",
   "notifications.helper": "Ajoutez d’abord au moins une ville",

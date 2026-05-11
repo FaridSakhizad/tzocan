@@ -73,6 +73,7 @@
   "index.emptyHint": "Нажмите кнопку +, чтобы добавить город.",
   "city.fallbackName": "этот город",
   "cities.sortTitle": "Сортировка городов",
+  "timeline.chooseDay": "Выбрать день",
   "addCity.searchPlaceholder": "Введите название города...",
   "addCity.databaseUnavailable": "Поиск городов временно недоступен.",
   "notifications.helper": "Сначала добавьте хотя бы один город",

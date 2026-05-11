@@ -73,6 +73,7 @@
   "index.emptyHint": "Pulsa el botón + para agregar una ciudad.",
   "city.fallbackName": "esta ciudad",
   "cities.sortTitle": "Ordenar ciudades",
+  "timeline.chooseDay": "Elegir día",
   "addCity.searchPlaceholder": "Introduce el nombre de la ciudad...",
   "addCity.databaseUnavailable": "La búsqueda de ciudades no está disponible temporalmente.",
   "notifications.helper": "Agrega al menos una ciudad primero",

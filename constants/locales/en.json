@@ -73,6 +73,7 @@
   "index.emptyHint": "Tap the + button to add a city.",
   "city.fallbackName": "this city",
   "cities.sortTitle": "Sort Cities",
+  "timeline.chooseDay": "Choose Day",
   "addCity.searchPlaceholder": "Enter City Name...",
   "addCity.databaseUnavailable": "City search is temporarily unavailable.",
   "notifications.helper": "Add at least one city first",

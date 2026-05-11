@@ -73,6 +73,7 @@
   "index.emptyHint": "Натисніть кнопку +, щоб додати місто.",
   "city.fallbackName": "це місто",
   "cities.sortTitle": "Сортувати міста",
+  "timeline.chooseDay": "Обрати день",
   "addCity.searchPlaceholder": "Введіть назву міста...",
   "addCity.databaseUnavailable": "Пошук міст тимчасово недоступний.",
   "notifications.helper": "Спочатку додайте хоча б одне місто",

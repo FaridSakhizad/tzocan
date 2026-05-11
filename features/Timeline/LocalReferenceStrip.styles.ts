@@ -23,6 +23,7 @@ export function createStyles(theme: UiTheme) {
     },
     navBlock: {
       flexDirection: 'row',
+      alignItems: 'center',
       borderWidth: 1,
       borderColor: theme.border.muted,
       height: 24,
@@ -45,6 +46,18 @@ export function createStyles(theme: UiTheme) {
       height: 22,
       alignItems: 'center',
       justifyContent: 'center'
+    },
+    sideDateText: {
+      fontSize: 14,
+      lineHeight: 16,
+      color: theme.text.warning,
+      textTransform: 'capitalize',
+    },
+    sideDateTextLeft: {
+      textAlign: 'right',
+    },
+    sideDateTextRight: {
+      textAlign: 'left',
     },
     navArrow: {
       width: 18,

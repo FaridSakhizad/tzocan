@@ -32,6 +32,7 @@ export function createStyles(theme: UiTheme) {
     timelineContent: {
       flex: 1,
       position: 'relative',
+      zIndex: 10,
     },
     referenceRow: {
       backgroundColor: theme.surface.elevatedMuted,
@@ -77,9 +78,8 @@ export function createStyles(theme: UiTheme) {
       zIndex: 10,
       elevation: 10,
       top: 0,
-      bottom: DAY_SELECTOR_HEIGHT,
+      bottom: 0,
       width: TIMELINE_CELL_WIDTH,
-      height: 3000,
       backgroundColor: theme.surface.elevatedSoft,
     },
     listItem: {

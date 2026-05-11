@@ -85,6 +85,32 @@ function LocalReferenceStripComponent({
     [hourIndices, locale, timeFormat, timezone]
   );
 
+  const sideDates = useMemo(() => {
+    const currentDayStartHourIndex = hourIndices[0];
+
+    if (currentDayStartHourIndex == null) {
+      return { previous: '', next: '' };
+    }
+
+    const currentDayStart = getFocusedDateTimeFromHourIndex(currentDayStartHourIndex);
+    const previousDay = new Date(currentDayStart);
+    previousDay.setDate(previousDay.getDate() - 1);
+
+    const nextDay = new Date(currentDayStart);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    const formatter = new Intl.DateTimeFormat(locale, {
+      timeZone: timezone,
+      month: 'short',
+      day: 'numeric',
+    });
+
+    return {
+      previous: formatter.format(previousDay),
+      next: formatter.format(nextDay),
+    };
+  }, [hourIndices, locale, timezone]);
+
   const startHourIndex = hourIndices[0] ?? 0;
   const minFocusableHourIndex = hourIndices[0] ?? 0;
   const maxFocusableHourIndex = hourIndices[hourIndices.length - 1] ?? 0;
@@ -154,6 +180,9 @@ function LocalReferenceStripComponent({
         <Animated.View style={[styles.timelineContent, { width: timelineWidth }, animatedStyle]}>
           <View style={[styles.sidePad, styles.sidePadLeft, { width: sidePad }]}>
             <Pressable onPress={onNavigateDayBackward} style={[styles.navBlock, styles.navBlockLeft]}>
+              <Text style={[styles.sideDateText, styles.sideDateTextLeft]} numberOfLines={1}>
+                {sideDates.previous}
+              </Text>
               <View style={styles.navBlockIconBox}>
                 <Arrow1
                   style={[styles.navArrow, styles.navArrowLeft]}
@@ -195,6 +224,9 @@ function LocalReferenceStripComponent({
                   fill={theme.text.warning}
                 />
               </View>
+              <Text style={[styles.sideDateText, styles.sideDateTextRight]} numberOfLines={1}>
+                {sideDates.next}
+              </Text>
             </Pressable>
           </View>
         </Animated.View>

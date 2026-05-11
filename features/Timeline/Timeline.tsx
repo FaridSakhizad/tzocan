@@ -17,6 +17,7 @@ import { AddCityModal, type CityRow } from '@/components/add-city-modal';
 import { CitySortPickerModal } from '@/components/city-sort-picker-modal';
 import { DeleteCityModal } from '@/components/delete-city-modal';
 import { HourStrip } from '@/features/Timeline/HourStrip';
+import { LocalReferenceRow } from '@/features/Timeline/LocalReferenceRow';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useEditMode } from '@/contexts/edit-mode-context';
 import { CityOrderMode, useNotificationsSort } from '@/contexts/notifications-sort-context';
@@ -123,6 +124,12 @@ export default function TimelineScreen() {
   const isDayTransitioningRef = useRef(false);
 
   const nowDate = useMemo(() => new Date(nowMs), [nowMs]);
+
+  const localTimezone = useMemo(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    []
+  );
+
   const localizedCityNames = useLocalizedCityNames(selectedCities.map((city) => city.cityId));
 
   const displayedCities = useMemo(
@@ -444,36 +451,44 @@ export default function TimelineScreen() {
     [renderCityRow]
   );
 
-  if (selectedCities.length < 1) {
-    return (
-      <>
-        <View style={styles.emptyStateContainer}>
-          <Pressable onPress={handleOpenAddCityModal} style={styles.emptyStateButton}>
-            <IconAddCity
-              style={styles.emptyStateButtonIcon}
-              fill={theme.surface.button.primary}
-            />
-            <Text style={styles.emptyStateButtonText}>{t('common.addCity')}</Text>
-          </Pressable>
-        </View>
-
-        <AddCityModal
-          visible={isAddCityModalVisible}
-          onClose={handleCloseAddCityModal}
-          onSave={handleSaveCity}
-        />
-      </>
-    );
-  }
-
   return (
     <GestureHandlerRootView style={styles.container}>
       <Animated.View style={[styles.timelineContent, { opacity: contentOpacity }]}>
+        <LocalReferenceRow
+          x={x}
+          minX={minScrollX}
+          maxX={maxScrollX}
+          enabled={!dragging && !isEditMode}
+          locale={locale}
+          sidePad={sidePad}
+          hourIndices={hourIndices}
+          timelineWidth={timelineWidth}
+          timeFormat={timeFormat}
+          width={width}
+          currentTimeText={getCurrentTimeInTimezone(localTimezone, locale, timeFormat, nowDate)}
+          title={t('common.yourTime')}
+          timezone={localTimezone}
+          onUserInteraction={handleTimelineInteraction}
+          onScrollSettled={handleTimelineScrollSettled}
+          onNavigateDayBackward={() => shiftDayBy(-1)}
+          onNavigateDayForward={() => shiftDayBy(1)}
+        />
+
         <View style={styles.listContentContainer}>
-        {sortState.cityOrder === 'none' ? (
-          <DraggableFlatList
-            contentContainerStyle={styles.listContent}
-            data={selectedCities}
+          {selectedCities.length < 1 ? (
+            <View style={styles.emptyStateContainer}>
+              <Pressable onPress={handleOpenAddCityModal} style={styles.emptyStateButton}>
+                <IconAddCity
+                  style={styles.emptyStateButtonIcon}
+                  fill={theme.surface.button.primary}
+                />
+                <Text style={styles.emptyStateButtonText}>{t('common.addCity')}</Text>
+              </Pressable>
+            </View>
+          ) : sortState.cityOrder === 'none' ? (
+            <DraggableFlatList
+              contentContainerStyle={styles.listContent}
+              data={selectedCities}
               keyExtractor={(city) => `${city.id}`}
               renderItem={renderItem}
               onDragBegin={() => setDragging(true)}
@@ -491,17 +506,17 @@ export default function TimelineScreen() {
               ))}
             </ScrollView>
           )}
-
-          <View
-            pointerEvents="none"
-            style={[
-              styles.middleMarker,
-              {
-                left: width / 2 - TIMELINE_CELL_WIDTH / 2,
-              },
-            ]}
-          />
         </View>
+
+        <View
+          pointerEvents="none"
+          style={[
+            styles.middleMarker,
+            {
+              left: width / 2 - TIMELINE_CELL_WIDTH / 2,
+            },
+          ]}
+        />
 
         <View style={styles.resetBar} pointerEvents="box-none">
           <Pressable style={styles.resetButtonPressable} onPress={handleResetTimeline}>

@@ -67,6 +67,7 @@ function TimelineHourStripComponent({
 }: TimelineHourStripProps) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+
   const startX = useSharedValue(0);
 
   const cells = useMemo(() => {
@@ -234,9 +235,9 @@ export const HourStrip = React.memo(
     prevProps.hourIndices === nextProps.hourIndices &&
     prevProps.timelineWidth === nextProps.timelineWidth &&
     prevProps.timeFormat === nextProps.timeFormat &&
-    prevProps.width === nextProps.width &&
-    prevProps.onUserInteraction === nextProps.onUserInteraction &&
-    prevProps.onScrollSettled === nextProps.onScrollSettled &&
-    prevProps.onNavigateDayBackward === nextProps.onNavigateDayBackward &&
-    prevProps.onNavigateDayForward === nextProps.onNavigateDayForward
+  prevProps.width === nextProps.width &&
+  prevProps.onUserInteraction === nextProps.onUserInteraction &&
+  prevProps.onScrollSettled === nextProps.onScrollSettled &&
+  prevProps.onNavigateDayBackward === nextProps.onNavigateDayBackward &&
+  prevProps.onNavigateDayForward === nextProps.onNavigateDayForward
 );

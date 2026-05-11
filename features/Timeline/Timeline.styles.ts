@@ -31,6 +31,7 @@ export function createStyles(theme: UiTheme) {
     },
     timelineContent: {
       flex: 1,
+      position: 'relative',
     },
     listContentContainer: {
       flex: 1,

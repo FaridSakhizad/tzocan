@@ -222,7 +222,7 @@ export default function HeaderButtons() {
     <>
       <View style={{
         ...styles.headerButtonsContainer,
-        paddingTop: insets.top + 15,
+        paddingTop: insets.top + 5,
       }}>
         {isEditCityScreen && (
           <>
@@ -361,24 +361,6 @@ export default function HeaderButtons() {
             )}
 
             <Pressable
-              onPress={handleOpenAddCityModal}
-              disabled={isEditMode}
-              style={[styles.headerButton, isEditMode && styles.headerButtonDisabled]}
-            >
-              {isAddCityModalVisible ? (
-                <IconAddLocationFilled
-                  style={styles.headerButtonIcon}
-                  fill={theme.text.primary}
-                />
-              ) : (
-                <IconAddLocationOutlined
-                  style={styles.headerButtonIcon}
-                  fill={theme.text.primary}
-                />
-              )}
-            </Pressable>
-
-            <Pressable
               onPress={handleOpenAddNotificationModal}
               disabled={isEditMode || selectedCities.length === 0}
               style={[styles.headerButton, (isEditMode || selectedCities.length === 0) && styles.headerButtonDisabled]}
@@ -390,6 +372,24 @@ export default function HeaderButtons() {
                 />
               ) : (
                 <IconAddNotificationFilled
+                  style={styles.headerButtonIcon}
+                  fill={theme.text.primary}
+                />
+              )}
+            </Pressable>
+
+            <Pressable
+              onPress={handleOpenAddCityModal}
+              disabled={isEditMode}
+              style={[styles.headerButton, isEditMode && styles.headerButtonDisabled]}
+            >
+              {isAddCityModalVisible ? (
+                <IconAddLocationFilled
+                  style={styles.headerButtonIcon}
+                  fill={theme.text.primary}
+                />
+              ) : (
+                <IconAddLocationOutlined
                   style={styles.headerButtonIcon}
                   fill={theme.text.primary}
                 />

@@ -140,9 +140,8 @@ function createStyles(theme: UiTheme) {
       flex: 1,
     },
     closeButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 60,
+      height: 60,
       margin: 'auto',
     },
     backgroundImage: {

@@ -91,6 +91,7 @@ function createStyles(theme: UiTheme) {
       borderBottomLeftRadius: theme.radius.panelBottom,
       borderBottomRightRadius: theme.radius.panelBottom,
       overflow: 'hidden',
+      minWidth: 280,
     },
     backgroundImageAsset: {
       transform: [{ scale: theme.image.modalBackgroundScale }],
@@ -102,12 +103,14 @@ function createStyles(theme: UiTheme) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingVertical: theme.spacing.modalInnerY,
-      paddingHorizontal: theme.spacing.screenX,
+      paddingVertical: 10,
+      paddingHorizontal: 10,
     },
     headerButton: {
-      width: 30,
-      height: 30,
+      width: 50,
+      height: 50,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     title: {
       color: theme.text.primary,

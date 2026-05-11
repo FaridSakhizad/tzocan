@@ -8,6 +8,9 @@ import { useEditMode } from '@/contexts/edit-mode-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 
+import IconCitiesOutlined from '@/assets/images/icon--cities-1--outlined.svg';
+import IconCitiesFilled from '@/assets/images/icon--cities-1--filled.svg';
+
 import IconClockOutlined from '@/assets/images/icon--clock-1--outlined.svg';
 import IconClockFilled from '@/assets/images/icon--clock-1--filled.svg';
 
@@ -73,12 +76,12 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconBox}>
               {(focused || pathname === RouteNamePaths.editCity) ? (
-                <IconClockFilled
+                <IconCitiesFilled
                   style={styles.icon}
                   fill={theme.text.primary}
                 />
               ) : (
-                <IconClockOutlined
+                <IconCitiesOutlined
                   style={styles.icon}
                   fill={theme.text.primary}
                 />

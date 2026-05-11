@@ -39,7 +39,7 @@ export type NotificationFormValues = {
   hour: number;
   minute: number;
   repeat: RepeatMode;
-  weekdays?: number[]; // JS: 0=Sun ... 6=Sat
+  weekdays?: number[];
   label?: string;
   notes?: string;
   url?: string;
@@ -989,9 +989,9 @@ function createStyles(theme: UiTheme) {
     paddingBottom: 8,
   },
   header: {
-    paddingHorizontal: 33,
-    paddingTop: theme.spacing.modalInnerY,
-    paddingBottom: 30,
+    paddingHorizontal: 23,
+    paddingTop: 10,
+    paddingBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1001,8 +1001,10 @@ function createStyles(theme: UiTheme) {
     fontSize: theme.typography.titleSm.fontSize,
   },
   headerButton: {
-    width: 30,
-    height: 30,
+    width: 50,
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerButtonDisabled: {
     opacity: 0.5,

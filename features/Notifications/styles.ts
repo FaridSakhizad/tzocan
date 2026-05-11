@@ -159,11 +159,11 @@ export function createStyles(theme: UiTheme) {
       paddingHorizontal: 2,
     },
     notificationParentCity: {
-      fontSize: 13,
-      lineHeight: 16,
-      fontWeight: '600',
-      color: theme.text.secondary,
-      marginBottom: 2,
+      fontSize: 18,
+      lineHeight: 26,
+      fontWeight: 'bold',
+      color: theme.text.primary,
+      marginBottom: 5,
     },
     notificationLabel: {
       fontSize: 16,

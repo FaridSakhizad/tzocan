@@ -144,6 +144,14 @@ export function createStyles(theme: UiTheme) {
       zIndex: 10,
     },
     resetButton: {
+      width: 46,
+      height: 38,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 10,
+      marginRight: 'auto',
+    },
+    resetButtonBg: {
       width: 36,
       height: 28,
       borderRadius: 14,
@@ -151,14 +159,20 @@ export function createStyles(theme: UiTheme) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.surface.button.subtle,
-      marginLeft: 20,
-      marginRight: 'auto',
     },
     resetButtonIcon: {
       width: 12,
       height: 12,
     },
     selectDayButton: {
+      width: 46,
+      height: 38,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+      marginLeft: 'auto',
+    },
+    selectDayButtonBg: {
       width: 36,
       height: 28,
       borderRadius: 14,
@@ -166,8 +180,6 @@ export function createStyles(theme: UiTheme) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: theme.surface.button.subtle,
-      marginRight: 20,
-      marginLeft: 'auto',
     },
     selectDayButtonIcon: {
       width: 14,
@@ -177,11 +189,17 @@ export function createStyles(theme: UiTheme) {
       height: 60,
       borderTopWidth: 1,
       borderColor: theme.border.muted,
-      paddingHorizontal: 20,
+      paddingHorizontal: 15,
       flexDirection: 'row',
       alignItems: 'center'
     },
     daySwitchButton: {
+      width: 56,
+      height: 38,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    daySwitchButtonBg: {
       width: 46,
       height: 28,
       borderRadius: 14,

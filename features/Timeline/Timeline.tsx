@@ -620,17 +620,21 @@ export default function TimelineScreen() {
           onPress={() => shiftDayBy(-1)}
           disabled={isDayTransitioning}
         >
-          <Arrow1
-            style={[styles.daySelectorButtonIcon, styles.daySelectorButtonIconRight]}
-            fill={theme.text.primary}
-          />
+          <View style={styles.daySwitchButtonBg}>
+            <Arrow1
+              style={[styles.daySelectorButtonIcon, styles.daySelectorButtonIconRight]}
+              fill={theme.text.primary}
+            />
+          </View>
         </Pressable>
 
         <Pressable style={styles.resetButton} onPress={handleResetTimeline}>
-          <IconReset
-            style={styles.resetButtonIcon}
-            fill={theme.text.primary}
-          />
+          <View style={styles.resetButtonBg}>
+            <IconReset
+              style={styles.resetButtonIcon}
+              fill={theme.text.primary}
+            />
+          </View>
         </Pressable>
 
         <Pressable
@@ -652,10 +656,12 @@ export default function TimelineScreen() {
           onPress={handleOpenDayPicker}
           disabled={isDayTransitioning}
         >
-          <IconCalendar
-            style={styles.selectDayButtonIcon}
-            fill={theme.text.primary}
-          />
+          <View style={styles.selectDayButtonBg}>
+            <IconCalendar
+              style={styles.selectDayButtonIcon}
+              fill={theme.text.primary}
+            />
+          </View>
         </Pressable>
 
         <Pressable
@@ -663,7 +669,9 @@ export default function TimelineScreen() {
           onPress={() => shiftDayBy(1)}
           disabled={isDayTransitioning}
         >
-          <Arrow1 style={styles.daySelectorButtonIcon} fill={theme.text.primary} />
+          <View style={styles.daySwitchButtonBg}>
+            <Arrow1 style={styles.daySelectorButtonIcon} fill={theme.text.primary} />
+          </View>
         </Pressable>
       </View>
 

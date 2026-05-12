@@ -17,7 +17,7 @@ export const themeLight: UiTheme = {
   },
   overlay: {
     strong: 'rgba(62, 63, 86, 0.9)',
-    medium: 'rgba(62, 63, 86, 0.4)',
+    medium: 'rgba(62, 63, 86, 0.3)',
   },
   surface: {
     transparent: 'rgba(62, 63, 86, 0)',

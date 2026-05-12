@@ -92,6 +92,18 @@ export function createStyles(theme: UiTheme) {
     cityInfo: {
       flex: 1,
     },
+    cityItemTimePeriodIcon: {
+      width: 20,
+      height: 20,
+      marginRight: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    cityItemTimePeriodIconSvg: {
+      width: 18,
+      height: 18,
+    },
     cityName: {
       fontSize: 16,
       fontWeight: '700',

@@ -29,6 +29,11 @@ import IconDelete1 from '@/assets/images/icon--delete-1.svg';
 import IconNotification2 from '@/assets/images/icon--notification-2.svg';
 import IconNotificationsMultiple from '@/assets/images/icon--notifications-multiple-1.svg';
 
+import IconDay from '@/assets/images/icon--day.svg';
+import IconNight from '@/assets/images/icon--night.svg';
+import IconMorning from '@/assets/images/icon--morning.svg';
+import IconEvening from '@/assets/images/icon--evening.svg';
+
 import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
 import { createStyles } from './styles';
 
@@ -106,6 +111,32 @@ function getTimezoneOffset(timezone: string, sameLabel: string): string {
   const prefix = diffMinutes < 0 ? '-' : '+';
 
   return `${prefix}${wholeHours}:${mins.toString().padStart(2, '0')}`;
+}
+
+type DayPhase = 'morning' | 'day' | 'evening' | 'night';
+
+function getDayPhaseForTimezone(timezone: string): DayPhase {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    hour: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+
+  const hour = parseInt(parts.find((part) => part.type === 'hour')?.value || '0', 10);
+
+  if (hour >= 5 && hour < 12) {
+    return 'morning';
+  }
+
+  if (hour >= 12 && hour < 18) {
+    return 'day';
+  }
+
+  if (hour >= 18 && hour < 22) {
+    return 'evening';
+  }
+
+  return 'night';
 }
 
 export default function Cities() {
@@ -227,6 +258,16 @@ export default function Cities() {
   ) => {
     const isActive = options?.isActive;
     const canDrag = Boolean(options?.draggable && sortState.cityOrder === 'none');
+    const dayPhase = getDayPhaseForTimezone(city.tz);
+
+    const TimePeriodIcon =
+      dayPhase === 'morning'
+        ? IconMorning
+        : dayPhase === 'day'
+          ? IconDay
+          : dayPhase === 'evening'
+            ? IconEvening
+            : IconNight;
 
     return (
       <Pressable
@@ -260,6 +301,12 @@ export default function Cities() {
             </Pressable>
           </Animated.View>
 
+          <View style={styles.cityItemTimePeriodIcon}>
+            <TimePeriodIcon
+              style={styles.cityItemTimePeriodIconSvg}
+              fill={theme.text.primary}
+            />
+          </View>
           <View style={styles.cityInfo}>
             <Text style={styles.cityName}>
               {getCityDisplayName(city, localizedCityNames[city.cityId])}

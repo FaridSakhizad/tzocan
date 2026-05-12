@@ -85,6 +85,7 @@
   "notifications.sortByTime": "Ordenar por hora",
   "notifications.grouping": "Agrupación",
   "notifications.groupByCity": "Agrupar notificaciones por ciudad",
+  "notifications.ungroup": "Desagrupar notificaciones",
   "notifications.notificationOrder": "Ordenar notificaciones",
   "notifications.sortNotificationsByTime": "Por hora programada",
   "notifications.sortNotificationsByDateAdded": "Por fecha de creación",

@@ -85,6 +85,7 @@
   "notifications.sortByTime": "Sort by time",
   "notifications.grouping": "Grouping",
   "notifications.groupByCity": "Group Notifications by City",
+  "notifications.ungroup": "Ungroup Notifications",
   "notifications.notificationOrder": "Sort Notifications",
   "notifications.sortNotificationsByTime": "By Scheduled",
   "notifications.sortNotificationsByDateAdded": "By Creation Date",

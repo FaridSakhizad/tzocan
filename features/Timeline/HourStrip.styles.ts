@@ -13,19 +13,33 @@ export function createStyles(theme: UiTheme) {
     },
     sidePad: {
       flexDirection: 'row',
-      alignItems: 'center'
+      alignItems: 'center',
+      position: 'relative',
     },
     sidePadLeft: {
       paddingRight: 5,
+      justifyContent: 'flex-end',
+    },
+    sidePadIconBox: {
+      width: 64,
+      height: 64,
+      position: 'absolute',
+      top: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5
     },
     sidePadRight: {
       paddingLeft: 5,
+      justifyContent: 'flex-start',
     },
     navBlock: {
       flexDirection: 'row',
       backgroundColor: theme.surface.fieldStrong,
       height: 64,
       flex: 1,
+      borderCurve: 'continuous',
     },
     navBlockLeft: {
       justifyContent: 'flex-end',

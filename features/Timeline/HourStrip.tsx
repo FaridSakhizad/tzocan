@@ -34,6 +34,9 @@ import {
 } from '@/features/Timeline/constants';
 import { createStyles } from '@/features/Timeline/HourStrip.styles';
 
+const SIDE_PAD_ICON_HIDDEN_OFFSET = 10;
+const SIDE_PAD_ICON_REVEAL_DISTANCE = TIMELINE_EDGE_PULL_MAX - SIDE_PAD_ICON_HIDDEN_OFFSET;
+
 type TimelineHourStripProps = {
   x: SharedValue<number>;
   edgePull: SharedValue<number>;
@@ -191,13 +194,29 @@ function TimelineHourStripComponent({
     transform: [{ translateX: -x.value + edgePull.value }],
   }));
 
+  const leftSidePadIconStyle = useAnimatedStyle(() => ({
+    opacity: clamp(
+      (edgePull.value - SIDE_PAD_ICON_HIDDEN_OFFSET) / SIDE_PAD_ICON_REVEAL_DISTANCE,
+      0,
+      1
+    ),
+  }));
+
+  const rightSidePadIconStyle = useAnimatedStyle(() => ({
+    opacity: clamp(
+      (-edgePull.value - SIDE_PAD_ICON_HIDDEN_OFFSET) / SIDE_PAD_ICON_REVEAL_DISTANCE,
+      0,
+      1
+    ),
+  }));
+
   return (
     <GestureDetector gesture={pan}>
       <View style={styles.timelineViewport}>
         <Animated.View style={[styles.timelineContent, { width: timelineWidth }, animatedStyle]}>
 
           <View style={[styles.sidePad, styles.sidePadLeft, { width: sidePad }]}>
-            <Pressable onPress={onNavigateDayBackward} style={[styles.navBlock, styles.navBlockLeft]}>
+            <Pressable onPress={onNavigateDayBackward} style={[styles.navBlock, styles.navBlockLeft, { minWidth: sidePad * 2 }]}>
               <View style={styles.navBlockIconBox}>
                 <Arrow1
                   style={[styles.navArrow, styles.navArrowLeft]}
@@ -205,6 +224,23 @@ function TimelineHourStripComponent({
                 />
               </View>
             </Pressable>
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.sidePadIconBox, { right: sidePad + 10 }, leftSidePadIconStyle]}
+            >
+              <Arrow1
+                style={[styles.navArrow, styles.navArrowLeft]}
+                fill={theme.text.warning}
+              />
+              <Arrow1
+                style={[styles.navArrow, styles.navArrowLeft]}
+                fill={theme.text.warning}
+              />
+              <Arrow1
+                style={[styles.navArrow, styles.navArrowLeft]}
+                fill={theme.text.warning}
+              />
+            </Animated.View>
           </View>
 
           {cells.map((cell) => (
@@ -246,7 +282,7 @@ function TimelineHourStripComponent({
           ))}
 
           <View style={[styles.sidePad, styles.sidePadRight, { width: sidePad }]}>
-            <Pressable onPress={onNavigateDayForward} style={[styles.navBlock, styles.navBlockRight]}>
+            <Pressable onPress={onNavigateDayForward} style={[styles.navBlock, styles.navBlockRight, { minWidth: sidePad * 2 }]}>
               <View style={styles.navBlockIconBox}>
                 <Arrow1
                   style={styles.navArrow}
@@ -254,6 +290,23 @@ function TimelineHourStripComponent({
                 />
               </View>
             </Pressable>
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.sidePadIconBox, { left: sidePad + 10 }, rightSidePadIconStyle]}
+            >
+              <Arrow1
+                style={[styles.navArrow]}
+                fill={theme.text.warning}
+              />
+              <Arrow1
+                style={[styles.navArrow]}
+                fill={theme.text.warning}
+              />
+              <Arrow1
+                style={[styles.navArrow]}
+                fill={theme.text.warning}
+              />
+            </Animated.View>
           </View>
         </Animated.View>
       </View>

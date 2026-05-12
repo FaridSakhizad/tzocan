@@ -13,7 +13,17 @@ export function createStyles(theme: UiTheme) {
     },
     sidePad: {
       flexDirection: 'row',
-      alignItems: 'center'
+      alignItems: 'center',
+      position: 'relative',
+    },
+    sidePadRubberPlaceholder: {
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: theme.border.muted,
+      position: 'absolute',
+      top: 0,
+      height: '100%',
+      width: '100%',
     },
     sidePadLeft: {
       paddingRight: 5,
@@ -28,6 +38,7 @@ export function createStyles(theme: UiTheme) {
       borderColor: theme.border.muted,
       height: 24,
       flex: 1,
+      position: 'relative',
     },
     navBlockLeft: {
       justifyContent: 'flex-end',

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ImageBackground, Text, TextInput } from 'react-native';
+import { ImageBackground, Text, TextInput, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 
@@ -66,15 +66,28 @@ function AppShell() {
       style={{ flex: 1 }}
       resizeMode="cover"
     >
-      <ThemeProvider value={navigationTheme}>
-        <Stack>
-          <Stack.Screen
-            name="(tabs)"
-            options={{ headerShown: false }}
-          />
-        </Stack>
-        <StatusBar style={statusBarStyle} />
-      </ThemeProvider>
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          backgroundColor: theme.overlay.medium,
+        }}
+      />
+      <View style={{ flex: 1 }}>
+        <ThemeProvider value={navigationTheme}>
+          <Stack>
+            <Stack.Screen
+              name="(tabs)"
+              options={{ headerShown: false }}
+            />
+          </Stack>
+          <StatusBar style={statusBarStyle} />
+        </ThemeProvider>
+      </View>
     </ImageBackground>
   );
 }

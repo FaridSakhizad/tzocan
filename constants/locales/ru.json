@@ -85,6 +85,7 @@
   "notifications.sortByTime": "Сортировка по времени",
   "notifications.grouping": "Группировка",
   "notifications.groupByCity": "Группировать уведомления по городам",
+  "notifications.ungroup": "Разгруппировать уведомления",
   "notifications.notificationOrder": "Сортировать уведомления",
   "notifications.sortNotificationsByTime": "По времени срабатывания",
   "notifications.sortNotificationsByDateAdded": "По дате создания",

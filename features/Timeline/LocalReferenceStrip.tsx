@@ -225,6 +225,8 @@ function LocalReferenceStripComponent({
                 {sideDates.previous}
               </Text>
             </Pressable>
+
+            <View style={[styles.sidePadRubberPlaceholder, { right: sidePad }]} />
           </View>
 
           {cells.map((cell) => (
@@ -261,6 +263,8 @@ function LocalReferenceStripComponent({
                 fill={theme.text.warning}
               />
             </Pressable>
+
+            <View style={[styles.sidePadRubberPlaceholder, { left: sidePad }]} />
           </View>
         </Animated.View>
       </View>

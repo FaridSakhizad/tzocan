@@ -1223,7 +1223,9 @@ export default function Notifications() {
                   draftSortState.groupByCity && styles.sortPickerItemTextActive,
                 ]}
               >
-                {t('notifications.groupByCity')}
+                {draftSortState.groupByCity
+                  ? t('notifications.ungroup')
+                  : t('notifications.groupByCity')}
               </Text>
             </Pressable>
           </View>

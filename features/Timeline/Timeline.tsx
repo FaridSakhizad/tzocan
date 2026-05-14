@@ -128,6 +128,8 @@ export default function TimelineScreen() {
   const [pickerDraftDay, setPickerDraftDay] = useState(() => getLocalDayStart(new Date()));
   const contentOpacity = useRef(new Animated.Value(1)).current;
   const isDayTransitioningRef = useRef(false);
+  const previousTodayRef = useRef(getLocalDayStart(new Date()));
+  const previousCurrentHourIndexRef = useRef(getHourIndexForDate(new Date()));
 
   const nowDate = useMemo(() => new Date(nowMs), [nowMs]);
 
@@ -172,6 +174,36 @@ export default function TimelineScreen() {
 
     return () => clearInterval(timer);
   }, [isFocused]);
+
+  useEffect(() => {
+    const nextToday = getLocalDayStart(nowDate);
+    const previousToday = previousTodayRef.current;
+    const nextCurrentHourIndex = getHourIndexForDate(nowDate);
+    const previousCurrentHourIndex = previousCurrentHourIndexRef.current;
+
+    if (
+      nextToday.getTime() !== previousToday.getTime() &&
+      selectedDay.getTime() === previousToday.getTime() &&
+      !isDayTransitioningRef.current
+    ) {
+      const previousTodayHourIndex = getHourIndexForDate(previousToday);
+      const focusedHourWasOnPreviousToday =
+        focusedHourIndex >= previousTodayHourIndex &&
+        focusedHourIndex <= previousTodayHourIndex + 23;
+
+      setSelectedDay(nextToday);
+
+      if (focusedHourIndex === previousCurrentHourIndex) {
+        setFocusedHourIndex(nextCurrentHourIndex);
+      } else if (focusedHourWasOnPreviousToday) {
+        const offsetWithinDay = focusedHourIndex - previousTodayHourIndex;
+        setFocusedHourIndex(getHourIndexForDate(nextToday) + offsetWithinDay);
+      }
+    }
+
+    previousTodayRef.current = nextToday;
+    previousCurrentHourIndexRef.current = nextCurrentHourIndex;
+  }, [focusedHourIndex, nowDate, selectedDay]);
 
   useEffect(() => {
     if (isSortPickerVisible && isFocused) {

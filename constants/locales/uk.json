@@ -74,7 +74,7 @@
   "city.fallbackName": "це місто",
   "cities.sortTitle": "Сортувати міста",
   "timeline.chooseDay": "Обрати день",
-  "addCity.searchPlaceholder": "Введіть назву міста...",
+  "addCity.searchPlaceholder": "Введіть назву міста або часовий пояс...",
   "addCity.databaseUnavailable": "Пошук міст тимчасово недоступний.",
   "notifications.helper": "Спочатку додайте хоча б одне місто",
   "notifications.empty": "Сповіщень поки немає",

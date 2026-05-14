@@ -24,6 +24,8 @@ import { useAppTheme } from '@/contexts/app-theme-context';
 import { CityOrderMode, useNotificationsSort } from '@/contexts/notifications-sort-context';
 import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
 import { sortCitiesByOrder } from '@/utils/city-sorting';
+import { getTimezoneDifferenceLabel } from '@/utils/timezone-offset';
+import { getRelativeDayLabelForTimezone } from '@/utils/timezone-relative-day';
 
 import IconDelete1 from '@/assets/images/icon--delete-1.svg';
 import IconNotification2 from '@/assets/images/icon--notification-2.svg';
@@ -35,12 +37,10 @@ import IconMorning from '@/assets/images/icon--morning.svg';
 import IconEvening from '@/assets/images/icon--evening.svg';
 
 import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
-import { createStyles } from './styles';
+import { createStyles } from './Cities.styles';
 
-function getLocalTime(timezone: string, locale: string, timeFormat: TimeFormat, offsetMinutes: number = 0): string {
-  const now = new Date();
-  const shiftedTime = new Date(now.getTime() + offsetMinutes * 60 * 1000);
-  return shiftedTime.toLocaleTimeString(locale, {
+function getLocalTime(timezone: string, locale: string, timeFormat: TimeFormat, now: Date): string {
+  return now.toLocaleTimeString(locale, {
     timeZone: timezone,
     hour: '2-digit',
     minute: '2-digit',
@@ -48,79 +48,14 @@ function getLocalTime(timezone: string, locale: string, timeFormat: TimeFormat, 
   });
 }
 
-function getTimezoneOffset(timezone: string, sameLabel: string): string {
-  const now = new Date();
-
-  // Get time components in target timezone
-  const targetParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(now);
-
-  // Get time components in local timezone
-  const localParts = new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(now);
-
-  const getPart = (parts: Intl.DateTimeFormatPart[], type: string) =>
-    parseInt(parts.find(p => p.type === type)?.value || '0', 10);
-
-  const targetMinutes =
-    getPart(targetParts, 'day') * 24 * 60 +
-    getPart(targetParts, 'hour') * 60 +
-    getPart(targetParts, 'minute');
-
-  const localMinutes =
-    getPart(localParts, 'day') * 24 * 60 +
-    getPart(localParts, 'hour') * 60 +
-    getPart(localParts, 'minute');
-
-  let diffMinutes = targetMinutes - localMinutes;
-
-  if (diffMinutes > 12 * 60) {
-    diffMinutes -= 24 * 60;
-  }
-
-  if (diffMinutes < -12 * 60) {
-    diffMinutes += 24 * 60;
-  }
-
-  if (diffMinutes === 0) {
-    return sameLabel;
-  }
-
-  const sign = diffMinutes > 0 ? '+' : '';
-  const hours = diffMinutes / 60;
-
-  if (Number.isInteger(hours)) {
-    return `${sign}${hours}h`;
-  }
-
-  const wholeHours = Math.floor(Math.abs(hours));
-  const mins = Math.abs(diffMinutes) % 60;
-  const prefix = diffMinutes < 0 ? '-' : '+';
-
-  return `${prefix}${wholeHours}:${mins.toString().padStart(2, '0')}`;
-}
-
 type DayPhase = 'morning' | 'day' | 'evening' | 'night';
 
-function getDayPhaseForTimezone(timezone: string): DayPhase {
+function getDayPhaseForTimezone(timezone: string, now: Date): DayPhase {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
     hour: '2-digit',
     hour12: false,
-  }).formatToParts(new Date());
+  }).formatToParts(now);
 
   const hour = parseInt(parts.find((part) => part.type === 'hour')?.value || '0', 10);
 
@@ -150,7 +85,7 @@ export default function Cities() {
   const isFocused = useIsFocused();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const localizedCityNames = useLocalizedCityNames(selectedCities.map((city) => city.cityId));
-  const [, setTick] = useState(1);
+  const [tick, setTick] = useState(1);
   const [cityPendingDelete, setCityPendingDelete] = useState<SelectedCity | null>(null);
   const [isAddCityModalVisible, setIsAddCityModalVisible] = useState(false);
   const [draftCityOrder, setDraftCityOrder] = useState<CityOrderMode>(sortState.cityOrder);
@@ -215,6 +150,11 @@ export default function Cities() {
     [locale, localizedCityNames, selectedCities, sortState.cityOrder]
   );
 
+  const referenceNow = useMemo(
+    () => new Date(Date.now() + timeOffsetMinutes * 60 * 1000),
+    [tick, timeOffsetMinutes]
+  );
+
   const handleEditCity = (city: SelectedCity) => {
     if (!isEditMode) {
       router.replace({ pathname: '/edit-city', params: { cityId: city.id.toString() } });
@@ -258,7 +198,9 @@ export default function Cities() {
   ) => {
     const isActive = options?.isActive;
     const canDrag = Boolean(options?.draggable && sortState.cityOrder === 'none');
-    const dayPhase = getDayPhaseForTimezone(city.tz);
+    const dayPhase = getDayPhaseForTimezone(city.tz, referenceNow);
+
+    const relativeDayLabel = getRelativeDayLabelForTimezone(city.tz, t, referenceNow);
 
     const TimePeriodIcon =
       dayPhase === 'morning'
@@ -318,7 +260,7 @@ export default function Cities() {
 
             <View style={styles.cityMeta}>
               <Text style={styles.cityTimezone}>
-                {getTimezoneOffset(city.tz, t('common.same'))}
+                {getTimezoneDifferenceLabel(city.tz, t('common.same'), referenceNow)}
               </Text>
               {city.notifications && city.notifications.length > 0 && (
                 <View style={styles.cityNotifications}>
@@ -338,10 +280,13 @@ export default function Cities() {
                   )}
                 </View>
               )}
+              {!!relativeDayLabel && (
+                <Text style={styles.cityRelativeDayLabel}>{relativeDayLabel}</Text>
+              )}
             </View>
           </View>
           <Text style={styles.cityTime}>
-            {getLocalTime(city.tz, locale, timeFormat, timeOffsetMinutes)}
+            {getLocalTime(city.tz, locale, timeFormat, referenceNow)}
           </Text>
           <Animated.View
             pointerEvents={isEditMode ? 'auto' : 'none'}

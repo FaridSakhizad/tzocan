@@ -24,6 +24,11 @@ import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
+import {
+  getTimezoneDifferenceLabel,
+  getUtcOffsetLabel as getUtcOffsetLabelForTimezone,
+} from '@/utils/timezone-offset';
+import { getDatePartsInTimezone, getRelativeDayLabelForTimezone } from '@/utils/timezone-relative-day';
 
 import ClockIcon from '../../assets/images/icon--clock-2--outlined.svg';
 import CalendarIcon from '../../assets/images/icon--calendar-2--outlined.svg';
@@ -155,41 +160,6 @@ function getInactiveReasonLabel(notification: CityNotification, t: (key: string)
 
   if (notification.inactiveReason === 'past') {
     return t('notification.inactive.past');
-  }
-
-  return null;
-}
-
-function getDatePartsInTimezone(date: Date, timezone: string) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const parts = fmt.formatToParts(date);
-  const getPart = (type: string) => parseInt(parts.find((p) => p.type === type)?.value || '0', 10);
-
-  return {
-    year: getPart('year'),
-    month: getPart('month'),
-    day: getPart('day'),
-  };
-}
-
-function getRelativeDayLabel(timezone: string, t: (key: string) => string) {
-  const now = new Date();
-  const cityNow = getDatePartsInTimezone(now, timezone);
-  const localStamp = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  const cityStamp = Date.UTC(cityNow.year, cityNow.month - 1, cityNow.day);
-  const dayDiff = Math.round((cityStamp - localStamp) / 86400000);
-
-  if (dayDiff > 0) {
-    return t('common.tomorrow');
-  }
-
-  if (dayDiff < 0) {
-    return t('common.yesterday');
   }
 
   return null;
@@ -396,118 +366,11 @@ function getCurrentTimeInTimezone(timezone: string, timeFormat: TimeFormat, loca
 }
 
 function getTimezoneOffsetLabel(timezone: string) {
-  const now = new Date();
-
-  const targetParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(now);
-
-  const localParts = new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(now);
-
-  const getPart = (parts: Intl.DateTimeFormatPart[], type: string) =>
-    parseInt(parts.find((part) => part.type === type)?.value || '0', 10);
-
-  const targetMinutes =
-    getPart(targetParts, 'day') * 24 * 60 +
-    getPart(targetParts, 'hour') * 60 +
-    getPart(targetParts, 'minute');
-
-  const localMinutes =
-    getPart(localParts, 'day') * 24 * 60 +
-    getPart(localParts, 'hour') * 60 +
-    getPart(localParts, 'minute');
-
-  let diffMinutes = targetMinutes - localMinutes;
-
-  if (diffMinutes > 12 * 60) {
-    diffMinutes -= 24 * 60;
-  }
-
-  if (diffMinutes < -12 * 60) {
-    diffMinutes += 24 * 60;
-  }
-
-  const prefix = diffMinutes < 0 ? '-' : '+';
-  const absoluteMinutes = Math.abs(diffMinutes);
-  const hours = Math.floor(absoluteMinutes / 60);
-  const minutes = absoluteMinutes % 60;
-
-  if (minutes === 0) {
-    return `${prefix}${hours}h`;
-  }
-
-  return `${prefix}${hours}:${minutes.toString().padStart(2, '0')}h`;
+  return getTimezoneDifferenceLabel(timezone, '+0h');
 }
 
 function getUtcOffsetLabel(timezone: string) {
-  const now = new Date();
-
-  const targetParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(now);
-
-  const utcParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'UTC',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(now);
-
-  const getPart = (parts: Intl.DateTimeFormatPart[], type: string) =>
-    parseInt(parts.find((part) => part.type === type)?.value || '0', 10);
-
-  const targetMinutes =
-    getPart(targetParts, 'day') * 24 * 60 +
-    getPart(targetParts, 'hour') * 60 +
-    getPart(targetParts, 'minute');
-
-  const utcMinutes =
-    getPart(utcParts, 'day') * 24 * 60 +
-    getPart(utcParts, 'hour') * 60 +
-    getPart(utcParts, 'minute');
-
-  let diffMinutes = targetMinutes - utcMinutes;
-
-  if (diffMinutes > 12 * 60) {
-    diffMinutes -= 24 * 60;
-  }
-
-  if (diffMinutes < -12 * 60) {
-    diffMinutes += 24 * 60;
-  }
-
-  const prefix = diffMinutes < 0 ? '-' : '+';
-  const absoluteMinutes = Math.abs(diffMinutes);
-  const hours = Math.floor(absoluteMinutes / 60);
-  const minutes = absoluteMinutes % 60;
-
-  if (minutes === 0) {
-    return `UTC${prefix}${hours}`;
-  }
-
-  return `UTC${prefix}${hours}:${minutes.toString().padStart(2, '0')}`;
+  return `UTC${getUtcOffsetLabelForTimezone(timezone)}`;
 }
 
 export default function EditCity() {
@@ -626,7 +489,7 @@ export default function EditCity() {
     await toggleNotification(city.id, notificationId, !enabled);
   };
 
-  const relativeDayLabel = getRelativeDayLabel(city.tz, t);
+  const relativeDayLabel = getRelativeDayLabelForTimezone(city.tz, t);
 
   return (
     <>

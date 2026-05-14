@@ -10,6 +10,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { LoadingSpinner } from '@/components/loading-spinner';
+import { getUtcOffsetMinutesForTimezone } from '@/utils/timezone-offset';
 
 export type CityRow = {
   id: number;
@@ -25,6 +26,8 @@ export type CityRow = {
 type SearchCityRow = CityRow & {
   localizedName?: string | null;
 };
+
+let cachedDistinctTimezones: string[] | null = null;
 
 function normalizeSearchText(value: string) {
   return value
@@ -86,6 +89,136 @@ async function searchCitiesInDb(
   );
 }
 
+function parseOffsetValue(value: string) {
+  const normalized = value.trim().replace(/\s+/g, '');
+
+  if (normalized === '0' || normalized === '+0' || normalized === '-0') {
+    return 0;
+  }
+
+  const match = normalized.match(/^([+-]?)(\d{1,2})(?::?(\d{2}))?$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const [, sign, hoursPart, minutesPart] = match;
+  const hours = parseInt(hoursPart, 10);
+  const minutes = minutesPart ? parseInt(minutesPart, 10) : 0;
+
+  if (hours > 23 || minutes > 59) {
+    return null;
+  }
+
+  const totalMinutes = hours * 60 + minutes;
+
+  if (sign === '-') {
+    return -totalMinutes;
+  }
+
+  return totalMinutes;
+}
+
+function parseRelativeOffsetQuery(query: string) {
+  return parseOffsetValue(query);
+}
+
+function parseGmtOffsetQuery(query: string) {
+  const normalized = query
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/^utc\b/, 'gmt');
+
+  const match = normalized.match(/^gmt(?:\s+)?([+-]?\s*\d{1,2}(?::?\d{2})?)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  return parseOffsetValue(match[1].replace(/\s+/g, ''));
+}
+
+async function getDistinctTimezones(db: SQLite.SQLiteDatabase) {
+  if (cachedDistinctTimezones) {
+    return cachedDistinctTimezones;
+  }
+
+  const rows = await db.getAllAsync<{ tz: string }>(
+    `SELECT DISTINCT tz
+     FROM cities`
+  );
+
+  cachedDistinctTimezones = rows.map((row) => row.tz);
+  return cachedDistinctTimezones;
+}
+
+async function searchCitiesByTimezones(
+  db: SQLite.SQLiteDatabase,
+  timezones: string[],
+  languageCode: string
+): Promise<SearchCityRow[]> {
+  if (timezones.length === 0) {
+    return [];
+  }
+
+  const placeholders = timezones.map(() => '?').join(', ');
+
+  return db.getAllAsync<SearchCityRow>(
+    `SELECT
+       c.id,
+       c.name,
+       c.country,
+       c.admin1,
+       c.tz,
+       c.lat,
+       c.lon,
+       c.pop,
+       (
+         SELECT alias.name
+         FROM city_aliases AS alias
+         WHERE alias.city_id = c.id
+           AND alias.locale = ?
+         ORDER BY alias.is_preferred DESC, alias.name ASC
+         LIMIT 1
+       ) AS localizedName
+     FROM cities AS c
+     WHERE c.tz IN (${placeholders})
+     ORDER BY c.pop DESC, c.name ASC
+     LIMIT 30`,
+    [languageCode, ...timezones]
+  );
+}
+
+async function searchCitiesByRelativeOffsetInDb(
+  db: SQLite.SQLiteDatabase,
+  offsetMinutes: number,
+  languageCode: string
+) {
+  const now = new Date();
+  const localOffsetMinutes = -now.getTimezoneOffset();
+  const distinctTimezones = await getDistinctTimezones(db);
+  const matchingTimezones = distinctTimezones.filter(
+    (timezone) => getUtcOffsetMinutesForTimezone(timezone, now) - localOffsetMinutes === offsetMinutes
+  );
+
+  return searchCitiesByTimezones(db, matchingTimezones, languageCode);
+}
+
+async function searchCitiesByUtcOffsetInDb(
+  db: SQLite.SQLiteDatabase,
+  offsetMinutes: number,
+  languageCode: string
+) {
+  const now = new Date();
+  const distinctTimezones = await getDistinctTimezones(db);
+  const matchingTimezones = distinctTimezones.filter(
+    (timezone) => getUtcOffsetMinutesForTimezone(timezone, now) === offsetMinutes
+  );
+
+  return searchCitiesByTimezones(db, matchingTimezones, languageCode);
+}
+
 type AddCityModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -122,7 +255,23 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
       setIsLoading(true);
 
       try {
-        const results = await searchCitiesInDb(db as SQLite.SQLiteDatabase, query, languageCode);
+        const gmtOffsetQueryMinutes = parseGmtOffsetQuery(query);
+        const relativeOffsetQueryMinutes =
+          gmtOffsetQueryMinutes === null ? parseRelativeOffsetQuery(query) : null;
+
+        const results = gmtOffsetQueryMinutes !== null
+          ? await searchCitiesByUtcOffsetInDb(
+            db as SQLite.SQLiteDatabase,
+            gmtOffsetQueryMinutes,
+            languageCode
+          )
+          : relativeOffsetQueryMinutes !== null
+            ? await searchCitiesByRelativeOffsetInDb(
+              db as SQLite.SQLiteDatabase,
+              relativeOffsetQueryMinutes,
+              languageCode
+            )
+            : await searchCitiesInDb(db as SQLite.SQLiteDatabase, query, languageCode);
         setCities(results);
       } catch (error) {
         console.error('Failed to search cities:', error);
@@ -211,6 +360,12 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                 {!isLoading && !isDatabaseLoading && !!dbError && (
                   <Text style={styles.helperText}>
                     {t('addCity.databaseUnavailable')}
+                  </Text>
+                )}
+
+                {!isLoading && !isDatabaseLoading && !dbError && query.length > 1 && cities.length === 0 && (
+                  <Text style={styles.helperText}>
+                    {t('common.noResults')}
                   </Text>
                 )}
 

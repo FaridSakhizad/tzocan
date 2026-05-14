@@ -125,9 +125,18 @@ export function createStyles(theme: UiTheme) {
       color: theme.text.primary,
     },
     cityNotifications: {
-      flex: 1,
-      alignItems: 'center',
       flexDirection: 'row',
+      alignItems: 'center',
+    },
+    cityRelativeDayLabel: {
+      backgroundColor: theme.surface.button.primary,
+      borderRadius: 7,
+      height: 14,
+      lineHeight: 14,
+      fontSize: 10,
+      color: theme.text.onLight,
+      paddingHorizontal: 5,
+      marginTop: -2,
     },
     cityNotificationIcon: {
       width: 13,

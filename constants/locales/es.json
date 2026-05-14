@@ -74,7 +74,7 @@
   "city.fallbackName": "esta ciudad",
   "cities.sortTitle": "Ordenar ciudades",
   "timeline.chooseDay": "Elegir día",
-  "addCity.searchPlaceholder": "Introduce el nombre de la ciudad...",
+  "addCity.searchPlaceholder": "Ingresa el nombre de la ciudad o la zona horaria...",
   "addCity.databaseUnavailable": "La búsqueda de ciudades no está disponible temporalmente.",
   "notifications.helper": "Agrega al menos una ciudad primero",
   "notifications.empty": "Aún no hay notificaciones",

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "TimeCross",
+    "slug": "timecross",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "timecross",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

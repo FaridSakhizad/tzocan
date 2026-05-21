@@ -3,6 +3,7 @@ import { Modal, Pressable, StyleSheet, Text, View, ImageBackground } from 'react
 
 import IconCancelOutlined from '@/assets/images/icon--x-1--outlined.svg';
 import IconConfirmOutlined from '@/assets/images/icon--checkmark-1--outlined.svg';
+import IconBackOutlined from '@/assets/images/icon--arrow-2--outlined.svg';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 
@@ -14,6 +15,7 @@ type NotificationPickerModalProps = {
   showActions?: boolean;
   wide?: boolean;
   children: ReactNode;
+  closeActionType: string | null;
 };
 
 export function NotificationPickerModal({
@@ -24,6 +26,7 @@ export function NotificationPickerModal({
   showActions = true,
   wide = false,
   children,
+  closeActionType = null
 }: NotificationPickerModalProps) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -47,7 +50,7 @@ export function NotificationPickerModal({
               <View style={styles.header}>
                 {showActions && (
                   <Pressable style={styles.headerButton} onPress={onClose}>
-                    <IconCancelOutlined fill={theme.text.primary} />
+                    {closeActionType === 'back' ? <IconBackOutlined fill={theme.text.primary} /> : <IconCancelOutlined fill={theme.text.primary} />}
                   </Pressable>
                 )}
 

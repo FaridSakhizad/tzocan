@@ -758,6 +758,7 @@ export function NotificationModal({
         onClose={handleClosePicker}
         onApply={applyPicker}
         showActions={activePicker !== 'city'}
+        closeActionType={activePicker === 'weekdays' ? 'back' : null}
         wide={isCityPicker}
       >
         {isCityPicker && cityOptions && (

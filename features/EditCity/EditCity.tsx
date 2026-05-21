@@ -35,6 +35,7 @@ import CalendarIcon from '../../assets/images/icon--calendar-2--outlined.svg';
 import EditIcon from '../../assets/images/icon--edit-2.svg';
 import DeleteIcon from '../../assets/images/icon--delete-3.svg';
 import RepeatIcon from '../../assets/images/icon--repeat-1.svg';
+import IconDelete from '@/assets/images/icon--x-2--outlined.svg';
 
 import { createStyles } from './styles';
 
@@ -518,7 +519,7 @@ export default function EditCity() {
             />
             {editName.length > 0 && (
               <Pressable style={styles.clearButton} onPress={() => handleNameChange('')}>
-                <Text style={styles.clearButtonText}>✕</Text>
+                <IconDelete fill={theme.text.warning} />
               </Pressable>
             )}
           </View>

@@ -85,8 +85,6 @@ export function createStyles(theme: UiTheme) {
       alignItems: 'center',
       width: 24,
       height: 24,
-      borderRadius: 12,
-      backgroundColor: theme.surface.elevated,
       position: 'absolute',
       zIndex: 10,
       top: 8,

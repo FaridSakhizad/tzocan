@@ -76,10 +76,12 @@ export function createStyles(theme: UiTheme) {
       position: 'absolute',
       zIndex: 1,
       elevation: 1,
-      top: 0,
+      top: 21,
       bottom: 0,
       width: TIMELINE_CELL_WIDTH,
       backgroundColor: theme.surface.elevatedSoft,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
     },
     listItem: {
       paddingTop: 11,

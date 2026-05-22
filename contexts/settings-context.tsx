@@ -56,17 +56,19 @@ const STORAGE_KEY = '@tzalac_settings';
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [timeFormat, setTimeFormatState] = useState<TimeFormat>(detectPreferredTimeFormat());
-
   const [firstDayOfWeek, setFirstDayOfWeekState] = useState<FirstDayOfWeek>('monday');
-
   const [timeOffsetMinutes, setTimeOffsetMinutesState] = useState<number>(0);
-
-  const [languageCode, setLanguageCodeState] = useState<LanguageCode>(detectPreferredLanguage());
-
+  const [timeFormatOverride, setTimeFormatOverride] = useState<TimeFormat | null>(null);
+  const [timeFormatFollowsSystem, setTimeFormatFollowsSystem] = useState(true);
+  const [languageCodeOverride, setLanguageCodeOverride] = useState<LanguageCode | null>(null);
+  const [languageFollowsSystem, setLanguageFollowsSystem] = useState(true);
   const [themeName, setThemeNameState] = useState<ThemeName>(DEFAULT_THEME_NAME);
-
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const detectedTimeFormat = detectPreferredTimeFormat();
+  const detectedLanguageCode = detectPreferredLanguage();
+  const timeFormat = timeFormatFollowsSystem ? detectedTimeFormat : timeFormatOverride ?? detectedTimeFormat;
+  const languageCode = languageFollowsSystem ? detectedLanguageCode : languageCodeOverride ?? detectedLanguageCode;
 
   useEffect(() => {
     loadSettings();
@@ -77,8 +79,25 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    saveSettings(timeFormat, firstDayOfWeek, timeOffsetMinutes, languageCode, themeName);
-  }, [firstDayOfWeek, isLoaded, languageCode, themeName, timeFormat, timeOffsetMinutes]);
+    saveSettings(
+      timeFormat,
+      timeFormatFollowsSystem,
+      firstDayOfWeek,
+      timeOffsetMinutes,
+      languageCode,
+      languageFollowsSystem,
+      themeName
+    );
+  }, [
+    firstDayOfWeek,
+    isLoaded,
+    languageCode,
+    languageFollowsSystem,
+    themeName,
+    timeFormat,
+    timeFormatFollowsSystem,
+    timeOffsetMinutes,
+  ]);
 
   const loadSettings = async () => {
     try {
@@ -90,8 +109,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
       const parsed = JSON.parse(stored);
 
-      if (isTimeFormat(parsed.timeFormat)) {
-        setTimeFormatState(parsed.timeFormat);
+      const parsedTimeFormatFollowsSystem = parsed.timeFormatFollowsSystem !== false;
+
+      if (parsedTimeFormatFollowsSystem) {
+        setTimeFormatFollowsSystem(true);
+        setTimeFormatOverride(null);
+      } else if (isTimeFormat(parsed.timeFormat)) {
+        setTimeFormatFollowsSystem(false);
+        setTimeFormatOverride(parsed.timeFormat);
       }
 
       if (parsed.firstDayOfWeek === 'monday' || parsed.firstDayOfWeek === 'sunday') {
@@ -102,8 +127,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setTimeOffsetMinutesState(parsed.timeOffsetMinutes);
       }
 
-      if (isLanguageCode(parsed.languageCode)) {
-        setLanguageCodeState(parsed.languageCode);
+      const parsedLanguageFollowsSystem = parsed.languageFollowsSystem !== false;
+
+      if (parsedLanguageFollowsSystem) {
+        setLanguageFollowsSystem(true);
+        setLanguageCodeOverride(null);
+      } else if (isLanguageCode(parsed.languageCode)) {
+        setLanguageFollowsSystem(false);
+        setLanguageCodeOverride(parsed.languageCode);
       }
 
       if (parsed.themeName === 'dark' || parsed.themeName === 'light') {
@@ -120,26 +151,34 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const saveSettings = async (
     format: TimeFormat,
+    nextTimeFormatFollowsSystem: boolean,
     firstDay: FirstDayOfWeek,
     offset: number,
     nextLanguageCode: LanguageCode,
+    nextLanguageFollowsSystem: boolean,
     nextThemeName: ThemeName
   ) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
-        timeFormat: format,
-        firstDayOfWeek: firstDay,
-        timeOffsetMinutes: offset,
-        languageCode: nextLanguageCode,
-        themeName: nextThemeName,
-      }));
+      await AsyncStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          timeFormat: nextTimeFormatFollowsSystem ? null : format,
+          timeFormatFollowsSystem: nextTimeFormatFollowsSystem,
+          firstDayOfWeek: firstDay,
+          timeOffsetMinutes: offset,
+          languageCode: nextLanguageFollowsSystem ? null : nextLanguageCode,
+          languageFollowsSystem: nextLanguageFollowsSystem,
+          themeName: nextThemeName,
+        })
+      );
     } catch (error) {
       console.error('Failed to save settings:', error);
     }
   };
 
   const setTimeFormat = (format: TimeFormat) => {
-    setTimeFormatState(format);
+    setTimeFormatFollowsSystem(false);
+    setTimeFormatOverride(format);
   };
 
   const setFirstDayOfWeek = (value: FirstDayOfWeek) => {
@@ -151,7 +190,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   };
 
   const setLanguageCode = (nextLanguageCode: LanguageCode) => {
-    setLanguageCodeState(nextLanguageCode);
+    setLanguageFollowsSystem(false);
+    setLanguageCodeOverride(nextLanguageCode);
   };
 
   const setThemeName = (nextThemeName: ThemeName) => {

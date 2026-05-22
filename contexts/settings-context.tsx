@@ -1,10 +1,41 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { detectPreferredLanguage, type LanguageCode } from '@/constants/i18n';
+import { getCalendars } from 'expo-localization';
+import { detectPreferredLanguage, isLanguageCode, type LanguageCode } from '@/constants/i18n';
 import { DEFAULT_THEME_NAME, ThemeName } from '@/constants/ui-theme';
 
 export type TimeFormat = '12h' | '24h';
 export type FirstDayOfWeek = 'monday' | 'sunday';
+
+function isTimeFormat(value: unknown): value is TimeFormat {
+  return value === '12h' || value === '24h';
+}
+
+function detectPreferredTimeFormat(): TimeFormat {
+  const preferredCalendar = getCalendars()[0];
+
+  if (preferredCalendar && typeof preferredCalendar.uses24hourClock === 'boolean') {
+    return preferredCalendar.uses24hourClock ? '24h' : '12h';
+  }
+
+  const timeFormatterOptions = new Intl.DateTimeFormat(undefined, {
+    hour: 'numeric',
+  }).resolvedOptions();
+
+  if (typeof timeFormatterOptions.hour12 === 'boolean') {
+    return timeFormatterOptions.hour12 ? '12h' : '24h';
+  }
+
+  if (timeFormatterOptions.hourCycle === 'h11' || timeFormatterOptions.hourCycle === 'h12') {
+    return '12h';
+  }
+
+  if (timeFormatterOptions.hourCycle === 'h23' || timeFormatterOptions.hourCycle === 'h24') {
+    return '24h';
+  }
+
+  return '12h';
+}
 
 type SettingsContextType = {
   timeFormat: TimeFormat;
@@ -25,11 +56,16 @@ const STORAGE_KEY = '@tzalac_settings';
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [timeFormat, setTimeFormatState] = useState<TimeFormat>('12h');
+  const [timeFormat, setTimeFormatState] = useState<TimeFormat>(detectPreferredTimeFormat());
+
   const [firstDayOfWeek, setFirstDayOfWeekState] = useState<FirstDayOfWeek>('monday');
+
   const [timeOffsetMinutes, setTimeOffsetMinutesState] = useState<number>(0);
+
   const [languageCode, setLanguageCodeState] = useState<LanguageCode>(detectPreferredLanguage());
+
   const [themeName, setThemeNameState] = useState<ThemeName>(DEFAULT_THEME_NAME);
+
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -47,19 +83,33 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const loadSettings = async () => {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.timeFormat) setTimeFormatState(parsed.timeFormat);
-        if (parsed.firstDayOfWeek === 'monday' || parsed.firstDayOfWeek === 'sunday') setFirstDayOfWeekState(parsed.firstDayOfWeek);
-        if (typeof parsed.timeOffsetMinutes === 'number') setTimeOffsetMinutesState(parsed.timeOffsetMinutes);
-        if (parsed.languageCode === 'en' || parsed.languageCode === 'es' || parsed.languageCode === 'ru' || parsed.languageCode === 'uk' || parsed.languageCode === 'fr') {
-          setLanguageCodeState(parsed.languageCode);
-        }
-        if (parsed.themeName === 'dark' || parsed.themeName === 'light') {
-          setThemeNameState(parsed.themeName);
-        } else if (parsed.themeName === 'sea' || parsed.themeName === 'paper') {
-          setThemeNameState('light');
-        }
+
+      if (!stored) {
+        return;
+      }
+
+      const parsed = JSON.parse(stored);
+
+      if (isTimeFormat(parsed.timeFormat)) {
+        setTimeFormatState(parsed.timeFormat);
+      }
+
+      if (parsed.firstDayOfWeek === 'monday' || parsed.firstDayOfWeek === 'sunday') {
+        setFirstDayOfWeekState(parsed.firstDayOfWeek);
+      }
+
+      if (typeof parsed.timeOffsetMinutes === 'number') {
+        setTimeOffsetMinutesState(parsed.timeOffsetMinutes);
+      }
+
+      if (isLanguageCode(parsed.languageCode)) {
+        setLanguageCodeState(parsed.languageCode);
+      }
+
+      if (parsed.themeName === 'dark' || parsed.themeName === 'light') {
+        setThemeNameState(parsed.themeName);
+      } else if (parsed.themeName === 'sea' || parsed.themeName === 'paper') {
+        setThemeNameState('light');
       }
     } catch (error) {
       console.error('Failed to load settings:', error);

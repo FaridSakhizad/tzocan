@@ -15,7 +15,7 @@ type NotificationPickerModalProps = {
   showActions?: boolean;
   wide?: boolean;
   children: ReactNode;
-  closeActionType: string | null;
+  closeActionType?: string | null;
 };
 
 export function NotificationPickerModal({

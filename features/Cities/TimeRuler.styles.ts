@@ -60,8 +60,10 @@ export function createStyles(theme: UiTheme, screenWidth: number) {
     rulerContainer: {
       height: 45,
       position: 'relative',
+      overflow: 'hidden',
     },
-    scrollContent: {
+    rulerTrack: {
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       height: 45,
@@ -73,27 +75,30 @@ export function createStyles(theme: UiTheme, screenWidth: number) {
     },
     tickContainer: {
       width: TICK_WIDTH,
-      alignItems: 'center',
+      alignItems: 'flex-end',
       justifyContent: 'center',
       height: 45,
     },
     tick: {
-      width: 3,
-      height: 3,
+      width: 4,
+      height: 4,
+      marginRight: -2,
       backgroundColor: theme.border.field,
       borderRadius: 3,
     },
     hourTick: {
-      height: 5,
-      width: 5,
+      height: 6,
+      width: 6,
+      marginRight: -3,
       backgroundColor: theme.border.field,
       borderRadius: 5,
     },
     zeroTick: {
       height: 13,
       backgroundColor: theme.surface.button.primary,
-      width: 5,
-      borderRadius: 5,
+      width: 6,
+      marginRight: -3,
+      borderRadius: 6,
     },
     centerIndicator: {
       position: 'absolute',

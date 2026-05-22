@@ -1,5 +1,12 @@
 import { useRef, useMemo, useState, useEffect } from 'react';
-import { View, ScrollView, Text, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Pressable, Animated } from 'react-native';
+import { View, Text, Dimensions, Pressable, Animated as RNAnimated } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import IconReset from '@/assets/images/icon--reset-1.svg';
 import { TIME_REFRESH_INTERVAL_MS } from '@/constants/app-config';
@@ -12,8 +19,10 @@ import { createStyles } from '@/features/Cities/TimeRuler.styles';
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const TOTAL_TICKS = TOTAL_MINUTES / MINUTES_PER_TICK;
-const NUMBER_OF_DUMMIES = Math.ceil(SCREEN_WIDTH / TICK_WIDTH);
-const RULER_WIDTH = TOTAL_TICKS * TICK_WIDTH + NUMBER_OF_DUMMIES * TICK_WIDTH;
+const SIDE_DUMMY_TICKS = Math.ceil(SCREEN_WIDTH / 2 / TICK_WIDTH);
+const MIN_OFFSET_MINUTES = -HOURS_RANGE * 60;
+const MAX_OFFSET_MINUTES = HOURS_RANGE * 60;
+const RULER_WIDTH = TOTAL_TICKS * TICK_WIDTH + SIDE_DUMMY_TICKS * 2 * TICK_WIDTH;
 
 type TimeFormat = '12h' | '24h';
 
@@ -57,45 +66,55 @@ const getScrollXForOffset = (minutes: number) => {
   return RULER_WIDTH / 2 - SCREEN_WIDTH / 2 + TICK_WIDTH / 2 + minutes;
 };
 
+const MIN_SCROLL_X = getScrollXForOffset(MIN_OFFSET_MINUTES);
+const MAX_SCROLL_X = getScrollXForOffset(MAX_OFFSET_MINUTES);
+
+const calculateOffsetFromScroll = (scrollX: number) => {
+  return Math.round(scrollX + SCREEN_WIDTH / 2 - RULER_WIDTH / 2 - TICK_WIDTH / 2);
+};
+
+const clampScrollX = (scrollX: number) => {
+  return Math.max(MIN_SCROLL_X, Math.min(MAX_SCROLL_X, scrollX));
+};
+
 export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive = true }: TimeRulerProps) {
   const { theme } = useAppTheme();
   const { locale } = useI18n();
 
   const styles = useMemo(() => createStyles(theme, SCREEN_WIDTH), [theme]);
 
-  const scrollViewRef = useRef<ScrollView>(null);
-  const isScrolling = useRef(false);
-  const isProgrammaticScroll = useRef(false);
+  const isDraggingRef = useRef(false);
   const displayOffsetRef = useRef(offsetMinutes);
-  const initialScrollXRef = useRef(getScrollXForOffset(offsetMinutes));
-
   const [displayOffset, setDisplayOffset] = useState(offsetMinutes);
   const [, setTick] = useState(0);
 
-  const leftSlideAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 0 : -30)).current;
-  const rightSlideAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 0 : 30)).current;
-  const topSlideAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 0 : -20)).current;
-  const opacityAnim = useRef(new Animated.Value(offsetMinutes !== 0 ? 1 : 0)).current;
+  const leftSlideAnim = useRef(new RNAnimated.Value(offsetMinutes !== 0 ? 0 : -30)).current;
+  const rightSlideAnim = useRef(new RNAnimated.Value(offsetMinutes !== 0 ? 0 : 30)).current;
+  const topSlideAnim = useRef(new RNAnimated.Value(offsetMinutes !== 0 ? 0 : -20)).current;
+  const opacityAnim = useRef(new RNAnimated.Value(offsetMinutes !== 0 ? 1 : 0)).current;
   const isOffsetVisible = displayOffset !== 0;
+  const scrollX = useSharedValue(clampScrollX(getScrollXForOffset(offsetMinutes)));
+  const gestureStartScrollX = useSharedValue(scrollX.value);
+  const lastGestureOffset = useSharedValue(offsetMinutes);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(leftSlideAnim, {
+    RNAnimated.parallel([
+      RNAnimated.timing(leftSlideAnim, {
         toValue: isOffsetVisible ? 0 : -30,
         duration: 200,
         useNativeDriver: true,
       }),
-      Animated.timing(rightSlideAnim, {
+      RNAnimated.timing(rightSlideAnim, {
         toValue: isOffsetVisible ? 0 : 30,
         duration: 200,
         useNativeDriver: true,
       }),
-      Animated.timing(topSlideAnim, {
+      RNAnimated.timing(topSlideAnim, {
         toValue: isOffsetVisible ? 0 : -20,
         duration: 200,
         useNativeDriver: true,
       }),
-      Animated.timing(opacityAnim, {
+      RNAnimated.timing(opacityAnim, {
         toValue: isOffsetVisible ? 1 : 0,
         duration: 200,
         useNativeDriver: true,
@@ -104,16 +123,17 @@ export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive 
   }, [displayOffset, isOffsetVisible, leftSlideAnim, opacityAnim, rightSlideAnim, topSlideAnim]);
 
   useEffect(() => {
-    if (isScrolling.current || isProgrammaticScroll.current) {
+    if (isDraggingRef.current) {
       return;
     }
 
     if (displayOffsetRef.current !== offsetMinutes) {
       displayOffsetRef.current = offsetMinutes;
       setDisplayOffset(offsetMinutes);
-      scrollViewRef.current?.scrollTo({ x: getScrollXForOffset(offsetMinutes), animated: false });
+      lastGestureOffset.value = offsetMinutes;
+      scrollX.value = clampScrollX(getScrollXForOffset(offsetMinutes));
     }
-  }, [offsetMinutes]);
+  }, [lastGestureOffset, offsetMinutes, scrollX]);
 
   useEffect(() => {
     if (!isActive) {
@@ -129,98 +149,87 @@ export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive 
     return () => clearInterval(interval);
   }, [isActive]);
 
-  const calculateOffsetFromScroll = (scrollX: number) => {
-    return Math.round(scrollX + SCREEN_WIDTH / 2 - RULER_WIDTH / 2 - TICK_WIDTH / 2);
-  };
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (!isScrolling.current) {
-       return;
-    }
-
-    const scrollX = event.nativeEvent.contentOffset.x;
-
-    const newOffset = calculateOffsetFromScroll(scrollX);
-
-    const leftThreshold = RULER_WIDTH / 2 - (NUMBER_OF_DUMMIES * TICK_WIDTH / 2);
-
-    if (newOffset < 0 && Math.abs(newOffset) > leftThreshold) {
+  const syncOffsetDuringDrag = (newOffset: number) => {
+    if (displayOffsetRef.current === newOffset) {
       return;
     }
 
-    if (newOffset > TOTAL_MINUTES / 2) {
-      return;
-    }
-
-    if (displayOffsetRef.current !== newOffset) {
-      displayOffsetRef.current = newOffset;
-      setDisplayOffset(newOffset);
-      onOffsetChange(newOffset);
-    }
-  };
-
-  const handleScrollBeginDrag = () => {
-    isScrolling.current = true;
-  };
-
-  const handleScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (isProgrammaticScroll.current) {
-      isProgrammaticScroll.current = false;
-
-      return;
-    }
-
-    const scrollX = event.nativeEvent.contentOffset.x;
-
-    const newOffset = calculateOffsetFromScroll(scrollX);
-
-    isScrolling.current = false;
-
-    if (scrollX > (TOTAL_MINUTES)) {
-      isProgrammaticScroll.current = true;
-      scrollViewRef.current?.scrollTo({ x: TOTAL_MINUTES + TICK_WIDTH / 2, animated: true });
-      return;
-    }
-
-    if (scrollX < (TICK_WIDTH / 2)) {
-      isProgrammaticScroll.current = true;
-      scrollViewRef.current?.scrollTo({ x: TICK_WIDTH / 2, animated: true });
-      return;
-    }
-
-    if (Math.abs(newOffset) <= SNAP_TO_ZERO_THRESHOLD) {
-      isProgrammaticScroll.current = true;
-      displayOffsetRef.current = 0;
-      setDisplayOffset(0);
-      onOffsetChange(0);
-      scrollViewRef.current?.scrollTo({ x: getScrollXForOffset(0), animated: true });
-      return;
-    }
-
-    if (displayOffsetRef.current !== newOffset) {
-      displayOffsetRef.current = newOffset;
-      setDisplayOffset(newOffset);
-    }
+    displayOffsetRef.current = newOffset;
+    setDisplayOffset(newOffset);
     onOffsetChange(newOffset);
   };
 
-  const handleResetPress = () => {
-    isProgrammaticScroll.current = true;
+  const handleGestureStart = () => {
+    isDraggingRef.current = true;
+  };
 
+  const handleGestureFinalize = () => {
+    isDraggingRef.current = false;
+  };
+
+  const handleGestureEnd = (nextOffset: number) => {
+    isDraggingRef.current = false;
+
+    if (displayOffsetRef.current !== nextOffset) {
+      displayOffsetRef.current = nextOffset;
+      setDisplayOffset(nextOffset);
+    }
+
+    onOffsetChange(nextOffset);
+  };
+
+  const handleResetPress = () => {
     displayOffsetRef.current = 0;
     setDisplayOffset(0);
     onOffsetChange(0);
+    lastGestureOffset.value = 0;
+    scrollX.value = clampScrollX(getScrollXForOffset(0));
+  };
 
-    const scrollX = getScrollXForOffset(0);
-    scrollViewRef.current?.scrollTo({ x: scrollX, animated: false });
-  }
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        .runOnJS(true)
+        .onBegin(() => {
+          cancelAnimation(scrollX);
+          gestureStartScrollX.value = scrollX.value;
+          handleGestureStart();
+        })
+        .onUpdate((event) => {
+          const rawScrollX = gestureStartScrollX.value - event.translationX;
+          const nextScrollX = clampScrollX(rawScrollX);
+          scrollX.value = nextScrollX;
+          const nextOffset = calculateOffsetFromScroll(nextScrollX);
+
+          if (displayOffsetRef.current !== nextOffset) {
+            lastGestureOffset.value = nextOffset;
+            syncOffsetDuringDrag(nextOffset);
+          }
+        })
+        .onEnd(() => {
+          const finalScrollX = clampScrollX(scrollX.value);
+          const finalOffset = calculateOffsetFromScroll(finalScrollX);
+          const nextOffset = Math.abs(finalOffset) <= SNAP_TO_ZERO_THRESHOLD ? 0 : finalOffset;
+          const nextScrollX = nextOffset === 0 ? getScrollXForOffset(0) : finalScrollX;
+
+          scrollX.value = withTiming(nextScrollX, { duration: 140 });
+          lastGestureOffset.value = nextOffset;
+          handleGestureEnd(nextOffset);
+        })
+        .onFinalize(() => {
+          handleGestureFinalize();
+        }),
+    [gestureStartScrollX, lastGestureOffset, scrollX]
+  );
+
+  const rulerTrackStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: -scrollX.value }],
+  }));
 
   const ticks = useMemo(() => {
     const ticks = [];
 
-    const numberOfDummies = Math.ceil(SCREEN_WIDTH / 2 / TICK_WIDTH);
-
-    for (let i = 0; i < numberOfDummies; i++) {
+    for (let i = 0; i < SIDE_DUMMY_TICKS; i++) {
       ticks.push(<View key={`dummy1_${i}`} style={styles.tickDummy} />)
     }
 
@@ -243,7 +252,7 @@ export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive 
       );
     }
 
-    for (let i = 0; i < numberOfDummies; i++) {
+    for (let i = 0; i < SIDE_DUMMY_TICKS; i++) {
       ticks.push(<View key={`dummy2_${i}`} style={styles.tickDummy} />)
     }
 
@@ -252,7 +261,7 @@ export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive 
 
   return (
     <View style={styles.container}>
-      <Animated.View
+      <RNAnimated.View
         style={[
           styles.resetButton,
           {
@@ -267,10 +276,10 @@ export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive 
             fill={theme.surface.button.subtleStrong}
           />
         </Pressable>
-      </Animated.View>
+      </RNAnimated.View>
 
       <View style={styles.timeContainer}>
-        <Animated.Text
+        <RNAnimated.Text
           style={[
             styles.sideText,
             {
@@ -280,13 +289,13 @@ export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive 
           ]}
         >
           {getLocalTime(locale, timeFormat, 0)}
-        </Animated.Text>
+        </RNAnimated.Text>
         <Pressable onPress={handleResetPress}>
           <Text style={styles.localTimeText}>
             {getLocalTime(locale, timeFormat, displayOffset)}
           </Text>
         </Pressable>
-        <Animated.Text
+        <RNAnimated.Text
           style={[
             styles.sideText,
             {
@@ -296,30 +305,15 @@ export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive 
           ]}
         >
           {formatOffset(displayOffset)}
-        </Animated.Text>
+        </RNAnimated.Text>
       </View>
 
       <View style={styles.rulerContainer}>
-        <ScrollView
-          ref={scrollViewRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          onScroll={handleScroll}
-          onScrollBeginDrag={handleScrollBeginDrag}
-          onScrollEndDrag={handleScrollEnd}
-          onMomentumScrollEnd={handleScrollEnd}
-          scrollEventThrottle={4}
-          contentContainerStyle={styles.scrollContent}
-          contentOffset={{ x: initialScrollXRef.current, y: 0 }}
-          decelerationRate={0}
-          disableIntervalMomentum
-          alwaysBounceHorizontal={false}
-          alwaysBounceVertical={false}
-          bounces={false}
-          overScrollMode="never"
-        >
-          {ticks}
-        </ScrollView>
+        <GestureDetector gesture={pan}>
+          <Animated.View style={[styles.rulerTrack, { width: RULER_WIDTH }, rulerTrackStyle]}>
+            {ticks}
+          </Animated.View>
+        </GestureDetector>
 
         <View
           style={styles.centerIndicator}

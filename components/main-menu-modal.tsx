@@ -78,11 +78,8 @@ export function MainMenuModal({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.modalContainer}
       >
-        <View style={styles.modalTop}>
-          <Pressable onPress={onClose} style={styles.closeButton}>
-            <CloseButton fill={theme.text.primary} />
-          </Pressable>
-        </View>
+        <View style={styles.modalPad} />
+
         <ImageBackground
           source={theme.image.modalBackgroundSource}
           style={styles.backgroundImage}
@@ -117,7 +114,12 @@ export function MainMenuModal({
             </View>
           </View>
         </ImageBackground>
-        <View style={styles.modalTop} />
+
+        <View style={styles.modalPad}>
+          <Pressable onPress={onClose} style={styles.closeButton}>
+            <CloseButton fill={theme.text.primary} />
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -133,10 +135,7 @@ function createStyles(theme: UiTheme) {
       backgroundColor: theme.overlay.strong,
       padding: theme.spacing.modalX,
     },
-    modalTop: {
-      flex: 1,
-    },
-    modalBottom: {
+    modalPad: {
       flex: 1,
     },
     closeButton: {

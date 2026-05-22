@@ -219,11 +219,11 @@ export default function Settings() {
 
         {permissionGranted !== true && (
           <Pressable
-            style={detailScreenStyles.secondaryActionButton}
+            style={detailScreenStyles.optionButton}
             onPress={permissionCanAskAgain ? handleEnableNotifications : handleOpenSystemSettings}
             disabled={isPermissionLoading}
           >
-            <Text style={detailScreenStyles.secondaryActionButtonText}>
+            <Text style={[detailScreenStyles.optionButtonText, detailScreenStyles.notificationsOptionButtonText]}>
               {isPermissionLoading
                 ? t('common.loading')
                 : permissionCanAskAgain

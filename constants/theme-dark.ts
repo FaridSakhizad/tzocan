@@ -34,7 +34,7 @@ export const themeDark: UiTheme = {
     successSoft: 'rgba(76, 175, 80, 0.14)',
     button: {
       primary: '#fff',
-      subtle: 'rgba(62, 63, 86, 0.4)',
+      subtle: 'rgb(93,96,175, 0.6)',
       subtleStrong: 'rgba(62, 63, 86, 0.6)',
       subtleMedium: 'rgba(62, 63, 86, 0.5)',
       subtleWeak: 'rgba(62, 63, 86, 0.2)',

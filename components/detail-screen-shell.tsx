@@ -138,18 +138,6 @@ function createDetailScreenStyles(theme: UiTheme) {
       color: theme.text.primary,
       marginTop: 4,
     },
-    secondaryActionButton: {
-      alignSelf: 'flex-start',
-      borderRadius: theme.radius.md,
-      backgroundColor: theme.surface.button.primary,
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-    },
-    secondaryActionButtonText: {
-      color: theme.text.onLight,
-      fontSize: 14,
-      fontWeight: '600',
-    },
     settingThemeOptions: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -173,6 +161,9 @@ function createDetailScreenStyles(theme: UiTheme) {
     optionButtonText: {
       color: theme.text.primary,
       fontSize: 15
+    },
+    notificationsOptionButtonText: {
+      fontWeight: 'bold',
     },
     optionButtonTextActive: {
       fontWeight: 'bold',

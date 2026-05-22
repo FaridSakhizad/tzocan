@@ -11,18 +11,18 @@ import { HapticTab } from '@/components/haptic-tab';
 import IconCitiesOutlined from '@/assets/images/icon--cities-1--outlined.svg';
 import IconCitiesFilled from '@/assets/images/icon--cities-1--filled.svg';
 
-import IconClockOutlined from '@/assets/images/icon--clock-1--outlined.svg';
-import IconClockFilled from '@/assets/images/icon--clock-1--filled.svg';
-
 import IconTimelineOutlined from '@/assets/images/icon--timeline-1--outlined.svg';
 import IconTimelineFilled from '@/assets/images/icon--timeline-1--filled.svg';
 
 import IconNotificationOutlined from '@/assets/images/icon--notification-1--outlined.svg';
 import IconNotificationFilled from '@/assets/images/icon--notification-1--filled.svg';
+import IconMainMenuOutlined from '@/assets/images/icon--menu-3--outlined.svg';
+import IconMainMenuFilled from '@/assets/images/icon--menu-3--filled.svg';
 
 import { RouteNames, RouteNamePaths } from '@/types/router';
 
 import HeaderButtons from './HeaderButtons';
+import MainMenuLauncher from './MainMenuLauncher';
 import { createStyles } from './styles';
 
 function TabBar(props: BottomTabBarProps) {
@@ -52,111 +52,144 @@ export default function TabLayout() {
   const { theme } = useAppTheme();
 
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const [isMainMenuVisible, setIsMainMenuVisible] = React.useState(false);
 
   return (
-    <Tabs
-      tabBar={(props) => <TabBar {...props} />}
-      screenOptions={{
-        tabBarActiveTintColor: theme.navigation.colors.primary,
-        headerShown: true,
-        header: () => <HeaderButtons />,
-        headerStyle: {
-          shadowOpacity: 0,
-          elevation: 0,
-        },
-        headerTransparent: false,
-        tabBarButton: HapticTab,
-        tabBarStyle: styles.tabBarStyle,
-      }}
-    >
-      <Tabs.Screen
-        name={RouteNames.cities}
-        options={{
-          title: '',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={styles.iconBox}>
-              {(focused || pathname === RouteNamePaths.editCity) ? (
-                <IconCitiesFilled
-                  style={styles.icon}
-                  fill={theme.text.primary}
-                />
-              ) : (
-                <IconCitiesOutlined
-                  style={styles.icon}
-                  fill={theme.text.primary}
-                />
-              )}
-            </View>
-          ),
+    <>
+      <Tabs
+        tabBar={(props) => <TabBar {...props} />}
+        screenOptions={{
+          tabBarActiveTintColor: theme.navigation.colors.primary,
+          headerShown: true,
+          header: () => <HeaderButtons />,
+          headerStyle: {
+            shadowOpacity: 0,
+            elevation: 0,
+          },
+          headerTransparent: false,
+          tabBarButton: HapticTab,
+          tabBarStyle: styles.tabBarStyle,
         }}
-      />
+      >
+        <Tabs.Screen
+          name={RouteNames.cities}
+          options={{
+            title: '',
+            tabBarIcon: ({ color, focused }) => (
+              <View style={styles.iconBox}>
+                {(focused || pathname === RouteNamePaths.editCity) ? (
+                  <IconCitiesFilled
+                    style={styles.icon}
+                    fill={theme.text.primary}
+                  />
+                ) : (
+                  <IconCitiesOutlined
+                    style={styles.icon}
+                    fill={theme.text.primary}
+                  />
+                )}
+              </View>
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name={RouteNames.timeline}
-        options={{
-          title: '',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={styles.iconBox}>
-              {focused ? (
-                <IconTimelineFilled
-                  style={styles.icon}
-                  fill={theme.text.primary}
-                />
-              ) : (
-                <IconTimelineOutlined
-                  style={styles.icon}
-                  fill={theme.text.primary}
-                />
-              )}
-            </View>
-          ),
-        }}
-      />
+        <Tabs.Screen
+          name={RouteNames.timeline}
+          options={{
+            title: '',
+            tabBarIcon: ({ color, focused }) => (
+              <View style={styles.iconBox}>
+                {focused ? (
+                  <IconTimelineFilled
+                    style={styles.icon}
+                    fill={theme.text.primary}
+                  />
+                ) : (
+                  <IconTimelineOutlined
+                    style={styles.icon}
+                    fill={theme.text.primary}
+                  />
+                )}
+              </View>
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name={RouteNames.notifications}
-        options={{
-          title: '',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={styles.iconBox}>
-              {focused ? (
-                <IconNotificationFilled style={styles.icon} fill={theme.text.primary} />
-              ) : (
-                <IconNotificationOutlined style={styles.icon} fill={theme.text.primary} />
-              )}
-            </View>
-          ),
-        }}
-      />
+        <Tabs.Screen
+          name={RouteNames.notifications}
+          options={{
+            title: '',
+            tabBarIcon: ({ color, focused }) => (
+              <View style={styles.iconBox}>
+                {focused ? (
+                  <IconNotificationFilled style={styles.icon} fill={theme.text.primary} />
+                ) : (
+                  <IconNotificationOutlined style={styles.icon} fill={theme.text.primary} />
+                )}
+              </View>
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name={RouteNames.editCity}
-        options={{
-          title: '',
-          href: null,
-        }}
+        <Tabs.Screen
+          name={RouteNames.mainMenu}
+          listeners={{
+            tabPress: (event) => {
+              event.preventDefault();
+              setIsMainMenuVisible(true);
+            },
+          }}
+          options={{
+            title: '',
+            tabBarIcon: () => (
+              <View style={styles.iconBox}>
+                {isMainMenuVisible ? (
+                  <IconMainMenuFilled style={styles.icon} fill={theme.text.primary} />
+                ) : (
+                  <IconMainMenuOutlined style={styles.icon} fill={theme.text.primary} />
+                )}
+              </View>
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name={RouteNames.editCity}
+          options={{
+            title: '',
+            href: null,
+          }}
+        />
+
+        <Tabs.Screen
+          name={RouteNames.contact}
+          options={{
+            title: '',
+            href: null,
+          }}
+        />
+
+        <Tabs.Screen
+          name={RouteNames.settings}
+          options={{
+            title: '',
+            href: null,
+          }}
+        />
+
+        <Tabs.Screen
+          name={RouteNames.about}
+          options={{
+            title: '',
+            href: null,
+          }}
+        />
+      </Tabs>
+
+      <MainMenuLauncher
+        visible={isMainMenuVisible}
+        onClose={() => setIsMainMenuVisible(false)}
       />
-      <Tabs.Screen
-        name={RouteNames.contact}
-        options={{
-          title: '',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name={RouteNames.settings}
-        options={{
-          title: '',
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name={RouteNames.about}
-        options={{
-          title: '',
-          href: null,
-        }}
-      />
-    </Tabs>
+    </>
   );
 }

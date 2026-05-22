@@ -6,7 +6,7 @@ import { useNotificationsSort } from '@/contexts/notifications-sort-context';
 import { useSelectedCities } from '@/contexts/selected-cities-context';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import React, { useEffect } from 'react';
-import { createStyles } from '@/features/MainLayout/styles';
+import { createStyles } from '@/features/MainLayout/HeaderButtons.styles';
 import { RouteNamePaths } from '@/types/router';
 import { getCityDisplayName } from '@/utils/city-display';
 import { AddCityModal, CityRow } from '@/components/add-city-modal';
@@ -16,15 +16,12 @@ import IconBack from '@/assets/images/icon--arrow-2--outlined.svg';
 import IconAddNotificationOutlined from '@/assets/images/icon--add-notification-1--outlined.svg';
 import IconAddNotificationFilled from '@/assets/images/icon--add-notification-1--filled.svg';
 import IconDelete1 from '@/assets/images/icon--delete-2--outlined.svg';
-import IconMainMenuFilled from '@/assets/images/icon--menu-1--filled.svg';
-import IconMainMenuOutlined from '@/assets/images/icon--menu-1--outlined.svg';
 import IconCheckmarkFilled from '@/assets/images/icon--checkmark-1--filled.svg';
 import IconEditOutlined from '@/assets/images/icon--edit-1--outlined.svg';
 import IconMiscMenuFilled from '@/assets/images/icon--menu-2--filled.svg';
 import IconMiscMenuOutlined from '@/assets/images/icon--menu-2--outlined.svg';
 import IconAddLocationFilled from '@/assets/images/icon--add-location-1--filled.svg';
 import IconAddLocationOutlined from '@/assets/images/icon--add-location-1--outlined.svg';
-import { MainMenuModal } from '@/components/main-menu-modal';
 import { DeleteCityModal } from '@/components/delete-city-modal';
 
 export default function HeaderButtons() {
@@ -37,11 +34,12 @@ export default function HeaderButtons() {
   const { openSortPicker, isSortPickerVisible } = useNotificationsSort();
   const { selectedCities, addCity, addNotification, removeCity } = useSelectedCities();
   const localizedCityNames = useLocalizedCityNames(selectedCities.map((city) => city.cityId));
+
   const styles = React.useMemo(() => createStyles(theme), [theme]);
+
   const [isAddCityModalVisible, setIsAddCityModalVisible] = React.useState(false);
   const [isAddNotificationModalVisible, setIsAddNotificationModalVisible] = React.useState(false);
   const [selectedNotificationCityId, setSelectedNotificationCityId] = React.useState<number | null>(null);
-  const [isMainMenuModalVisible, setIsMainMenuModalVisible] = React.useState(false);
   const [isDeleteCityModalVisible, setIsDeleteCityModalVisible] = React.useState(false);
 
   const lastActiveTabPathRef = React.useRef<RouteNamePaths.root | RouteNamePaths.timeline | RouteNamePaths.notifications>(RouteNamePaths.root);
@@ -107,18 +105,6 @@ export default function HeaderButtons() {
     setIsAddCityModalVisible(false);
   };
 
-  const handleOpenMainMenuModal = () => {
-    if (isEditMode) {
-      return;
-    }
-
-    setIsMainMenuModalVisible(true);
-  };
-
-  const handleCloseMainMenuModal = () => {
-    setIsMainMenuModalVisible(false);
-  };
-
   const handleOpenDeleteCityModal = () => {
     if (pathname !== RouteNamePaths.editCity || !currentEditCity) {
       return;
@@ -144,30 +130,6 @@ export default function HeaderButtons() {
 
   const handleBackFromEditCity = () => {
     router.navigate(lastActiveTabPathRef.current);
-  };
-
-  const handleOpenContactScreen = () => {
-    if (isEditMode) {
-      return;
-    }
-
-    router.replace(RouteNamePaths.contact);
-  };
-
-  const handleOpenSettingsScreen = () => {
-    if (isEditMode) {
-      return;
-    }
-
-    router.replace(RouteNamePaths.settings);
-  };
-
-  const handleOpenAboutScreen = () => {
-    if (isEditMode) {
-      return;
-    }
-
-    router.replace(RouteNamePaths.about);
   };
 
   const handleOpenAddNotificationModal = () => {
@@ -287,30 +249,6 @@ export default function HeaderButtons() {
                 fill={theme.text.primary}
               />
             </Pressable>
-
-            {(isContactScreen || isSettingsScreen || isAboutScreen) && (
-              <Pressable
-                onPress={handleOpenMainMenuModal}
-                disabled={isEditMode}
-                style={[
-                  styles.headerButton,
-                  isEditMode && styles.headerButtonDisabled,
-                  styles.headerButtonSettings,
-                ]}
-              >
-                {isMainMenuModalVisible ? (
-                  <IconMainMenuFilled
-                    style={styles.headerButtonIcon}
-                    fill={theme.text.primary}
-                  />
-                ) : (
-                  <IconMainMenuOutlined
-                    style={styles.headerButtonIcon}
-                    fill={theme.text.primary}
-                  />
-                )}
-              </Pressable>
-            )}
           </>
         )}
 
@@ -335,30 +273,6 @@ export default function HeaderButtons() {
                 />
               )}
             </Pressable>
-
-            {isSortScreen && (
-              <Pressable
-                onPress={openSortPicker}
-                disabled={isEditMode}
-                style={[
-                  styles.headerButton,
-                  styles.headerButtonSort,
-                  isEditMode && styles.headerButtonDisabled,
-                ]}
-              >
-                {isSortPickerVisible ? (
-                  <IconMiscMenuFilled
-                    style={styles.headerButtonIcon}
-                    fill={theme.text.primary}
-                  />
-                ) : (
-                  <IconMiscMenuOutlined
-                    style={styles.headerButtonIcon}
-                    fill={theme.text.primary}
-                  />
-                )}
-              </Pressable>
-            )}
 
             <Pressable
               onPress={handleOpenAddNotificationModal}
@@ -396,27 +310,29 @@ export default function HeaderButtons() {
               )}
             </Pressable>
 
-            <Pressable
-              onPress={handleOpenMainMenuModal}
-              disabled={isEditMode}
-              style={[
-                styles.headerButton,
-                isEditMode && styles.headerButtonDisabled,
-                styles.headerButtonSettings,
-              ]}
-            >
-              {isMainMenuModalVisible ? (
-                <IconMainMenuFilled
-                  style={styles.headerButtonIcon}
-                  fill={theme.text.primary}
-                />
-              ) : (
-                <IconMainMenuOutlined
-                  style={styles.headerButtonIcon}
-                  fill={theme.text.primary}
-                />
-              )}
-            </Pressable>
+            {isSortScreen && (
+              <Pressable
+                onPress={openSortPicker}
+                disabled={isEditMode}
+                style={[
+                  styles.headerButton,
+                  styles.headerButtonSort,
+                  isEditMode && styles.headerButtonDisabled,
+                ]}
+              >
+                {isSortPickerVisible ? (
+                  <IconMiscMenuFilled
+                    style={styles.headerButtonIcon}
+                    fill={theme.text.primary}
+                  />
+                ) : (
+                  <IconMiscMenuOutlined
+                    style={styles.headerButtonIcon}
+                    fill={theme.text.primary}
+                  />
+                )}
+              </Pressable>
+            )}
           </>
         )}
       </View>
@@ -439,18 +355,6 @@ export default function HeaderButtons() {
         onClose={handleCloseAddNotificationModal}
         onSave={handleSaveNotification}
       />
-
-      <MainMenuModal
-        visible={isMainMenuModalVisible}
-        onClose={handleCloseMainMenuModal}
-        onAddNotification={handleOpenAddNotificationModal}
-        onAddCity={handleOpenAddCityModal}
-        onContact={handleOpenContactScreen}
-        onSettings={handleOpenSettingsScreen}
-        onAbout={handleOpenAboutScreen}
-        canAddNotification={selectedCities.length > 0}
-      />
-
       <DeleteCityModal
         visible={isDeleteCityModalVisible}
         cityName={currentEditCity ? getCityDisplayName(currentEditCity, localizedCityNames[currentEditCity.cityId]) : 'this city'}

@@ -1,26 +1,32 @@
 import { getLocales } from 'expo-localization';
 
+import de from '@/constants/locales/de.json';
 import en from '@/constants/locales/en.json';
 import es from '@/constants/locales/es.json';
 import fr from '@/constants/locales/fr.json';
+import pt from '@/constants/locales/pt.json';
 import ru from '@/constants/locales/ru.json';
 import uk from '@/constants/locales/uk.json';
 
-export type LanguageCode = 'en' | 'ru' | 'uk' | 'fr' | 'es';
+export type LanguageCode = 'en' | 'ru' | 'uk' | 'fr' | 'es' | 'de' | 'pt';
 
-const supportedLanguageCodes = ['en', 'ru', 'uk', 'fr', 'es'] as const;
+const supportedLanguageCodes = ['en', 'ru', 'uk', 'fr', 'es', 'de', 'pt'] as const;
 
 export const languageLocaleMap: Record<LanguageCode, string> = {
+  de: 'de-DE',
   en: 'en-GB',
   es: 'es-ES',
+  pt: 'pt-PT',
   ru: 'ru-RU',
   uk: 'uk-UA',
   fr: 'fr-FR',
 };
 
 export const languageLabels: Record<LanguageCode, string> = {
+  de: 'Deutsch',
   en: 'English',
   es: 'Español',
+  pt: 'Português',
   ru: 'Русский',
   uk: 'Українська',
   fr: 'Français',
@@ -29,8 +35,10 @@ export const languageLabels: Record<LanguageCode, string> = {
 export type TranslationMap = Record<string, string>;
 
 export const translations: Record<LanguageCode, TranslationMap> = {
+  de,
   en,
   es,
+  pt,
   ru,
   uk,
   fr,

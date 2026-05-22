@@ -55,8 +55,10 @@ export default function Settings() {
   ];
 
   const languageOptions = [
+    { value: 'de' as const, label: languageLabels.de },
     { value: 'en' as const, label: languageLabels.en },
     { value: 'es' as const, label: languageLabels.es },
+    { value: 'pt' as const, label: languageLabels.pt },
     { value: 'ru' as const, label: languageLabels.ru },
     { value: 'uk' as const, label: languageLabels.uk },
     { value: 'fr' as const, label: languageLabels.fr },

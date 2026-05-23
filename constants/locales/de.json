@@ -80,6 +80,7 @@
   "cities.sortTitle": "Städte sortieren",
   "timeline.chooseDay": "Tag auswählen",
   "addCity.searchPlaceholder": "Stadtname oder Zeitzone eingeben...",
+  "addCity.chooseTimezone": "GMT / UTC wählen",
   "addCity.databaseUnavailable": "Die Stadtsuche ist vorübergehend nicht verfügbar.",
   "notifications.helper": "Fügen Sie zuerst mindestens eine Stadt hinzu",
   "notifications.empty": "Noch keine Benachrichtigungen",

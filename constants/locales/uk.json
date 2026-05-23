@@ -80,6 +80,7 @@
   "cities.sortTitle": "Сортувати міста",
   "timeline.chooseDay": "Обрати день",
   "addCity.searchPlaceholder": "Введіть назву міста або часовий пояс...",
+  "addCity.chooseTimezone": "Обрати GMT / UTC",
   "addCity.databaseUnavailable": "Пошук міст тимчасово недоступний.",
   "notifications.helper": "Спочатку додайте хоча б одне місто",
   "notifications.empty": "Сповіщень поки немає",

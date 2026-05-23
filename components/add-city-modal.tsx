@@ -5,6 +5,11 @@ import * as SQLite from "expo-sqlite";
 
 import IconCancelOutlined from '@/assets/images/icon--x-1--outlined.svg';
 import IconConfirmOutlined from '@/assets/images/icon--checkmark-1--outlined.svg';
+
+import IconArrow from '@/assets/images/icon--arrow-1.svg';
+import IconGlobe from '@/assets/images/icon--globe-1.svg';
+import IconSearch from '@/assets/images/icon--search-1.svg';
+
 import { useDatabase } from '@/hooks/use-database';
 import { useI18n } from '@/hooks/use-i18n';
 import type { UiTheme } from '@/constants/ui-theme.types';
@@ -76,6 +81,7 @@ const ABSTRACT_TIMEZONE_OFFSETS_MINUTES = [
 ];
 
 let cachedDistinctTimezones: string[] | null = null;
+const SHOW_ABSTRACT_TIMEZONE_QUICK_BUTTONS = false;
 
 function normalizeSearchText(value: string) {
   return value
@@ -353,6 +359,137 @@ type AddCityModalProps = {
   onSave: (city: CityRow) => void;
 };
 
+type AbstractTimezoneQuickButtonsProps = {
+  fractionalTimezoneRows: SearchCityRow[];
+  fullHourTimezoneRows: SearchCityRow[];
+  onSelect: (city: SearchCityRow) => void;
+  styles: ReturnType<typeof createStyles>;
+};
+
+function AbstractTimezoneQuickButtons({
+  fractionalTimezoneRows,
+  fullHourTimezoneRows,
+  onSelect,
+  styles,
+}: AbstractTimezoneQuickButtonsProps) {
+  return (
+    <View style={styles.timezoneSection}>
+      <View style={styles.timezoneGrid}>
+        {fullHourTimezoneRows.map((city) => (
+          <Pressable
+            key={`abstract-timezone-${city.id}`}
+            onPress={() => onSelect(city)}
+            style={({ pressed }) => [
+              styles.timezoneButton,
+              pressed && styles.timezoneButtonPressed,
+            ]}
+          >
+            <Text style={styles.timezoneButtonText}>{city.name.replace('GMT', '')}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <View style={styles.fractionalTimezoneSection}>
+        <Text style={styles.fractionalTimezoneSectionTitle}>Fractional GMT / UTC</Text>
+
+        <View style={styles.fractionalTimezoneGrid}>
+          {fractionalTimezoneRows.map((city) => (
+            <Pressable
+              key={`abstract-fractional-timezone-${city.id}`}
+              onPress={() => onSelect(city)}
+              style={({ pressed }) => [
+                styles.fractionalTimezoneButton,
+                pressed && styles.timezoneButtonPressed,
+              ]}
+            >
+              <Text style={styles.fractionalTimezoneButtonText}>{city.name.replace('GMT', '')}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+type AbstractTimezonePickerProps = {
+  triggerLabel: string;
+  options: SearchCityRow[];
+  onSelect: (city: SearchCityRow) => void;
+  theme: UiTheme;
+  styles: ReturnType<typeof createStyles>;
+};
+
+function AbstractTimezonePicker({
+  triggerLabel,
+  onSelect,
+  options,
+  theme,
+  styles,
+}: AbstractTimezonePickerProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <View style={styles.timezonePickerSection}>
+      <Pressable
+        onPress={() => {
+          setIsExpanded((prev) => !prev);
+        }}
+        style={({ pressed }) => [
+          styles.timezonePickerTrigger,
+          pressed && styles.timezonePickerTriggerPressed,
+        ]}
+      >
+        <IconGlobe
+          fill={theme.text.primary}
+          style={[
+            styles.timezonePickerIcon,
+            isExpanded && styles.timezonePickerIconExpanded,
+          ]}
+        />
+
+        <Text style={[
+          styles.timezonePickerTriggerText,
+          isExpanded && styles.timezonePickerTriggerTextExpanded,
+        ]}>{triggerLabel}</Text>
+
+        <IconArrow
+          fill={theme.text.primary}
+          style={[
+            styles.timezonePickerTriggerIcon,
+            isExpanded && styles.timezonePickerTriggerIconExpanded,
+          ]}
+        />
+      </Pressable>
+
+      {isExpanded && (
+        <ScrollView
+          style={styles.timezonePickerListScroll}
+          contentContainerStyle={styles.timezonePickerList}
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={false}
+        >
+          {options.map((city) => (
+            <Pressable
+              key={`timezone-option-${city.id}`}
+              onPress={() => {
+                setIsExpanded(false);
+                onSelect(city);
+              }}
+              style={({ pressed }) => [
+                styles.cityItem,
+                styles.timezonePickerItemCard,
+                pressed && styles.cityItemPressed,
+              ]}
+            >
+              <Text style={styles.cityText}>{city.name.replace('GMT', '')}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
 export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
   const insets = useSafeAreaInsets();
   const { theme } = useAppTheme();
@@ -365,13 +502,14 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const hasActiveQuery = query.trim().length > 0;
 
-  const { fullHourTimezoneRows, fractionalTimezoneRows } = useMemo(
+  const { abstractTimezoneRows, fullHourTimezoneRows, fractionalTimezoneRows } = useMemo(
     () => {
       const rows = ABSTRACT_TIMEZONE_OFFSETS_MINUTES.map((offsetMinutes) =>
         createAbstractTimezoneRow(offsetMinutes)
       ).filter((city): city is SearchCityRow => city !== null);
 
       return {
+        abstractTimezoneRows: rows,
         fullHourTimezoneRows: rows.filter((city) => !city.name.includes(':')),
         fractionalTimezoneRows: rows.filter((city) => city.name.includes(':')),
       };
@@ -498,19 +636,25 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                     </View>
                   </View>
 
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t('addCity.searchPlaceholder')}
-                    placeholderTextColor={theme.text.placeholder}
-                    value={query}
-                    onChangeText={(value) => {
-                      setQuery(value);
-                    }}
-                    onBlur={() => Keyboard.dismiss()}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    autoFocus
-                  />
+                  <View style={styles.searchInputBox}>
+                    <IconSearch
+                      fill={theme.text.primary}
+                      style={styles.searchInputIcon}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('addCity.searchPlaceholder')}
+                      placeholderTextColor={theme.text.placeholder}
+                      value={query}
+                      onChangeText={(value) => {
+                        setQuery(value);
+                      }}
+                      onBlur={() => Keyboard.dismiss()}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoFocus
+                    />
+                  </View>
 
                   {isLoading && (
                     <View style={styles.loadingBlock}>
@@ -528,6 +672,27 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                     <Text style={styles.helperText}>
                       {t('common.noResults')}
                     </Text>
+                  )}
+
+                  {!hasActiveQuery && cities.length === 0 && (
+                    <>
+                      {SHOW_ABSTRACT_TIMEZONE_QUICK_BUTTONS && (
+                        <AbstractTimezoneQuickButtons
+                          fractionalTimezoneRows={fractionalTimezoneRows}
+                          fullHourTimezoneRows={fullHourTimezoneRows}
+                          onSelect={handleSave}
+                          styles={styles}
+                        />
+                      )}
+
+                      <AbstractTimezonePicker
+                        options={abstractTimezoneRows}
+                        onSelect={handleSave}
+                        theme={theme}
+                        triggerLabel={t('addCity.chooseTimezone')}
+                        styles={styles}
+                      />
+                    </>
                   )}
 
                   {!isLoading && (
@@ -553,45 +718,6 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                           )}
                         </Pressable>
                       ))}
-
-                      {!hasActiveQuery && cities.length === 0 && (
-                        <View style={styles.timezoneSection}>
-                          <Text style={styles.fractionalTimezoneSectionTitle}>GMT</Text>
-                          <View style={styles.timezoneGrid}>
-                            {fullHourTimezoneRows.map((city) => (
-                              <Pressable
-                                key={`abstract-timezone-${city.id}`}
-                                onPress={() => handleSave(city)}
-                                style={({ pressed }) => [
-                                  styles.timezoneButton,
-                                  pressed && styles.timezoneButtonPressed,
-                                ]}
-                              >
-                                <Text style={styles.timezoneButtonText}>{city.name.replace('GMT', '')}</Text>
-                              </Pressable>
-                            ))}
-                          </View>
-
-                          <View style={styles.fractionalTimezoneSection}>
-                            <Text style={styles.fractionalTimezoneSectionTitle}>Fractional GMT / UTC</Text>
-
-                            <View style={styles.fractionalTimezoneGrid}>
-                              {fractionalTimezoneRows.map((city) => (
-                                <Pressable
-                                  key={`abstract-fractional-timezone-${city.id}`}
-                                  onPress={() => handleSave(city)}
-                                  style={({ pressed }) => [
-                                    styles.fractionalTimezoneButton,
-                                    pressed && styles.timezoneButtonPressed,
-                                  ]}
-                                >
-                                  <Text style={styles.fractionalTimezoneButtonText}>{city.name.replace('GMT', '')}</Text>
-                                </Pressable>
-                              ))}
-                            </View>
-                          </View>
-                        </View>
-                      )}
                     </ScrollView>
                   )}
                 </View>
@@ -652,14 +778,27 @@ function createStyles(theme: UiTheme) {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    searchInputBox: {
+      position: 'relative',
+      marginLeft: theme.spacing.screenX,
+      marginRight: theme.spacing.screenX,
+    },
+    searchInputIcon: {
+      position: 'absolute',
+      left: 13,
+      top: 15,
+      bottom: 0,
+      width: 16,
+      height: 16,
+      opacity: 0.44
+    },
     input: {
       borderWidth: 1,
       borderColor: theme.border.field,
       borderRadius: theme.radius.md,
       padding: 12,
+      paddingLeft: 34,
       fontSize: theme.typography.control.fontSize,
-      marginLeft: theme.spacing.screenX,
-      marginRight: theme.spacing.screenX,
       marginBottom: 16,
       backgroundColor: theme.surface.field,
       color: theme.text.primary,
@@ -710,6 +849,71 @@ function createStyles(theme: UiTheme) {
       paddingTop: 14,
       paddingBottom: 20,
       display: 'flex',
+    },
+    timezonePickerSection: {
+      paddingTop: 14,
+      paddingBottom: 20,
+      marginLeft: theme.spacing.screenX,
+      marginRight: theme.spacing.screenX,
+    },
+    timezonePickerTrigger: {
+      borderWidth: 1,
+      borderColor: theme.border.field,
+      borderRadius: theme.radius.md,
+      padding: 12,
+      fontSize: theme.typography.control.fontSize,
+      marginBottom: 6,
+      backgroundColor: theme.surface.field,
+      color: theme.text.primary,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    timezonePickerTriggerPressed: {
+      backgroundColor: theme.overlay.medium,
+    },
+    timezonePickerTriggerText: {
+      fontSize: theme.typography.control.fontSize,
+      color: theme.text.primary,
+      opacity: 0.44
+    },
+    timezonePickerTriggerTextExpanded: {
+      opacity: 1
+    },
+    timezonePickerIcon: {
+      marginRight: 6,
+      opacity: 0.44
+    },
+    timezonePickerIconExpanded: {
+      opacity: 1,
+    },
+    timezonePickerTriggerIcon: {
+      marginLeft: 'auto',
+      marginRight: 4,
+      opacity: 0.44,
+      transform: [{ rotate: '90deg' }],
+    },
+    timezonePickerTriggerIconExpanded: {
+      transform: [{ rotate: '-90deg' }],
+      opacity: 1,
+    },
+    timezonePickerList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'flex-start',
+      columnGap: '2%',
+      rowGap: 6,
+      paddingBottom: 2,
+    },
+    timezonePickerItemCard: {
+      alignItems: 'center',
+      width: '23.5%',
+      fontSize: 13,
+      paddingLeft: 9,
+      paddingBottom: 9,
+      marginBottom: 0,
+    },
+    timezonePickerListScroll: {
+      marginTop: 8,
     },
     timezoneGrid: {
       flexDirection: 'row',

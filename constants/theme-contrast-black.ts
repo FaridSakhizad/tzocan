@@ -1,0 +1,69 @@
+import { themeBaseScales } from '@/constants/theme-base';
+import type { UiTheme } from '@/constants/ui-theme.types';
+
+export const themeContrastBlack: UiTheme = {
+  name: 'contrastBlack',
+  statusBarStyle: 'light',
+  navigation: {
+    dark: true,
+    colors: {
+      primary: '#ffffff',
+      background: 'transparent',
+      card: 'transparent',
+      text: '#ffffff',
+      border: '#e8e8e8',
+      notification: '#ffffff',
+    },
+  },
+  overlay: {
+    strong: 'rgba(0, 0, 0, 0.95)',
+    medium: 'rgba(0, 0, 0, 0.95)',
+  },
+  surface: {
+    transparent: 'rgba(0, 0, 0, 0)',
+    elevated: 'rgba(0, 0, 0, 0.95)',
+    elevatedSoft: 'rgba(0, 0, 0, 0.95)',
+    elevatedMuted: 'rgba(12, 12, 12, 0.95)',
+    card: 'rgba(0, 0, 0, 0.95)',
+    cardSoft: 'rgba(10, 10, 10, 0.95)',
+    cardAlt: 'rgba(20, 20, 20, 0.95)',
+    cardStrong: 'rgba(0, 0, 0, 0.95)',
+    field: 'rgba(0, 0, 0, 0.95)',
+    fieldStrong: 'rgba(18, 18, 18, 0.95)',
+    fieldSelected: 'rgba(38, 38, 38, 0.95)',
+    successSoft: 'rgba(0, 36, 0, 0.95)',
+    button: {
+      primary: '#ffffff',
+      subtle: 'rgba(255, 255, 255, 0.1)',
+      subtleStrong: 'rgba(255, 255, 255, 0.16)',
+      subtleMedium: 'rgba(255, 255, 255, 0.13)',
+      subtleWeak: 'rgba(255, 255, 255, 0.06)',
+      danger: '#ffffff',
+    },
+  },
+  border: {
+    field: 'rgba(255, 255, 255, 0.9)',
+    subtle: 'rgba(255, 255, 255, 0.48)',
+    faint: 'rgba(255, 255, 255, 0.24)',
+    muted: 'rgba(255, 255, 255, 0.14)',
+    transparent: 'rgba(255, 255, 255, 0)',
+    success: '#7dff7d',
+  },
+  text: {
+    primary: '#ffffff',
+    secondary: 'rgba(255, 255, 255, 0.82)',
+    muted: '#bdbdbd',
+    helper: 'rgba(255, 255, 255, 0.64)',
+    placeholder: 'rgba(255, 255, 255, 0.44)',
+    accentSoft: '#ffffff',
+    onLight: '#000000',
+    warning: '#ffffff',
+  },
+  image: {
+    ...themeBaseScales.image,
+    modalBackgroundSource: require('@/assets/images/bg-paper-black.jpg'),
+  },
+  radius: themeBaseScales.radius,
+  spacing: themeBaseScales.spacing,
+  typography: themeBaseScales.typography,
+};

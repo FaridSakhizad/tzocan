@@ -64,6 +64,8 @@
   "settings.theme.dark": "Sombre",
   "settings.theme.paperLight": "Papier clair",
   "settings.theme.paperDark": "Papier sombre",
+  "settings.theme.contrastWhite": "Contraste blanc",
+  "settings.theme.contrastBlack": "Contraste noir",
   "settings.language.label": "Langue",
   "settings.language.hint": "Choisissez la langue de l’interface.",
   "settings.notifications.label": "Autorisations de notifications",

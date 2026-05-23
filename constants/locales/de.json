@@ -64,6 +64,8 @@
   "settings.theme.dark": "Dunkel",
   "settings.theme.paperLight": "Papier hell",
   "settings.theme.paperDark": "Papier dunkel",
+  "settings.theme.contrastWhite": "Kontrast weiss",
+  "settings.theme.contrastBlack": "Kontrast schwarz",
   "settings.language.label": "Sprache",
   "settings.language.hint": "Wählen Sie die Sprache der App-Oberfläche.",
   "settings.notifications.label": "Benachrichtigungen",

@@ -1,4 +1,4 @@
-export type ThemeName = 'light' | 'dark' | 'paperLight' | 'paperDark';
+export type ThemeName = 'light' | 'dark' | 'paperLight' | 'paperDark' | 'contrastWhite' | 'contrastBlack';
 
 export type UiTheme = {
   name: ThemeName;

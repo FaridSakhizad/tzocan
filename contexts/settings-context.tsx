@@ -141,7 +141,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         parsed.themeName === 'dark' ||
         parsed.themeName === 'light' ||
         parsed.themeName === 'paperLight' ||
-        parsed.themeName === 'paperDark'
+        parsed.themeName === 'paperDark' ||
+        parsed.themeName === 'contrastWhite' ||
+        parsed.themeName === 'contrastBlack'
       ) {
         setThemeNameState(parsed.themeName);
       } else if (parsed.themeName === 'sea' || parsed.themeName === 'paper') {

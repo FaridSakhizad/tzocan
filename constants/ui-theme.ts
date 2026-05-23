@@ -1,3 +1,5 @@
+import { themeContrastBlack } from '@/constants/theme-contrast-black';
+import { themeContrastWhite } from '@/constants/theme-contrast-white';
 import { themeDark } from '@/constants/theme-dark';
 import { themePaperDark } from '@/constants/theme-paper-dark';
 import { themePaperLight } from '@/constants/theme-paper-light';
@@ -11,6 +13,8 @@ export const themesByName: Record<ThemeName, UiTheme> = {
   dark: themeDark,
   paperLight: themePaperLight,
   paperDark: themePaperDark,
+  contrastWhite: themeContrastWhite,
+  contrastBlack: themeContrastBlack,
 };
 
 export const uiTheme = themesByName[DEFAULT_THEME_NAME];

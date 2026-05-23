@@ -1,0 +1,69 @@
+import { themeBaseScales } from '@/constants/theme-base';
+import type { UiTheme } from '@/constants/ui-theme.types';
+
+export const themeContrastWhite: UiTheme = {
+  name: 'contrastWhite',
+  statusBarStyle: 'dark',
+  navigation: {
+    dark: false,
+    colors: {
+      primary: '#111111',
+      background: 'transparent',
+      card: 'transparent',
+      text: '#111111',
+      border: '#1a1a1a',
+      notification: '#111111',
+    },
+  },
+  overlay: {
+    strong: 'rgba(255, 255, 255, 0.95)',
+    medium: 'rgba(255, 255, 255, 0.95)',
+  },
+  surface: {
+    transparent: 'rgba(255, 255, 255, 0)',
+    elevated: 'rgba(255, 255, 255, 0.95)',
+    elevatedSoft: 'rgba(255, 255, 255, 0.95)',
+    elevatedMuted: 'rgba(248, 248, 248, 0.95)',
+    card: 'rgba(255, 255, 255, 0.95)',
+    cardSoft: 'rgba(252, 252, 252, 0.95)',
+    cardAlt: 'rgba(244, 244, 244, 0.95)',
+    cardStrong: 'rgba(255, 255, 255, 0.95)',
+    field: 'rgba(255, 255, 255, 0.95)',
+    fieldStrong: 'rgba(247, 247, 247, 0.95)',
+    fieldSelected: 'rgba(232, 232, 232, 0.95)',
+    successSoft: 'rgba(236, 255, 236, 0.95)',
+    button: {
+      primary: '#111111',
+      subtle: 'rgba(17, 17, 17, 0.08)',
+      subtleStrong: 'rgba(17, 17, 17, 0.14)',
+      subtleMedium: 'rgba(17, 17, 17, 0.12)',
+      subtleWeak: 'rgba(17, 17, 17, 0.05)',
+      danger: '#111111',
+    },
+  },
+  border: {
+    field: 'rgba(17, 17, 17, 0.92)',
+    subtle: 'rgba(17, 17, 17, 0.48)',
+    faint: 'rgba(17, 17, 17, 0.22)',
+    muted: 'rgba(17, 17, 17, 0.14)',
+    transparent: 'rgba(255, 255, 255, 0)',
+    success: '#216b21',
+  },
+  text: {
+    primary: '#111111',
+    secondary: 'rgba(17, 17, 17, 0.78)',
+    muted: '#5f5f5f',
+    helper: 'rgba(17, 17, 17, 0.62)',
+    placeholder: 'rgba(17, 17, 17, 0.42)',
+    accentSoft: '#111111',
+    onLight: '#ffffff',
+    warning: '#111111',
+  },
+  image: {
+    ...themeBaseScales.image,
+    modalBackgroundSource: require('@/assets/images/bg-paper-white.jpg'),
+  },
+  radius: themeBaseScales.radius,
+  spacing: themeBaseScales.spacing,
+  typography: themeBaseScales.typography,
+};

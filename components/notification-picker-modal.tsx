@@ -81,6 +81,8 @@ export function NotificationPickerModal({
 }
 
 function createStyles(theme: UiTheme) {
+  const isContrastBlack = theme.name === 'contrastBlack';
+
   return StyleSheet.create({
     wrapper: {
       flex: 1
@@ -106,6 +108,14 @@ function createStyles(theme: UiTheme) {
       borderBottomRightRadius: theme.radius.panelBottom,
       overflow: 'hidden',
       minWidth: 280,
+      shadowColor: isContrastBlack ? '#ffffff' : '#000000',
+      shadowOffset: {
+        width: 0,
+        height: 10,
+      },
+      shadowOpacity: isContrastBlack ? 0.28 : 0.16,
+      shadowRadius: isContrastBlack ? 24 : 18,
+      elevation: 16,
     },
     backgroundImageAsset: {
       transform: [{ scale: theme.image.modalBackgroundScale }],

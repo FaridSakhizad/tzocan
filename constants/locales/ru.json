@@ -64,6 +64,8 @@
   "settings.theme.dark": "Тёмная",
   "settings.theme.paperLight": "Бумажная светлая",
   "settings.theme.paperDark": "Бумажная тёмная",
+  "settings.theme.contrastWhite": "Контрастная белая",
+  "settings.theme.contrastBlack": "Контрастная чёрная",
   "settings.language.label": "Язык",
   "settings.language.hint": "Выберите язык интерфейса приложения.",
   "settings.notifications.label": "Уведомления",

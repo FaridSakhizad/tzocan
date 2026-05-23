@@ -72,6 +72,8 @@ export function ConfirmDialogModal({
 }
 
 function createStyles(theme: UiTheme) {
+  const isContrastBlack = theme.name === 'contrastBlack';
+
   return StyleSheet.create({
     modalWrapper: {
       flex: 1,
@@ -87,6 +89,14 @@ function createStyles(theme: UiTheme) {
       borderRadius: 36,
       overflow: 'hidden',
       width: 295,
+      shadowColor: isContrastBlack ? '#ffffff' : '#000000',
+      shadowOffset: {
+        width: 0,
+        height: 10,
+      },
+      shadowOpacity: isContrastBlack ? 0.28 : 0.16,
+      shadowRadius: isContrastBlack ? 24 : 18,
+      elevation: 16,
     },
     backgroundImageAsset: {
       transform: [{ scale: theme.image.modalBackgroundScale }],

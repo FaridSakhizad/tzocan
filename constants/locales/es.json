@@ -64,6 +64,8 @@
   "settings.theme.dark": "Oscuro",
   "settings.theme.paperLight": "Papel claro",
   "settings.theme.paperDark": "Papel oscuro",
+  "settings.theme.contrastWhite": "Contraste blanco",
+  "settings.theme.contrastBlack": "Contraste negro",
   "settings.language.label": "Idioma",
   "settings.language.hint": "Elige el idioma de la interfaz de la aplicación.",
   "settings.notifications.label": "Notificaciones",

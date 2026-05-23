@@ -137,6 +137,8 @@ export function MainMenuModal({
 }
 
 function createStyles(theme: UiTheme) {
+  const isContrastBlack = theme.name === 'contrastBlack';
+
   return StyleSheet.create({
     mainMenuModal: {},
     modalRoot: { flex: 1 },
@@ -159,6 +161,14 @@ function createStyles(theme: UiTheme) {
       display: 'flex',
       borderRadius: theme.radius.xl,
       overflow: 'hidden',
+      shadowColor: isContrastBlack ? '#ffffff' : '#000000',
+      shadowOffset: {
+        width: 0,
+        height: 10,
+      },
+      shadowOpacity: isContrastBlack ? 0.28 : 0.16,
+      shadowRadius: isContrastBlack ? 24 : 18,
+      elevation: 16,
     },
     backgroundImageAsset: {
       transform: [{ scale: theme.image.modalBackgroundScale }],

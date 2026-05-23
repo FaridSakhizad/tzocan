@@ -64,6 +64,8 @@
   "settings.theme.dark": "Dark",
   "settings.theme.paperLight": "Paper Light",
   "settings.theme.paperDark": "Paper Dark",
+  "settings.theme.contrastWhite": "Contrast White",
+  "settings.theme.contrastBlack": "Contrast Black",
   "settings.language.label": "Language",
   "settings.language.hint": "Choose the language for the app interface.",
   "settings.notifications.label": "Notifications",

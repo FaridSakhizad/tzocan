@@ -271,10 +271,12 @@ export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive 
         ]}
       >
         <Pressable onPress={handleResetPress} style={styles.resetButtonPressable}>
-          <IconReset
-            style={styles.resetButtonIcon}
-            fill={theme.surface.button.subtleStrong}
-          />
+          <View style={styles.resetButtonIconBox}>
+            <IconReset
+              style={styles.resetButtonIcon}
+              fill={theme.surface.button.subtleStrong}
+            />
+          </View>
         </Pressable>
       </RNAnimated.View>
 
@@ -290,11 +292,9 @@ export function TimeRuler({ offsetMinutes, onOffsetChange, timeFormat, isActive 
         >
           {getLocalTime(locale, timeFormat, 0)}
         </RNAnimated.Text>
-        <Pressable onPress={handleResetPress}>
-          <Text style={styles.localTimeText}>
-            {getLocalTime(locale, timeFormat, displayOffset)}
-          </Text>
-        </Pressable>
+        <Text style={styles.localTimeText}>
+          {getLocalTime(locale, timeFormat, displayOffset)}
+        </Text>
         <RNAnimated.Text
           style={[
             styles.sideText,

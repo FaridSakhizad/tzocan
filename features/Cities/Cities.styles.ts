@@ -35,6 +35,32 @@ export function createStyles(theme: UiTheme) {
       fontSize: 16,
       color: theme.text.primary,
     },
+    addCityFooterButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      paddingVertical: 18,
+      marginTop: 2,
+      marginBottom: 12,
+      borderTopWidth: 1,
+      borderColor: theme.surface.fieldStrong,
+    },
+    addCityFooterIconBox: {
+      width: 20,
+      height: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    addCityFooterIcon: {
+      width: 18,
+      height: 18,
+    },
+    addCityFooterText: {
+      fontSize: 16,
+      color: theme.text.primary,
+    },
     cityItem: {
       paddingVertical: 16,
       paddingHorizontal: 2,

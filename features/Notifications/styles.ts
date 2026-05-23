@@ -94,6 +94,21 @@ export function createStyles(theme: UiTheme) {
       fontSize: 16,
       color: theme.text.primary,
     },
+    addNotificationFooterButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 18,
+      marginBottom: 12,
+    },
+    addNotificationFooterIcon: {
+      width: 20,
+      height: 20,
+      marginBottom: 20,
+    },
+    addNotificationFooterText: {
+      fontSize: 16,
+      color: theme.text.primary,
+    },
     cityGroup: {
       borderBottomColor: theme.surface.button.subtleStrong,
       borderBottomWidth: 2,

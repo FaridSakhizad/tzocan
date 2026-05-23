@@ -86,6 +86,28 @@ export function createStyles(theme: UiTheme) {
     listItem: {
       paddingTop: 11,
     },
+    addCityFooter: {
+      paddingTop: 11,
+      paddingBottom: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addCityTile: {
+      width: 64,
+      height: 64,
+      borderRadius: 10,
+      borderCurve: 'continuous',
+      backgroundColor: theme.surface.fieldStrong,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addCityTileText: {
+      fontSize: 36,
+      lineHeight: 36,
+      fontWeight: '300',
+      color: theme.text.primary,
+      top: -1,
+    },
     listItemDragging: {
       backgroundColor: theme.surface.elevatedSoft,
     },

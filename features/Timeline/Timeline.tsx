@@ -563,6 +563,16 @@ export default function TimelineScreen() {
     [renderCityRow]
   );
 
+  const renderAddCityFooter = useCallback(() => {
+    return (
+      <View style={styles.addCityFooter}>
+        <Pressable onPress={handleOpenAddCityModal} style={styles.addCityTile}>
+          <Text style={styles.addCityTileText}>+</Text>
+        </Pressable>
+      </View>
+    );
+  }, [handleOpenAddCityModal, styles]);
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <Animated.View style={[styles.timelineContent, { opacity: contentOpacity }]}>
@@ -618,6 +628,7 @@ export default function TimelineScreen() {
               data={selectedCities}
               keyExtractor={(city) => `${city.id}`}
               renderItem={renderItem}
+              ListFooterComponent={renderAddCityFooter}
               onDragBegin={() => setDragging(true)}
               onDragEnd={({ data }) => {
                 reorderCities(data);
@@ -631,6 +642,7 @@ export default function TimelineScreen() {
               {displayedCities.map((city) => (
                 <View key={`sorted-city-${city.id}`}>{renderCityRow(city)}</View>
               ))}
+              {renderAddCityFooter()}
             </ScrollView>
           )}
         </View>

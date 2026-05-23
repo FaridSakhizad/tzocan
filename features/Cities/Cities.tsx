@@ -191,6 +191,14 @@ export default function Cities() {
     setIsAddCityModalVisible(false);
   };
 
+  const renderAddCityButton = () => {
+    return (
+      <Pressable onPress={handleOpenAddCityModal} style={styles.addCityFooterButton}>
+        <Text style={styles.addCityFooterText}>{t('common.addCity')}</Text>
+      </Pressable>
+    );
+  };
+
   const renderCityItem = (
     city: SelectedCity,
     index: number,
@@ -348,6 +356,7 @@ export default function Cities() {
                 onDragEnd={({data}) => reorderCities(data)}
                 keyExtractor={(item) => `city-${item.id}`}
                 renderItem={renderItem}
+                ListFooterComponent={renderAddCityButton}
               />
             ) : (
               <ScrollView
@@ -358,6 +367,7 @@ export default function Cities() {
                     {renderCityItem(city, index)}
                   </View>
                 ))}
+                {renderAddCityButton()}
               </ScrollView>
             )}
           </View>

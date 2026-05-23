@@ -35,6 +35,7 @@ import CalendarIcon from '../../assets/images/icon--calendar-2--outlined.svg';
 import EditIcon from '../../assets/images/icon--edit-2.svg';
 import DeleteIcon from '../../assets/images/icon--delete-3.svg';
 import RepeatIcon from '../../assets/images/icon--repeat-1.svg';
+import IconAddNotification from '@/assets/images/icon--notification-3--outlined.svg';
 import IconDelete from '@/assets/images/icon--x-2--outlined.svg';
 
 import { createStyles } from './styles';
@@ -469,6 +470,11 @@ export default function EditCity() {
     setIsNotificationModalVisible(true);
   };
 
+  const handleOpenAddNotificationModal = () => {
+    setEditingNotification(null);
+    setIsNotificationModalVisible(true);
+  };
+
   const handleOpenDeleteNotificationModal = (notification: CityNotification) => {
     setNotificationPendingDelete(notification);
   };
@@ -664,6 +670,10 @@ export default function EditCity() {
               })}
             </View>
           )}
+
+          <Pressable onPress={handleOpenAddNotificationModal} style={styles.addNotificationButton}>
+            <Text style={styles.addNotificationButtonText}>{t('common.addNotification')}</Text>
+          </Pressable>
         </View>
       </ScrollView>
 

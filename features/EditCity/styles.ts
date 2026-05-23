@@ -108,6 +108,29 @@ export function createStyles(theme: UiTheme) {
       marginBottom: 4,
     },
     notificationsList: {},
+    addNotificationButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      paddingVertical: 18,
+      marginBottom: 12,
+    },
+    addNotificationIconBox: {
+      width: 20,
+      height: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    addNotificationIcon: {
+      width: 18,
+      height: 18,
+    },
+    addNotificationButtonText: {
+      fontSize: 16,
+      color: theme.text.primary,
+    },
     notificationItem: {
       paddingTop: 17,
       paddingBottom: 22,

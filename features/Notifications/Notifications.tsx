@@ -1087,6 +1087,14 @@ export default function Notifications() {
     );
   };
 
+  const renderAddNotificationFooter = () => {
+    return (
+      <Pressable onPress={handleOpenAddNotificationModal} style={styles.addNotificationFooterButton}>
+        <Text style={styles.addNotificationFooterText}>{t('common.addNotification')}</Text>
+      </Pressable>
+    );
+  };
+
   return (
     <GestureHandlerRootView style={styles.rootContainer}>
       <View style={styles.container}>
@@ -1128,6 +1136,7 @@ export default function Notifications() {
             }}
             keyExtractor={(item) => `notification-city-${item.city.id}`}
             renderItem={renderItem}
+            ListFooterComponent={renderAddNotificationFooter}
           />
         )}
 
@@ -1142,6 +1151,7 @@ export default function Notifications() {
                 {renderCityGroup(city, notifications)}
               </View>
             ))}
+            {renderAddNotificationFooter()}
           </ScrollView>
         )}
 
@@ -1154,6 +1164,7 @@ export default function Notifications() {
             {linearNotificationEntries.map(({ city, notification }, index) =>
               renderNotificationCard(city, notification, index, { showCityName: true })
             )}
+            {renderAddNotificationFooter()}
           </ScrollView>
         )}
       </View>

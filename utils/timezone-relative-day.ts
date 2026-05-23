@@ -1,19 +1,5 @@
-export function getDatePartsInTimezone(date: Date, timezone: string) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const parts = fmt.formatToParts(date);
-  const getPart = (type: string) => parseInt(parts.find((p) => p.type === type)?.value || '0', 10);
-
-  return {
-    year: getPart('year'),
-    month: getPart('month'),
-    day: getPart('day'),
-  };
-}
+export { getDatePartsInTimezone } from '@/utils/abstract-timezone';
+import { getDatePartsInTimezone } from '@/utils/abstract-timezone';
 
 export function getRelativeDayLabelForTimezone(
   timezone: string,

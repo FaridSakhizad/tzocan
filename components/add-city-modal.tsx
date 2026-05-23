@@ -12,6 +12,11 @@ import { useAppTheme } from '@/contexts/app-theme-context';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
 import { getUtcOffsetMinutesForTimezone } from '@/utils/timezone-offset';
+import {
+  formatGmtOffsetLabel,
+  getAbstractTimezoneId,
+  getFixedOffsetTimezoneForOffsetMinutes,
+} from '@/utils/abstract-timezone';
 
 export type CityRow = {
   id: number;
@@ -22,11 +27,53 @@ export type CityRow = {
   lat: number;
   lon: number;
   pop: number;
+  isAbstractTimezone?: boolean;
 };
 
 type SearchCityRow = CityRow & {
   localizedName?: string | null;
 };
+
+const ABSTRACT_TIMEZONE_OFFSETS_MINUTES = [
+  -12 * 60,
+  -11 * 60,
+  -10 * 60,
+  -(9 * 60 + 30),
+  -9 * 60,
+  -8 * 60,
+  -7 * 60,
+  -6 * 60,
+  -5 * 60,
+  -4 * 60,
+  -(3 * 60 + 30),
+  -3 * 60,
+  -2 * 60,
+  -1 * 60,
+  0,
+  1 * 60,
+  2 * 60,
+  3 * 60,
+  3 * 60 + 30,
+  4 * 60,
+  4 * 60 + 30,
+  5 * 60,
+  5 * 60 + 30,
+  5 * 60 + 45,
+  6 * 60,
+  6 * 60 + 30,
+  7 * 60,
+  8 * 60,
+  8 * 60 + 45,
+  9 * 60,
+  9 * 60 + 30,
+  10 * 60,
+  10 * 60 + 30,
+  11 * 60,
+  12 * 60,
+  13 * 60,
+  13 * 60 + 45,
+  14 * 60,
+];
 
 let cachedDistinctTimezones: string[] | null = null;
 
@@ -220,6 +267,26 @@ async function searchCitiesByUtcOffsetInDb(
   return searchCitiesByTimezones(db, matchingTimezones, languageCode);
 }
 
+function createAbstractTimezoneRow(offsetMinutes: number): SearchCityRow | null {
+  const timezone = getFixedOffsetTimezoneForOffsetMinutes(offsetMinutes);
+
+  if (!timezone) {
+    return null;
+  }
+
+  return {
+    id: getAbstractTimezoneId(offsetMinutes),
+    name: formatGmtOffsetLabel(offsetMinutes),
+    country: '',
+    admin1: null,
+    tz: timezone,
+    lat: 0,
+    lon: 0,
+    pop: 0,
+    isAbstractTimezone: true,
+  };
+}
+
 type AddCityModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -236,6 +303,19 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
   const [query, setQuery] = useState('');
   const [cities, setCities] = useState<SearchCityRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { fullHourTimezoneRows, fractionalTimezoneRows } = useMemo(
+    () => {
+      const rows = ABSTRACT_TIMEZONE_OFFSETS_MINUTES.map((offsetMinutes) =>
+        createAbstractTimezoneRow(offsetMinutes)
+      ).filter((city): city is SearchCityRow => city !== null);
+
+      return {
+        fullHourTimezoneRows: rows.filter((city) => !city.name.includes(':')),
+        fractionalTimezoneRows: rows.filter((city) => city.name.includes(':')),
+      };
+    },
+    []
+  );
 
   useEffect(() => {
     if (!visible) {
@@ -261,20 +341,34 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
         const relativeOffsetQueryMinutes =
           gmtOffsetQueryMinutes === null ? parseRelativeOffsetQuery(query) : null;
 
-        const results = gmtOffsetQueryMinutes !== null
-          ? await searchCitiesByUtcOffsetInDb(
+        if (gmtOffsetQueryMinutes !== null) {
+          const timezoneResults = await searchCitiesByUtcOffsetInDb(
             db as SQLite.SQLiteDatabase,
             gmtOffsetQueryMinutes,
             languageCode
-          )
-          : relativeOffsetQueryMinutes !== null
-            ? await searchCitiesByRelativeOffsetInDb(
-              db as SQLite.SQLiteDatabase,
-              relativeOffsetQueryMinutes,
-              languageCode
-            )
-            : await searchCitiesInDb(db as SQLite.SQLiteDatabase, query, languageCode);
-        setCities(results);
+          );
+          const abstractTimezoneRow = createAbstractTimezoneRow(gmtOffsetQueryMinutes);
+
+          setCities(
+            abstractTimezoneRow
+              ? [abstractTimezoneRow, ...timezoneResults]
+              : timezoneResults
+          );
+        } else if (relativeOffsetQueryMinutes !== null) {
+          const results = await searchCitiesByRelativeOffsetInDb(
+            db as SQLite.SQLiteDatabase,
+            relativeOffsetQueryMinutes,
+            languageCode
+          );
+          setCities(results);
+        } else {
+          const results = await searchCitiesInDb(
+            db as SQLite.SQLiteDatabase,
+            query,
+            languageCode
+          );
+          setCities(results);
+        }
       } catch (error) {
         console.error('Failed to search cities:', error);
         setCities([]);
@@ -289,9 +383,9 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
   }, [query, visible, db, languageCode]);
 
   const handleSave = (city: SearchCityRow) => {
-    const { id, name, country, admin1, tz, lat, lon, pop } = city;
+    const { id, name, country, admin1, tz, lat, lon, pop, isAbstractTimezone } = city;
     Keyboard.dismiss();
-    onSave({ id, name, country, admin1, tz, lat, lon, pop });
+    onSave({ id, name, country, admin1, tz, lat, lon, pop, isAbstractTimezone });
     setQuery('');
     setCities([]);
   };
@@ -376,9 +470,9 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                     </Text>
                   )}
 
-                  {!isLoading && cities.length > 0 && (
+                  {!isLoading && (
                     <ScrollView style={styles.resultsList} showsVerticalScrollIndicator={false}>
-                      {cities.map((city) => (
+                      {cities.length > 0 && cities.map((city) => (
                         <Pressable
                           key={`${city.id}-${city.name}-${city.country}`}
                           onPress={() => handleSave(city)}
@@ -388,14 +482,53 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                           ]}
                         >
                           <Text style={styles.cityText}>
-                            {city.localizedName || city.name}, {city.country}
+                            {city.localizedName || city.name}
+                            {!!city.country && `, ${city.country}`}
                           </Text>
-                          {!!city.localizedName && city.localizedName !== city.name && (
+                          {!city.isAbstractTimezone && !!city.localizedName && city.localizedName !== city.name && (
                             <Text style={styles.citySecondaryText}>{city.name}</Text>
                           )}
-                          <Text style={styles.cityTimezone}>{city.tz}</Text>
+                          {!city.isAbstractTimezone && (
+                            <Text style={styles.cityTimezone}>{city.tz}</Text>
+                          )}
                         </Pressable>
                       ))}
+
+                      <View style={styles.timezoneSection}>
+                        <View style={styles.timezoneGrid}>
+                          {fullHourTimezoneRows.map((city) => (
+                            <Pressable
+                              key={`abstract-timezone-${city.id}`}
+                              onPress={() => handleSave(city)}
+                              style={({ pressed }) => [
+                                styles.timezoneButton,
+                                pressed && styles.timezoneButtonPressed,
+                              ]}
+                            >
+                              <Text style={styles.timezoneButtonText}>{city.name}</Text>
+                            </Pressable>
+                          ))}
+                        </View>
+
+                        <View style={styles.fractionalTimezoneSection}>
+                          <Text style={styles.fractionalTimezoneSectionTitle}>Fractional GMT / UTC</Text>
+
+                          <View style={styles.fractionalTimezoneGrid}>
+                            {fractionalTimezoneRows.map((city) => (
+                              <Pressable
+                                key={`abstract-fractional-timezone-${city.id}`}
+                                onPress={() => handleSave(city)}
+                                style={({ pressed }) => [
+                                  styles.fractionalTimezoneButton,
+                                  pressed && styles.timezoneButtonPressed,
+                                ]}
+                              >
+                                <Text style={styles.fractionalTimezoneButtonText}>{city.name}</Text>
+                              </Pressable>
+                            ))}
+                          </View>
+                        </View>
+                      </View>
                     </ScrollView>
                   )}
                 </View>
@@ -509,6 +642,69 @@ function createStyles(theme: UiTheme) {
       fontSize: 13,
       lineHeight: 13,
       color: theme.text.secondary,
+    },
+    timezoneSection: {
+      paddingTop: 14,
+      paddingBottom: 20,
+    },
+    timezoneGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'flex-start',
+      columnGap: '2%',
+      rowGap: 8,
+    },
+    fractionalTimezoneSection: {
+      paddingTop: 18,
+    },
+    fractionalTimezoneSectionTitle: {
+      fontSize: 13,
+      lineHeight: 16,
+      color: theme.text.helper,
+      textAlign: 'center',
+      marginBottom: 12,
+    },
+    fractionalTimezoneGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'flex-start',
+      columnGap: '2%',
+      rowGap: 8,
+    },
+    timezoneButton: {
+      width: '23.5%',
+      minHeight: 38,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.surface.fieldStrong,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 6,
+    },
+    timezoneButtonPressed: {
+      backgroundColor: theme.overlay.strong,
+    },
+    timezoneButtonText: {
+      fontSize: 13,
+      lineHeight: 16,
+      color: theme.text.primary,
+      textAlign: 'center',
+    },
+    fractionalTimezoneButton: {
+      width: '23.5%',
+      minHeight: 38,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.surface.fieldStrong,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 6,
+    },
+    fractionalTimezoneButtonText: {
+      fontSize: 13,
+      lineHeight: 16,
+      color: theme.text.primary,
+      textAlign: 'center',
     },
   });
 }

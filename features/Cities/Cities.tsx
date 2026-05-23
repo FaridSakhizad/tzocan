@@ -27,6 +27,7 @@ import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
 import { sortCitiesByOrder } from '@/utils/city-sorting';
 import { getTimezoneDifferenceLabel } from '@/utils/timezone-offset';
 import { getRelativeDayLabelForTimezone } from '@/utils/timezone-relative-day';
+import { formatInTimezone, formatPartsInTimezone } from '@/utils/abstract-timezone';
 
 import IconDelete1 from '@/assets/images/icon--delete-1.svg';
 import IconNotification2 from '@/assets/images/icon--notification-2.svg';
@@ -41,8 +42,7 @@ import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
 import { createStyles } from './Cities.styles';
 
 function getLocalTime(timezone: string, locale: string, timeFormat: TimeFormat, now: Date): string {
-  return now.toLocaleTimeString(locale, {
-    timeZone: timezone,
+  return formatInTimezone(now, timezone, locale, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: timeFormat === '12h',
@@ -52,11 +52,10 @@ function getLocalTime(timezone: string, locale: string, timeFormat: TimeFormat, 
 type DayPhase = 'morning' | 'day' | 'evening' | 'night';
 
 function getDayPhaseForTimezone(timezone: string, now: Date): DayPhase {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
+  const parts = formatPartsInTimezone(now, timezone, 'en-US', {
     hour: '2-digit',
     hour12: false,
-  }).formatToParts(now);
+  });
 
   const hour = parseInt(parts.find((part) => part.type === 'hour')?.value || '0', 10);
 

@@ -34,6 +34,11 @@ import { useScrollFit } from '@/hooks/use-scroll-fit';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { getCityDisplayName } from '@/utils/city-display';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
+import {
+  formatInTimezone,
+  getDatePartsInTimezone as getAbstractDatePartsInTimezone,
+  getDateTimePartsInTimezone,
+} from '@/utils/abstract-timezone';
 
 import ClockIcon from '../../assets/images/icon--clock-2--outlined.svg';
 import CalendarIcon from '../../assets/images/icon--calendar-2--outlined.svg';
@@ -81,20 +86,7 @@ function NotificationToggleSwitch({
 }
 
 function getDatePartsInTimezone(date: Date, timezone: string) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const parts = fmt.formatToParts(date);
-  const getPart = (type: string) => parseInt(parts.find((p) => p.type === type)?.value || '0', 10);
-
-  return {
-    year: getPart('year'),
-    month: getPart('month'),
-    day: getPart('day'),
-  };
+  return getAbstractDatePartsInTimezone(date, timezone);
 }
 
 function getTriggerDateForTimezone(
@@ -106,25 +98,14 @@ function getTriggerDateForTimezone(
   minute: number
 ): Date {
   const now = new Date();
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-  const parts = fmt.formatToParts(now);
-  const getPart = (type: string) => parseInt(parts.find((p) => p.type === type)?.value || '0', 10);
+  const parts = getDateTimePartsInTimezone(now, timezone);
   const cityNowDate = new Date(
-    getPart('year'),
-    getPart('month') - 1,
-    getPart('day'),
-    getPart('hour'),
-    getPart('minute'),
-    getPart('second')
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second
   );
   const cityTargetDate = new Date(year, month - 1, day, hour, minute, 0);
   const diffMs = cityTargetDate.getTime() - cityNowDate.getTime();
@@ -546,12 +527,11 @@ function sortNotificationEntries(
 }
 
 function getCurrentTimeInTimezone(timezone: string, timeFormat: TimeFormat, locale: string) {
-  return new Intl.DateTimeFormat(locale, {
-    timeZone: timezone,
+  return formatInTimezone(new Date(), timezone, locale, {
     hour: 'numeric',
     minute: '2-digit',
     hour12: timeFormat === '12h',
-  }).format(new Date());
+  });
 }
 
 function formatScheduledTime(hour: number, minute: number, timeFormat: TimeFormat, locale: string) {

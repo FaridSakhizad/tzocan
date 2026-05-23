@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { CityRow } from '@/components/add-city-modal';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
+import { getDateTimePartsInTimezone } from '@/utils/abstract-timezone';
 
 export type CityNotification = {
   id: string;
@@ -70,29 +71,8 @@ function getTriggerDateForTimezone(
   minute: number
 ): Date {
   const now = new Date();
-
-  const targetFormatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-
-  const parts = targetFormatter.formatToParts(now);
-  const getPart = (type: string) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
-
-  const currentYearInTz = getPart('year');
-  const currentMonthInTz = getPart('month');
-  const currentDayInTz = getPart('day');
-  const currentHourInTz = getPart('hour');
-  const currentMinuteInTz = getPart('minute');
-  const currentSecondInTz = getPart('second');
-
-  const currentDateInTz = new Date(currentYearInTz, currentMonthInTz - 1, currentDayInTz, currentHourInTz, currentMinuteInTz, currentSecondInTz);
+  const parts = getDateTimePartsInTimezone(now, timezone);
+  const currentDateInTz = new Date(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
   const targetDateInTz = new Date(year, month - 1, day, hour, minute, 0);
 
   const diffMs = targetDateInTz.getTime() - currentDateInTz.getTime();
@@ -149,17 +129,10 @@ async function scheduleNotification(
 
   // If date is not provided, anchor to "today in target city"
   if (!anchorYear || !anchorMonth || !anchorDay) {
-    const targetFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: city.tz,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
-    const parts = targetFormatter.formatToParts(now);
-    const getPart = (type: string) => parseInt(parts.find((p) => p.type === type)?.value || '0', 10);
-    anchorYear = getPart('year');
-    anchorMonth = getPart('month');
-    anchorDay = getPart('day');
+    const parts = getDateTimePartsInTimezone(now, city.tz);
+    anchorYear = parts.year;
+    anchorMonth = parts.month;
+    anchorDay = parts.day;
   }
 
   let anchorTrigger = getTriggerDateForTimezone(city.tz, anchorYear, anchorMonth, anchorDay, hour, minute);
@@ -395,8 +368,9 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
 
   const updateCityName = (cityId: number, customName: string) => {
     setSelectedCities((prev) => {
+      const nextCustomName = customName.trim().length === 0 ? undefined : customName;
       const newCities = prev.map((c) =>
-        c.id === cityId ? { ...c, customName: customName || undefined } : c
+        c.id === cityId ? { ...c, customName: nextCustomName } : c
       );
 
       saveCities(newCities);

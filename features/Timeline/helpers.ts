@@ -1,6 +1,11 @@
 import type { SelectedCity } from '@/contexts/selected-cities-context';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 import { getFocusedDateTimeFromHourIndex } from '@/utils/timeline-core';
+import {
+  formatInTimezone,
+  formatPartsInTimezone,
+  getDateTimePartsInTimezone,
+} from '@/utils/abstract-timezone';
 
 export type HourLabel = {
   hour: number;
@@ -13,26 +18,7 @@ export type MidnightLabel = {
 };
 
 export function getDatePartsInTimezone(date: Date, timezone: string) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(date);
-
-  const getPart = (type: string) =>
-    parseInt(parts.find((part) => part.type === type)?.value || '0', 10);
-
-  return {
-    year: getPart('year'),
-    month: getPart('month'),
-    day: getPart('day'),
-    hour: getPart('hour'),
-    minute: getPart('minute'),
-  };
+  return getDateTimePartsInTimezone(date, timezone);
 }
 
 export function addDays(year: number, month: number, day: number, offsetDays: number) {
@@ -153,11 +139,10 @@ export function getHourLabelForTimezone(
   timezone: string,
   timeFormat: string
 ): HourLabel {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
+  const parts = formatPartsInTimezone(date, timezone, 'en-US', {
     hour: '2-digit',
     hour12: false,
-  }).formatToParts(date);
+  });
   const hour = parseInt(parts.find((part) => part.type === 'hour')?.value || '0', 10);
 
   if (timeFormat === '12h') {
@@ -179,14 +164,12 @@ export function getMidnightLabelForTimezone(
   locale: string
 ): MidnightLabel {
   return {
-    weekday: new Intl.DateTimeFormat(locale, {
-      timeZone: timezone,
+    weekday: formatInTimezone(date, timezone, locale, {
       weekday: 'short',
-    }).format(date),
-    monthDay: new Intl.DateTimeFormat(locale, {
-      timeZone: timezone,
+    }),
+    monthDay: formatInTimezone(date, timezone, locale, {
       month: 'short',
       day: 'numeric',
-    }).format(date),
+    }),
   };
 }

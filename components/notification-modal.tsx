@@ -33,6 +33,10 @@ import IconCheckmark from '@/assets/images/icon--checkmark-2.svg';
 
 import { NotificationPickerModal } from '@/components/notification-picker-modal';
 import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
+import {
+  getDatePartsInTimezone as getAbstractDatePartsInTimezone,
+  getDateTimePartsInTimezone,
+} from '@/utils/abstract-timezone';
 
 export type NotificationFormValues = {
   year?: number;
@@ -156,35 +160,15 @@ export function NotificationModal({
     minute: number
   ): Date => {
     const now = new Date();
-
-    const targetFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    });
-
-    const parts = targetFormatter.formatToParts(now);
-    const getPart = (type: string) => parseInt(parts.find((p) => p.type === type)?.value || '0', 10);
-
-    const currentYearInTz = getPart('year');
-    const currentMonthInTz = getPart('month');
-    const currentDayInTz = getPart('day');
-    const currentHourInTz = getPart('hour');
-    const currentMinuteInTz = getPart('minute');
-    const currentSecondInTz = getPart('second');
+    const parts = getDateTimePartsInTimezone(now, timezone);
 
     const currentDateInTz = new Date(
-      currentYearInTz,
-      currentMonthInTz - 1,
-      currentDayInTz,
-      currentHourInTz,
-      currentMinuteInTz,
-      currentSecondInTz
+      parts.year,
+      parts.month - 1,
+      parts.day,
+      parts.hour,
+      parts.minute,
+      parts.second
     );
     const targetDateInTz = new Date(year, month - 1, day, hour, minute, 0);
 
@@ -193,19 +177,7 @@ export function NotificationModal({
     return new Date(now.getTime() + diffMs);
   };
   const getDatePartsInTimezone = (date: Date, timezone: string) => {
-    const fmt = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
-    const parts = fmt.formatToParts(date);
-    const getPart = (type: string) => parseInt(parts.find((p) => p.type === type)?.value || '0', 10);
-    return {
-      year: getPart('year'),
-      month: getPart('month'),
-      day: getPart('day'),
-    };
+    return getAbstractDatePartsInTimezone(date, timezone);
   };
   const getPreviewInfo = useCallback((timezone: string, hour: number, minute: number, overrideDate?: Date) => {
     const now = new Date();

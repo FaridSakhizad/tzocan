@@ -1,3 +1,8 @@
+import {
+  formatPartsInTimezone,
+  getAbstractTimezoneOffsetMinutes,
+} from '@/utils/abstract-timezone';
+
 function formatOffsetLabel(offsetMinutes: number) {
   const prefix = offsetMinutes < 0 ? '-' : '+';
   const absoluteMinutes = Math.abs(offsetMinutes);
@@ -12,8 +17,13 @@ function formatOffsetLabel(offsetMinutes: number) {
 }
 
 export function getUtcOffsetMinutesForTimezone(timezone: string, date = new Date()) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
+  const abstractOffsetMinutes = getAbstractTimezoneOffsetMinutes(timezone);
+
+  if (abstractOffsetMinutes !== null) {
+    return abstractOffsetMinutes;
+  }
+
+  const parts = formatPartsInTimezone(date, timezone, 'en-US', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -21,7 +31,7 @@ export function getUtcOffsetMinutesForTimezone(timezone: string, date = new Date
     minute: '2-digit',
     second: '2-digit',
     hour12: false,
-  }).formatToParts(date);
+  });
 
   const getPart = (type: string) =>
     parseInt(parts.find((part) => part.type === type)?.value || '0', 10);

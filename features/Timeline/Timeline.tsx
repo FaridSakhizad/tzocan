@@ -44,6 +44,7 @@ import {
   shiftLocalDay,
   TIMELINE_CELL_WIDTH,
 } from '@/utils/timeline-core';
+import { formatInTimezone, formatPartsInTimezone } from '@/utils/abstract-timezone';
 
 import Arrow1 from '@/assets/images/icon--arrow-1.svg';
 import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
@@ -65,12 +66,11 @@ function getTimezoneOffsetHours(timezone: string, now = new Date()) {
     hour12: false,
   }).formatToParts(now);
 
-  const targetParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
+  const targetParts = formatPartsInTimezone(now, timezone, 'en-US', {
     hour: 'numeric',
     minute: 'numeric',
     hour12: false,
-  }).formatToParts(now);
+  });
 
   const getPart = (parts: Intl.DateTimeFormatPart[], type: string) =>
     parseInt(parts.find((part) => part.type === type)?.value || '0', 10);
@@ -97,12 +97,11 @@ function getCurrentTimeInTimezone(
   timeFormat: string,
   now = new Date()
 ) {
-  return new Intl.DateTimeFormat(locale, {
-    timeZone: timezone,
+  return formatInTimezone(now, timezone, locale, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: timeFormat === '12h',
-  }).format(now);
+  });
 }
 
 export default function TimelineScreen() {

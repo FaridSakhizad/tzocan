@@ -29,6 +29,7 @@ import {
   getUtcOffsetLabel as getUtcOffsetLabelForTimezone,
 } from '@/utils/timezone-offset';
 import { getDatePartsInTimezone, getRelativeDayLabelForTimezone } from '@/utils/timezone-relative-day';
+import { formatInTimezone, getDateTimePartsInTimezone } from '@/utils/abstract-timezone';
 
 import ClockIcon from '../../assets/images/icon--clock-2--outlined.svg';
 import CalendarIcon from '../../assets/images/icon--calendar-2--outlined.svg';
@@ -176,25 +177,14 @@ function getTriggerDateForTimezone(
   minute: number
 ): Date {
   const now = new Date();
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-  const parts = fmt.formatToParts(now);
-  const getPart = (type: string) => parseInt(parts.find((p) => p.type === type)?.value || '0', 10);
+  const parts = getDateTimePartsInTimezone(now, timezone);
   const cityNowDate = new Date(
-    getPart('year'),
-    getPart('month') - 1,
-    getPart('day'),
-    getPart('hour'),
-    getPart('minute'),
-    getPart('second')
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second
   );
   const cityTargetDate = new Date(year, month - 1, day, hour, minute, 0);
   const diffMs = cityTargetDate.getTime() - cityNowDate.getTime();
@@ -359,12 +349,11 @@ function getNotificationLocalDate(cityTz: string, notification: CityNotification
 }
 
 function getCurrentTimeInTimezone(timezone: string, timeFormat: TimeFormat, locale: string) {
-  return new Intl.DateTimeFormat(locale, {
-    timeZone: timezone,
+  return formatInTimezone(new Date(), timezone, locale, {
     hour: 'numeric',
     minute: '2-digit',
     hour12: timeFormat === '12h',
-  }).format(new Date());
+  });
 }
 
 function getTimezoneOffsetLabel(timezone: string) {
@@ -429,7 +418,7 @@ export default function EditCity() {
 
   const handleNameChange = (text: string) => {
     setEditName(text);
-    updateCityName(city.id, text.trim());
+    updateCityName(city.id, text);
   };
 
   const handleSaveNotification = async (values: NotificationFormValues) => {
@@ -503,7 +492,9 @@ export default function EditCity() {
       <ScrollView style={styles.container}>
         <View style={styles.editCityHeader}>
           <Text style={styles.cityName}>{getCityBaseName(city, localizedCityNames[city.cityId])}</Text>
-          <Text style={styles.cityCountry}>{getCountryName(city.country, locale)}</Text>
+          {!city.isAbstractTimezone && !!city.country && (
+            <Text style={styles.cityCountry}>{getCountryName(city.country, locale)}</Text>
+          )}
           <View style={styles.cityTimeInfo}>
             <Text style={styles.cityTimezone}>{getCurrentTimeInTimezone(city.tz, timeFormat, locale)}</Text>
             <Text style={styles.cityTimezone}>{getUtcOffsetLabel(city.tz)}</Text>

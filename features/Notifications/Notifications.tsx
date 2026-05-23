@@ -30,6 +30,7 @@ import { useSettings, TimeFormat, FirstDayOfWeek } from '@/contexts/settings-con
 import { TIME_REFRESH_INTERVAL_MS } from '@/constants/app-config';
 import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
+import { useScrollFit } from '@/hooks/use-scroll-fit';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { getCityDisplayName } from '@/utils/city-display';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
@@ -577,6 +578,11 @@ export default function Notifications() {
   const [isAddNotificationModalVisible, setIsAddNotificationModalVisible] = useState(false);
   const [selectedAddNotificationCityId, setSelectedAddNotificationCityId] = useState<number | null>(null);
   const [draftSortState, setDraftSortState] = useState(sortState);
+  const {
+    scrollEnabled,
+    handleContainerLayout,
+    handleContentSizeChange,
+  } = useScrollFit();
   const citySortSectionAnimation = useState(() => new Animated.Value(sortState.groupByCity ? 1 : 0))[0];
 
   const [editingTarget, setEditingTarget] = useState<{
@@ -1097,7 +1103,7 @@ export default function Notifications() {
 
   return (
     <GestureHandlerRootView style={styles.rootContainer}>
-      <View style={styles.container}>
+      <View style={styles.container} onLayout={handleContainerLayout}>
         {(selectedCities.length === 0 || totalNotifications === 0) && (
           <View style={styles.emptyState}>
             {selectedCities.length === 0 && (
@@ -1127,6 +1133,7 @@ export default function Notifications() {
           <DraggableFlatList
             contentContainerStyle={styles.listContent}
             data={groupedCityEntries}
+            onContentSizeChange={handleContentSizeChange}
             onDragEnd={({ data }) => {
               const reorderedCities = data.map((entry) => entry.city);
               const citiesWithoutNotifications = selectedCities.filter(
@@ -1137,6 +1144,7 @@ export default function Notifications() {
             keyExtractor={(item) => `notification-city-${item.city.id}`}
             renderItem={renderItem}
             ListFooterComponent={renderAddNotificationFooter}
+            scrollEnabled={scrollEnabled}
           />
         )}
 
@@ -1145,6 +1153,8 @@ export default function Notifications() {
             style={styles.timeSortedList}
             contentContainerStyle={styles.timeSortedListContent}
             showsVerticalScrollIndicator={false}
+            onContentSizeChange={handleContentSizeChange}
+            scrollEnabled={scrollEnabled}
           >
             {groupedCityEntries.map(({ city, notifications }) => (
               <View key={`sorted-city-${city.id}`}>
@@ -1160,6 +1170,8 @@ export default function Notifications() {
             style={styles.timeSortedList}
             contentContainerStyle={styles.timeSortedListContent}
             showsVerticalScrollIndicator={false}
+            onContentSizeChange={handleContentSizeChange}
+            scrollEnabled={scrollEnabled}
           >
             {linearNotificationEntries.map(({ city, notification }, index) =>
               renderNotificationCard(city, notification, index, { showCityName: true })

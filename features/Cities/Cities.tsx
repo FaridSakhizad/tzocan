@@ -20,6 +20,7 @@ import { TimeRuler } from '@/features/Cities/TimeRuler';
 import { TIME_REFRESH_INTERVAL_MS } from '@/constants/app-config';
 import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
+import { useScrollFit } from '@/hooks/use-scroll-fit';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { CityOrderMode, useNotificationsSort } from '@/contexts/notifications-sort-context';
 import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
@@ -89,6 +90,11 @@ export default function Cities() {
   const [cityPendingDelete, setCityPendingDelete] = useState<SelectedCity | null>(null);
   const [isAddCityModalVisible, setIsAddCityModalVisible] = useState(false);
   const [draftCityOrder, setDraftCityOrder] = useState<CityOrderMode>(sortState.cityOrder);
+  const {
+    scrollEnabled,
+    handleContainerLayout,
+    handleContentSizeChange,
+  } = useScrollFit();
   const deleteButtonsOpacity = useRef(new Animated.Value(isEditMode ? 1 : 0)).current;
   const dragHandleReveal = useRef(new Animated.Value(isEditMode ? 1 : 0)).current;
   const dragHandleTranslateX = dragHandleReveal.interpolate({
@@ -348,7 +354,7 @@ export default function Cities() {
             </Pressable>
           </View>
         ) : (
-          <View style={styles.listContainer}>
+          <View style={styles.listContainer} onLayout={handleContainerLayout}>
             {sortState.cityOrder === 'none' ? (
               <DraggableFlatList
                 style={styles.citiesList}
@@ -357,10 +363,14 @@ export default function Cities() {
                 keyExtractor={(item) => `city-${item.id}`}
                 renderItem={renderItem}
                 ListFooterComponent={renderAddCityButton}
+                onContentSizeChange={handleContentSizeChange}
+                scrollEnabled={scrollEnabled}
               />
             ) : (
               <ScrollView
                 style={styles.citiesList}
+                onContentSizeChange={handleContentSizeChange}
+                scrollEnabled={scrollEnabled}
               >
                 {displayedCities.map((city, index) => (
                   <View key={`sorted-city-${city.id}`}>

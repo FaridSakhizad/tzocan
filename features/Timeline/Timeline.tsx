@@ -27,6 +27,7 @@ import { SelectedCity, useSelectedCities } from '@/contexts/selected-cities-cont
 import { useSettings } from '@/contexts/settings-context';
 import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
+import { useScrollFit } from '@/hooks/use-scroll-fit';
 
 import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
 import { sortCitiesByOrder } from '@/utils/city-sorting';
@@ -126,6 +127,11 @@ export default function TimelineScreen() {
   const [isDayTransitioning, setIsDayTransitioning] = useState(false);
   const [isDayPickerVisible, setIsDayPickerVisible] = useState(false);
   const [pickerDraftDay, setPickerDraftDay] = useState(() => getLocalDayStart(new Date()));
+  const {
+    scrollEnabled,
+    handleContainerLayout,
+    handleContentSizeChange,
+  } = useScrollFit();
   const contentOpacity = useRef(new Animated.Value(1)).current;
   const isDayTransitioningRef = useRef(false);
   const previousTodayRef = useRef(getLocalDayStart(new Date()));
@@ -611,7 +617,7 @@ export default function TimelineScreen() {
           </View>
         </View>
 
-        <View style={styles.listContentContainer}>
+        <View style={styles.listContentContainer} onLayout={handleContainerLayout}>
           {selectedCities.length < 1 ? (
             <View style={styles.emptyStateContainer}>
               <Pressable onPress={handleOpenAddCityModal} style={styles.emptyStateButton}>
@@ -629,16 +635,21 @@ export default function TimelineScreen() {
               keyExtractor={(city) => `${city.id}`}
               renderItem={renderItem}
               ListFooterComponent={renderAddCityFooter}
+              onContentSizeChange={handleContentSizeChange}
               onDragBegin={() => setDragging(true)}
               onDragEnd={({ data }) => {
                 reorderCities(data);
                 setDragging(false);
               }}
               activationDistance={12}
-              scrollEnabled={!isEditMode || !dragging}
+              scrollEnabled={scrollEnabled && (!isEditMode || !dragging)}
             />
           ) : (
-            <ScrollView contentContainerStyle={styles.listContent}>
+            <ScrollView
+              contentContainerStyle={styles.listContent}
+              onContentSizeChange={handleContentSizeChange}
+              scrollEnabled={scrollEnabled}
+            >
               {displayedCities.map((city) => (
                 <View key={`sorted-city-${city.id}`}>{renderCityRow(city)}</View>
               ))}

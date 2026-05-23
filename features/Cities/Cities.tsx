@@ -213,7 +213,7 @@ export default function Cities() {
     const canDrag = Boolean(options?.draggable && sortState.cityOrder === 'none');
     const dayPhase = getDayPhaseForTimezone(city.tz, referenceNow);
 
-    const relativeDayLabel = getRelativeDayLabelForTimezone(city.tz, t, referenceNow);
+    const relativeDayLabel = getRelativeDayLabelForTimezone(city.tz, t, referenceNow, new Date());
 
     const TimePeriodIcon =
       dayPhase === 'morning'

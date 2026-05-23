@@ -171,12 +171,23 @@ function parseRelativeOffsetQuery(query: string) {
   return parseOffsetValue(query);
 }
 
-function parseGmtOffsetQuery(query: string) {
+type ParsedGmtOffsetQuery =
+  | {
+      kind: 'exact';
+      offsetMinutes: number;
+    }
+  | {
+      kind: 'prefix';
+      sign: '+' | '-';
+      hours: number;
+    };
+
+function parseGmtOffsetQuery(query: string): ParsedGmtOffsetQuery | null {
   const normalized = query
     .trim()
     .toLowerCase()
     .replace(/\s+/g, ' ')
-    .replace(/^utc\b/, 'gmt');
+    .replace(/^(utc|gtm)\b/, 'gmt');
 
   const match = normalized.match(/^gmt(?:\s+)?([+-]?\s*\d{1,2}(?::?\d{2})?)$/);
 
@@ -184,7 +195,38 @@ function parseGmtOffsetQuery(query: string) {
     return null;
   }
 
-  return parseOffsetValue(match[1].replace(/\s+/g, ''));
+  const normalizedOffset = match[1].replace(/\s+/g, '');
+  const parsedOffset = parseOffsetValue(normalizedOffset);
+
+  if (parsedOffset === null) {
+    return null;
+  }
+
+  if (normalizedOffset.includes(':')) {
+    return {
+      kind: 'exact',
+      offsetMinutes: parsedOffset,
+    };
+  }
+
+  const prefixMatch = normalizedOffset.match(/^([+-]?)(\d{1,2})$/);
+
+  if (!prefixMatch) {
+    return {
+      kind: 'exact',
+      offsetMinutes: parsedOffset,
+    };
+  }
+
+  const [, signRaw, hoursPart] = prefixMatch;
+  const sign: '+' | '-' = signRaw === '-' ? '-' : '+';
+  const hours = parseInt(hoursPart, 10);
+
+  return {
+    kind: 'prefix',
+    sign,
+    hours,
+  };
 }
 
 async function getDistinctTimezones(db: SQLite.SQLiteDatabase) {
@@ -253,15 +295,15 @@ async function searchCitiesByRelativeOffsetInDb(
   return searchCitiesByTimezones(db, matchingTimezones, languageCode);
 }
 
-async function searchCitiesByUtcOffsetInDb(
+async function searchCitiesByUtcOffsetsInDb(
   db: SQLite.SQLiteDatabase,
-  offsetMinutes: number,
+  offsetMinutesList: number[],
   languageCode: string
 ) {
   const now = new Date();
   const distinctTimezones = await getDistinctTimezones(db);
   const matchingTimezones = distinctTimezones.filter(
-    (timezone) => getUtcOffsetMinutesForTimezone(timezone, now) === offsetMinutes
+    (timezone) => offsetMinutesList.includes(getUtcOffsetMinutesForTimezone(timezone, now))
   );
 
   return searchCitiesByTimezones(db, matchingTimezones, languageCode);
@@ -287,6 +329,24 @@ function createAbstractTimezoneRow(offsetMinutes: number): SearchCityRow | null 
   };
 }
 
+function getMatchingAbstractTimezoneRowsForGmtQuery(parsedQuery: ParsedGmtOffsetQuery) {
+  if (parsedQuery.kind === 'exact') {
+    const row = createAbstractTimezoneRow(parsedQuery.offsetMinutes);
+    return row ? [row] : [];
+  }
+
+  return ABSTRACT_TIMEZONE_OFFSETS_MINUTES
+    .filter((offsetMinutes) => {
+      if (parsedQuery.sign === '+') {
+        return offsetMinutes >= 0 && Math.floor(offsetMinutes / 60) === parsedQuery.hours;
+      }
+
+      return offsetMinutes < 0 && Math.floor(Math.abs(offsetMinutes) / 60) === parsedQuery.hours;
+    })
+    .map((offsetMinutes) => createAbstractTimezoneRow(offsetMinutes))
+    .filter((city): city is SearchCityRow => city !== null);
+}
+
 type AddCityModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -303,6 +363,7 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
   const [query, setQuery] = useState('');
   const [cities, setCities] = useState<SearchCityRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const hasActiveQuery = query.trim().length > 0;
   const { fullHourTimezoneRows, fractionalTimezoneRows } = useMemo(
     () => {
       const rows = ABSTRACT_TIMEZONE_OFFSETS_MINUTES.map((offsetMinutes) =>
@@ -337,22 +398,20 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
       setIsLoading(true);
 
       try {
-        const gmtOffsetQueryMinutes = parseGmtOffsetQuery(query);
+        const gmtOffsetQuery = parseGmtOffsetQuery(query);
         const relativeOffsetQueryMinutes =
-          gmtOffsetQueryMinutes === null ? parseRelativeOffsetQuery(query) : null;
+          gmtOffsetQuery === null ? parseRelativeOffsetQuery(query) : null;
 
-        if (gmtOffsetQueryMinutes !== null) {
-          const timezoneResults = await searchCitiesByUtcOffsetInDb(
+        if (gmtOffsetQuery !== null) {
+          const abstractTimezoneResults = getMatchingAbstractTimezoneRowsForGmtQuery(gmtOffsetQuery);
+          const timezoneResults = await searchCitiesByUtcOffsetsInDb(
             db as SQLite.SQLiteDatabase,
-            gmtOffsetQueryMinutes,
+            abstractTimezoneResults.map((city) => parseOffsetValue(city.name.replace('GMT', '')) || 0),
             languageCode
           );
-          const abstractTimezoneRow = createAbstractTimezoneRow(gmtOffsetQueryMinutes);
 
           setCities(
-            abstractTimezoneRow
-              ? [abstractTimezoneRow, ...timezoneResults]
-              : timezoneResults
+            [...abstractTimezoneResults, ...timezoneResults]
           );
         } else if (relativeOffsetQueryMinutes !== null) {
           const results = await searchCitiesByRelativeOffsetInDb(
@@ -494,41 +553,43 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                         </Pressable>
                       ))}
 
-                      <View style={styles.timezoneSection}>
-                        <View style={styles.timezoneGrid}>
-                          {fullHourTimezoneRows.map((city) => (
-                            <Pressable
-                              key={`abstract-timezone-${city.id}`}
-                              onPress={() => handleSave(city)}
-                              style={({ pressed }) => [
-                                styles.timezoneButton,
-                                pressed && styles.timezoneButtonPressed,
-                              ]}
-                            >
-                              <Text style={styles.timezoneButtonText}>{city.name}</Text>
-                            </Pressable>
-                          ))}
-                        </View>
-
-                        <View style={styles.fractionalTimezoneSection}>
-                          <Text style={styles.fractionalTimezoneSectionTitle}>Fractional GMT / UTC</Text>
-
-                          <View style={styles.fractionalTimezoneGrid}>
-                            {fractionalTimezoneRows.map((city) => (
+                      {!hasActiveQuery && cities.length === 0 && (
+                        <View style={styles.timezoneSection}>
+                          <View style={styles.timezoneGrid}>
+                            {fullHourTimezoneRows.map((city) => (
                               <Pressable
-                                key={`abstract-fractional-timezone-${city.id}`}
+                                key={`abstract-timezone-${city.id}`}
                                 onPress={() => handleSave(city)}
                                 style={({ pressed }) => [
-                                  styles.fractionalTimezoneButton,
+                                  styles.timezoneButton,
                                   pressed && styles.timezoneButtonPressed,
                                 ]}
                               >
-                                <Text style={styles.fractionalTimezoneButtonText}>{city.name}</Text>
+                                <Text style={styles.timezoneButtonText}>{city.name}</Text>
                               </Pressable>
                             ))}
                           </View>
+
+                          <View style={styles.fractionalTimezoneSection}>
+                            <Text style={styles.fractionalTimezoneSectionTitle}>Fractional GMT / UTC</Text>
+
+                            <View style={styles.fractionalTimezoneGrid}>
+                              {fractionalTimezoneRows.map((city) => (
+                                <Pressable
+                                  key={`abstract-fractional-timezone-${city.id}`}
+                                  onPress={() => handleSave(city)}
+                                  style={({ pressed }) => [
+                                    styles.fractionalTimezoneButton,
+                                    pressed && styles.timezoneButtonPressed,
+                                  ]}
+                                >
+                                  <Text style={styles.fractionalTimezoneButtonText}>{city.name}</Text>
+                                </Pressable>
+                              ))}
+                            </View>
+                          </View>
                         </View>
-                      </View>
+                      )}
                     </ScrollView>
                   )}
                 </View>

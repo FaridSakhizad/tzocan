@@ -4,10 +4,15 @@ import { getDatePartsInTimezone } from '@/utils/abstract-timezone';
 export function getRelativeDayLabelForTimezone(
   timezone: string,
   t: (key: string) => string,
-  now = new Date()
+  now = new Date(),
+  baseLocalDate = now
 ) {
   const cityNow = getDatePartsInTimezone(now, timezone);
-  const localStamp = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const localStamp = Date.UTC(
+    baseLocalDate.getFullYear(),
+    baseLocalDate.getMonth(),
+    baseLocalDate.getDate()
+  );
   const cityStamp = Date.UTC(cityNow.year, cityNow.month - 1, cityNow.day);
   const dayDiff = Math.round((cityStamp - localStamp) / 86400000);
 

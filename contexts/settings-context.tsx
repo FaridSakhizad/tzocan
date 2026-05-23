@@ -137,7 +137,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setLanguageCodeOverride(parsed.languageCode);
       }
 
-      if (parsed.themeName === 'dark' || parsed.themeName === 'light') {
+      if (
+        parsed.themeName === 'dark' ||
+        parsed.themeName === 'light' ||
+        parsed.themeName === 'paperLight' ||
+        parsed.themeName === 'paperDark'
+      ) {
         setThemeNameState(parsed.themeName);
       } else if (parsed.themeName === 'sea' || parsed.themeName === 'paper') {
         setThemeNameState('light');

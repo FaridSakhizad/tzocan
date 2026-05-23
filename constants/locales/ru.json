@@ -62,6 +62,8 @@
   "settings.theme.hint": "Выберите визуальную тему приложения.",
   "settings.theme.light": "Светлая",
   "settings.theme.dark": "Тёмная",
+  "settings.theme.paperLight": "Бумажная светлая",
+  "settings.theme.paperDark": "Бумажная тёмная",
   "settings.language.label": "Язык",
   "settings.language.hint": "Выберите язык интерфейса приложения.",
   "settings.notifications.label": "Уведомления",

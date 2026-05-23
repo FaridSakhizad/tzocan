@@ -52,6 +52,8 @@ export default function Settings() {
   const themeOptions: { value: ThemeName; label: string }[] = [
     { value: 'light', label: t('settings.theme.light') },
     { value: 'dark', label: t('settings.theme.dark') },
+    { value: 'paperLight', label: t('settings.theme.paperLight') },
+    { value: 'paperDark', label: t('settings.theme.paperDark') },
   ];
 
   const languageOptions = [

@@ -62,6 +62,8 @@
   "settings.theme.hint": "Оберіть візуальну тему застосунку.",
   "settings.theme.light": "Світла",
   "settings.theme.dark": "Темна",
+  "settings.theme.paperLight": "Паперова світла",
+  "settings.theme.paperDark": "Паперова темна",
   "settings.language.label": "Мова",
   "settings.language.hint": "Оберіть мову інтерфейсу застосунку.",
   "settings.notifications.label": "Сповіщення",

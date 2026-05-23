@@ -62,6 +62,8 @@
   "settings.theme.hint": "Wählen Sie das visuelle Design der App.",
   "settings.theme.light": "Hell",
   "settings.theme.dark": "Dunkel",
+  "settings.theme.paperLight": "Papier hell",
+  "settings.theme.paperDark": "Papier dunkel",
   "settings.language.label": "Sprache",
   "settings.language.hint": "Wählen Sie die Sprache der App-Oberfläche.",
   "settings.notifications.label": "Benachrichtigungen",

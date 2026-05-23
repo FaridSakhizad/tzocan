@@ -1,0 +1,69 @@
+import { themeBaseScales } from '@/constants/theme-base';
+import type { UiTheme } from '@/constants/ui-theme.types';
+
+export const themePaperLight: UiTheme = {
+  name: 'paperLight',
+  statusBarStyle: 'dark',
+  navigation: {
+    dark: false,
+    colors: {
+      primary: '#62584f',
+      background: 'transparent',
+      card: 'transparent',
+      text: '#544c44',
+      border: '#a79a88',
+      notification: '#7b665d',
+    },
+  },
+  overlay: {
+    strong: 'rgba(233, 225, 213, 0.9)',
+    medium: 'rgba(244, 238, 229, 0.72)',
+  },
+  surface: {
+    transparent: 'rgba(0, 0, 0, 0)',
+    elevated: 'rgba(255, 250, 242, 0.72)',
+    elevatedSoft: 'rgba(255, 248, 239, 0.54)',
+    elevatedMuted: 'rgba(246, 239, 229, 0.48)',
+    card: 'rgba(245, 238, 228, 0.82)',
+    cardSoft: 'rgba(251, 246, 239, 0.66)',
+    cardAlt: 'rgba(232, 223, 210, 0.62)',
+    cardStrong: 'rgba(241, 232, 220, 0.9)',
+    field: 'rgba(255, 252, 247, 0.8)',
+    fieldStrong: 'rgba(247, 239, 229, 0.94)',
+    fieldSelected: 'rgba(224, 207, 189, 0.92)',
+    successSoft: 'rgba(127, 154, 112, 0.16)',
+    button: {
+      primary: '#5c534a',
+      subtle: 'rgba(88, 74, 60, 0.14)',
+      subtleStrong: 'rgba(88, 74, 60, 0.22)',
+      subtleMedium: 'rgba(88, 74, 60, 0.18)',
+      subtleWeak: 'rgba(88, 74, 60, 0.08)',
+      danger: '#81635d',
+    },
+  },
+  border: {
+    field: 'rgba(138, 118, 98, 0.72)',
+    subtle: 'rgba(138, 118, 98, 0.4)',
+    faint: 'rgba(138, 118, 98, 0.22)',
+    muted: 'rgba(138, 118, 98, 0.16)',
+    transparent: 'rgba(255, 255, 255, 0)',
+    success: '#6f8e63',
+  },
+  text: {
+    primary: '#544c44',
+    secondary: 'rgba(84, 76, 68, 0.72)',
+    muted: '#9a8e81',
+    helper: 'rgba(84, 76, 68, 0.56)',
+    placeholder: 'rgba(84, 76, 68, 0.42)',
+    accentSoft: '#756b61',
+    onLight: '#f8f0e5',
+    warning: '#765b55',
+  },
+  image: {
+    ...themeBaseScales.image,
+    modalBackgroundSource: require('@/assets/images/bg-paper-white.jpg'),
+  },
+  radius: themeBaseScales.radius,
+  spacing: themeBaseScales.spacing,
+  typography: themeBaseScales.typography,
+};

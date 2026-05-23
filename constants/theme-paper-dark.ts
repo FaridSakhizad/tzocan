@@ -1,0 +1,69 @@
+import { themeBaseScales } from '@/constants/theme-base';
+import type { UiTheme } from '@/constants/ui-theme.types';
+
+export const themePaperDark: UiTheme = {
+  name: 'paperDark',
+  statusBarStyle: 'light',
+  navigation: {
+    dark: true,
+    colors: {
+      primary: '#f0e4d3',
+      background: 'transparent',
+      card: 'transparent',
+      text: '#f2e7d8',
+      border: '#5a5146',
+      notification: '#d18d76',
+    },
+  },
+  overlay: {
+    strong: 'rgba(24, 20, 17, 0.92)',
+    medium: 'rgba(31, 26, 22, 0.66)',
+  },
+  surface: {
+    transparent: 'rgba(0, 0, 0, 0)',
+    elevated: 'rgba(44, 37, 31, 0.8)',
+    elevatedSoft: 'rgba(52, 44, 37, 0.66)',
+    elevatedMuted: 'rgba(37, 31, 26, 0.58)',
+    card: 'rgba(57, 48, 40, 0.84)',
+    cardSoft: 'rgba(52, 44, 37, 0.68)',
+    cardAlt: 'rgba(73, 62, 52, 0.56)',
+    cardStrong: 'rgba(66, 56, 47, 0.9)',
+    field: 'rgba(40, 34, 29, 0.86)',
+    fieldStrong: 'rgba(54, 46, 39, 0.92)',
+    fieldSelected: 'rgba(112, 95, 80, 0.94)',
+    successSoft: 'rgba(127, 154, 112, 0.18)',
+    button: {
+      primary: '#f2e7d8',
+      subtle: 'rgba(242, 231, 216, 0.12)',
+      subtleStrong: 'rgba(242, 231, 216, 0.2)',
+      subtleMedium: 'rgba(242, 231, 216, 0.16)',
+      subtleWeak: 'rgba(242, 231, 216, 0.08)',
+      danger: '#d18d76',
+    },
+  },
+  border: {
+    field: 'rgba(199, 182, 163, 0.5)',
+    subtle: 'rgba(199, 182, 163, 0.34)',
+    faint: 'rgba(199, 182, 163, 0.22)',
+    muted: 'rgba(199, 182, 163, 0.16)',
+    transparent: 'rgba(255, 255, 255, 0)',
+    success: '#7f9a70',
+  },
+  text: {
+    primary: '#f2e7d8',
+    secondary: 'rgba(242, 231, 216, 0.72)',
+    muted: '#b7a996',
+    helper: 'rgba(242, 231, 216, 0.56)',
+    placeholder: 'rgba(242, 231, 216, 0.42)',
+    accentSoft: '#ddd0bf',
+    onLight: '#27211c',
+    warning: '#efb09b',
+  },
+  image: {
+    ...themeBaseScales.image,
+    modalBackgroundSource: require('@/assets/images/bg-paper-black.jpg'),
+  },
+  radius: themeBaseScales.radius,
+  spacing: themeBaseScales.spacing,
+  typography: themeBaseScales.typography,
+};

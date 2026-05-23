@@ -62,6 +62,8 @@
   "settings.theme.hint": "Escolha o tema visual da aplicação.",
   "settings.theme.light": "Claro",
   "settings.theme.dark": "Escuro",
+  "settings.theme.paperLight": "Papel claro",
+  "settings.theme.paperDark": "Papel escuro",
   "settings.language.label": "Idioma",
   "settings.language.hint": "Escolha o idioma da interface da aplicação.",
   "settings.notifications.label": "Notificações",

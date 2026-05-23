@@ -79,7 +79,7 @@
   "city.fallbackName": "esta ciudad",
   "cities.sortTitle": "Ordenar ciudades",
   "timeline.chooseDay": "Elegir día",
-  "addCity.searchPlaceholder": "Ingresa el nombre de la ciudad o la zona horaria...",
+  "addCity.searchPlaceholder": "Nombre de la ciudad o zona horaria...",
   "addCity.chooseTimezone": "Elegir GMT / UTC",
   "addCity.databaseUnavailable": "La búsqueda de ciudades no está disponible temporalmente.",
   "notifications.helper": "Agrega al menos una ciudad primero",

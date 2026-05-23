@@ -79,7 +79,7 @@
   "city.fallbackName": "этот город",
   "cities.sortTitle": "Сортировка городов",
   "timeline.chooseDay": "Выбрать день",
-  "addCity.searchPlaceholder": "Введите имя города или часовой пояс...",
+  "addCity.searchPlaceholder": "Имя города или часовой пояс...",
   "addCity.chooseTimezone": "Выбрать GMT / UTC",
   "addCity.databaseUnavailable": "Поиск городов временно недоступен.",
   "notifications.helper": "Сначала добавьте хотя бы один город",

@@ -500,7 +500,9 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
   const [query, setQuery] = useState('');
   const [cities, setCities] = useState<SearchCityRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
   const hasActiveQuery = query.trim().length > 0;
+  const isSearchInputIconActive = isSearchInputFocused || cities.length > 0;
 
   const { abstractTimezoneRows, fullHourTimezoneRows, fractionalTimezoneRows } = useMemo(
     () => {
@@ -521,6 +523,7 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
     if (!visible) {
       setQuery('');
       setCities([]);
+      setIsSearchInputFocused(false);
       return;
     }
 
@@ -639,7 +642,10 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                   <View style={styles.searchInputBox}>
                     <IconSearch
                       fill={theme.text.primary}
-                      style={styles.searchInputIcon}
+                      style={[
+                        styles.searchInputIcon,
+                        isSearchInputIconActive && styles.searchInputIconActive,
+                      ]}
                     />
                     <TextInput
                       style={styles.input}
@@ -649,7 +655,13 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                       onChangeText={(value) => {
                         setQuery(value);
                       }}
-                      onBlur={() => Keyboard.dismiss()}
+                      onFocus={() => {
+                        setIsSearchInputFocused(true);
+                      }}
+                      onBlur={() => {
+                        setIsSearchInputFocused(false);
+                        Keyboard.dismiss();
+                      }}
                       autoCapitalize="none"
                       autoCorrect={false}
                       autoFocus
@@ -791,6 +803,9 @@ function createStyles(theme: UiTheme) {
       width: 16,
       height: 16,
       opacity: 0.44
+    },
+    searchInputIconActive: {
+      opacity: 1,
     },
     input: {
       borderWidth: 1,

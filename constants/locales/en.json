@@ -79,7 +79,7 @@
   "city.fallbackName": "this city",
   "cities.sortTitle": "Sort Cities",
   "timeline.chooseDay": "Choose Day",
-  "addCity.searchPlaceholder": "Enter City Name or Time Zone...",
+  "addCity.searchPlaceholder": "City Name or Time Zone...",
   "addCity.chooseTimezone": "Choose GMT / UTC",
   "addCity.databaseUnavailable": "City search is temporarily unavailable.",
   "notifications.helper": "Add at least one city first",

@@ -1,11 +1,12 @@
 import { ReactNode, useMemo } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View, ImageBackground } from 'react-native';
+import { Animated, Modal, Pressable, StyleSheet, Text, View, ImageBackground } from 'react-native';
 
 import IconCancelOutlined from '@/assets/images/icon--x-1--outlined.svg';
 import IconConfirmOutlined from '@/assets/images/icon--checkmark-1--outlined.svg';
 import IconBackOutlined from '@/assets/images/icon--arrow-2--outlined.svg';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
+import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
 
 type NotificationPickerModalProps = {
   visible: boolean;
@@ -30,50 +31,60 @@ export function NotificationPickerModal({
 }: NotificationPickerModalProps) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isMounted, opacity } = useModalVisibilityAnimation(visible);
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <Modal
-      visible={visible}
+      visible={isMounted}
       transparent
-      animationType="fade"
+      animationType="none"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={[styles.card, wide && styles.cardWide]} onPress={() => undefined}>
-          <ImageBackground
-            source={theme.image.modalBackgroundSource}
-            style={styles.backgroundImage}
-            imageStyle={styles.backgroundImageAsset}
-            resizeMode="cover"
-          >
-            <View style={styles.container}>
-              <View style={styles.header}>
-                {showActions && (
-                  <Pressable style={styles.headerButton} onPress={onClose}>
-                    {closeActionType === 'back' ? <IconBackOutlined fill={theme.text.primary} /> : <IconCancelOutlined fill={theme.text.primary} />}
-                  </Pressable>
-                )}
+      <Animated.View style={[styles.wrapper, { opacity }]}>
+        <Pressable style={styles.overlay} onPress={onClose}>
+          <Pressable style={[styles.card, wide && styles.cardWide]} onPress={() => undefined}>
+            <ImageBackground
+              source={theme.image.modalBackgroundSource}
+              style={styles.backgroundImage}
+              imageStyle={styles.backgroundImageAsset}
+              resizeMode="cover"
+            >
+              <View style={styles.container}>
+                <View style={styles.header}>
+                  {showActions && (
+                    <Pressable style={styles.headerButton} onPress={onClose}>
+                      {closeActionType === 'back' ? <IconBackOutlined fill={theme.text.primary} /> : <IconCancelOutlined fill={theme.text.primary} />}
+                    </Pressable>
+                  )}
 
-                <Text style={styles.title}>{title}</Text>
+                  <Text style={styles.title}>{title}</Text>
 
-                {showActions && (
-                  <Pressable style={styles.headerButton} onPress={onApply}>
-                    <IconConfirmOutlined fill={theme.text.primary} />
-                  </Pressable>
-                )}
+                  {showActions && (
+                    <Pressable style={styles.headerButton} onPress={onApply}>
+                      <IconConfirmOutlined fill={theme.text.primary} />
+                    </Pressable>
+                  )}
+                </View>
+
+                {children}
               </View>
-
-              {children}
-            </View>
-          </ImageBackground>
+            </ImageBackground>
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </Animated.View>
     </Modal>
   );
 }
 
 function createStyles(theme: UiTheme) {
   return StyleSheet.create({
+    wrapper: {
+      flex: 1
+    },
     overlay: {
       flex: 1,
       backgroundColor: theme.overlay.strong,

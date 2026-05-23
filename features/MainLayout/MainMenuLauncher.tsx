@@ -25,6 +25,18 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
   const [isAddCityModalVisible, setIsAddCityModalVisible] = React.useState(false);
   const [isAddNotificationModalVisible, setIsAddNotificationModalVisible] = React.useState(false);
   const [selectedNotificationCityId, setSelectedNotificationCityId] = React.useState<number | null>(null);
+  const [shouldForceUnmountMainMenu, setShouldForceUnmountMainMenu] = React.useState(false);
+
+  React.useEffect(() => {
+    if (visible) {
+      setShouldForceUnmountMainMenu(false);
+    }
+  }, [visible]);
+
+  const forceCloseMainMenu = () => {
+    setShouldForceUnmountMainMenu(true);
+    onClose();
+  };
 
   const notificationCityOptions = React.useMemo(
     () => selectedCities.map((city) => ({
@@ -46,6 +58,7 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
       return;
     }
 
+    forceCloseMainMenu();
     setIsAddCityModalVisible(true);
   };
 
@@ -72,6 +85,7 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
         ? currentCityId
         : null;
 
+    forceCloseMainMenu();
     setSelectedNotificationCityId(defaultCityId);
     setIsAddNotificationModalVisible(true);
   };
@@ -111,6 +125,7 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
       return;
     }
 
+    forceCloseMainMenu();
     router.replace(RouteNamePaths.contact);
   };
 
@@ -119,6 +134,7 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
       return;
     }
 
+    forceCloseMainMenu();
     router.replace(RouteNamePaths.settings);
   };
 
@@ -127,6 +143,7 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
       return;
     }
 
+    forceCloseMainMenu();
     router.replace(RouteNamePaths.about);
   };
 
@@ -151,16 +168,18 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
         onSave={handleSaveNotification}
       />
 
-      <MainMenuModal
-        visible={visible}
-        onClose={onClose}
-        onAddNotification={handleOpenAddNotificationModal}
-        onAddCity={handleOpenAddCityModal}
-        onContact={handleOpenContactScreen}
-        onSettings={handleOpenSettingsScreen}
-        onAbout={handleOpenAboutScreen}
-        canAddNotification={selectedCities.length > 0}
-      />
+      {!shouldForceUnmountMainMenu && (
+        <MainMenuModal
+          visible={visible}
+          onClose={onClose}
+          onAddNotification={handleOpenAddNotificationModal}
+          onAddCity={handleOpenAddCityModal}
+          onContact={handleOpenContactScreen}
+          onSettings={handleOpenSettingsScreen}
+          onAbout={handleOpenAboutScreen}
+          canAddNotification={selectedCities.length > 0}
+        />
+      )}
     </>
   );
 }

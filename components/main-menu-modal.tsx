@@ -1,4 +1,5 @@
 import {
+  Animated,
   Modal,
   View,
   Text,
@@ -13,8 +14,7 @@ import { useMemo } from 'react';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useI18n } from '@/hooks/use-i18n';
-
-import CloseButton from '../assets/images/icon--x-3--outlined.svg';
+import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
 
 type MainMenuModalProps = {
   visible: boolean;
@@ -40,6 +40,7 @@ export function MainMenuModal({
   const { theme } = useAppTheme();
   const { t } = useI18n();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isMounted, opacity } = useModalVisibilityAnimation(visible);
 
   const handleAddNotification = () => {
     onClose();
@@ -66,61 +67,71 @@ export function MainMenuModal({
     onAbout();
   };
 
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <Modal
-      visible={visible}
+      visible={isMounted}
       transparent
-      animationType="fade"
+      animationType="none"
       onRequestClose={onClose}
       style={styles.mainMenuModal}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.modalContainer}
-      >
-        <View style={styles.modalPad} />
+      <Animated.View style={[styles.modalRoot, { opacity }]}>
+        <View style={styles.modalRoot}>
+          <Pressable
+            style={StyleSheet.absoluteFillObject}
+            onPress={onClose}
+          />
 
-        <ImageBackground
-          source={theme.image.modalBackgroundSource}
-          style={styles.backgroundImage}
-          imageStyle={styles.backgroundImageAsset}
-          resizeMode="cover"
-        >
-          <View style={styles.modalContent}>
-            <View style={styles.menuCard}>
-              <Pressable
-                style={[styles.menuButton, !canAddNotification && styles.menuButtonDisabled]}
-                onPress={handleAddNotification}
-                disabled={!canAddNotification}
-              >
-                <Text style={styles.menuButtonText}>{t('common.addNotification')}</Text>
-              </Pressable>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalContainer}
+            pointerEvents="box-none"
+          >
+            <View style={styles.modalPad} />
 
-              <Pressable style={styles.menuButton} onPress={handleAddCity}>
-                <Text style={styles.menuButtonText}>{t('common.addCity')}</Text>
-              </Pressable>
+            <ImageBackground
+              source={theme.image.modalBackgroundSource}
+              style={styles.backgroundImage}
+              imageStyle={styles.backgroundImageAsset}
+              resizeMode="cover"
+            >
+              <View style={styles.modalContent}>
+                <View style={styles.menuCard}>
+                  <Pressable
+                    style={[styles.menuButton, !canAddNotification && styles.menuButtonDisabled]}
+                    onPress={handleAddNotification}
+                    disabled={!canAddNotification}
+                  >
+                    <Text style={styles.menuButtonText}>{t('common.addNotification')}</Text>
+                  </Pressable>
 
-              <Pressable style={styles.menuButton} onPress={handleOpenSettings}>
-                <Text style={styles.menuButtonText}>{t('common.settings')}</Text>
-              </Pressable>
+                  <Pressable style={styles.menuButton} onPress={handleAddCity}>
+                    <Text style={styles.menuButtonText}>{t('common.addCity')}</Text>
+                  </Pressable>
 
-              <Pressable style={styles.menuButton} onPress={handleOpenContact}>
-                <Text style={styles.menuButtonText}>{t('common.contact')}</Text>
-              </Pressable>
+                  <Pressable style={styles.menuButton} onPress={handleOpenSettings}>
+                    <Text style={styles.menuButtonText}>{t('common.settings')}</Text>
+                  </Pressable>
 
-              <Pressable style={styles.menuButton} onPress={handleOpenAbout}>
-                <Text style={styles.menuButtonText}>{t('common.about')}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </ImageBackground>
+                  <Pressable style={styles.menuButton} onPress={handleOpenContact}>
+                    <Text style={styles.menuButtonText}>{t('common.contact')}</Text>
+                  </Pressable>
 
-        <View style={styles.modalPad}>
-          <Pressable onPress={onClose} style={styles.closeButton}>
-            <CloseButton fill={theme.text.primary} />
-          </Pressable>
+                  <Pressable style={styles.menuButton} onPress={handleOpenAbout}>
+                    <Text style={styles.menuButtonText}>{t('common.about')}</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </ImageBackground>
+
+            <View style={styles.modalPad} />
+          </KeyboardAvoidingView>
         </View>
-      </KeyboardAvoidingView>
+      </Animated.View>
     </Modal>
   );
 }
@@ -128,6 +139,7 @@ export function MainMenuModal({
 function createStyles(theme: UiTheme) {
   return StyleSheet.create({
     mainMenuModal: {},
+    modalRoot: { flex: 1 },
     modalContainer: {
       flex: 1,
       flexDirection: 'column',
@@ -154,8 +166,8 @@ function createStyles(theme: UiTheme) {
     modalContent: {
       backgroundColor: theme.surface.transparent,
       borderRadius: theme.radius.xl,
-      paddingVertical: theme.spacing.modalInnerY,
-      paddingHorizontal: theme.spacing.modalInnerX,
+      paddingVertical: 15,
+      paddingHorizontal: 23,
       gap: theme.spacing.sectionGap,
     },
     header: {
@@ -166,10 +178,9 @@ function createStyles(theme: UiTheme) {
     },
     menuCard: {
       flexDirection: 'column',
-      gap: 10,
     },
     menuButton: {
-      height: 40,
+      height: 50,
       justifyContent: 'center',
     },
     menuButtonDisabled: {

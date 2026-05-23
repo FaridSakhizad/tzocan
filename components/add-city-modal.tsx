@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Text, View, TextInput, StyleSheet, Pressable, Modal, KeyboardAvoidingView, Platform, ScrollView, ImageBackground, Keyboard } from 'react-native';
+import { Animated, Text, View, TextInput, StyleSheet, Pressable, Modal, KeyboardAvoidingView, Platform, ScrollView, ImageBackground, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SQLite from "expo-sqlite";
 
@@ -10,6 +10,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { LoadingSpinner } from '@/components/loading-spinner';
+import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
 import { getUtcOffsetMinutesForTimezone } from '@/utils/timezone-offset';
 
 export type CityRow = {
@@ -231,6 +232,7 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
   const { t, languageCode } = useI18n();
   const { db, error: dbError, isLoading: isDatabaseLoading } = useDatabase();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isMounted, opacity } = useModalVisibilityAnimation(visible);
   const [query, setQuery] = useState('');
   const [cities, setCities] = useState<SearchCityRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -294,108 +296,114 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
     setCities([]);
   };
 
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <Modal
-      visible={visible}
+      visible={isMounted}
       transparent
-      animationType="fade"
+      animationType="none"
       onRequestClose={onClose}
     >
-      <ImageBackground
-        source={theme.image.modalBackgroundSource}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <View style={styles.modalBg}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.modalContainer}
-          >
-            <View
-              style={[
-                styles.safeArea,
-                {
-                  paddingTop: insets.top,
-                  paddingBottom: insets.bottom,
-                },
-              ]}
+      <Animated.View style={[styles.backgroundImage, { opacity }]}>
+        <ImageBackground
+          source={theme.image.modalBackgroundSource}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          <View style={styles.modalBg}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.modalContainer}
             >
-              <View style={styles.modalContent}>
-                <View style={styles.header}>
-                  <Pressable style={styles.cancelButton} onPress={onClose}>
-                    <IconCancelOutlined
-                      fill={theme.text.primary}
-                    />
-                  </Pressable>
+              <View
+                style={[
+                  styles.safeArea,
+                  {
+                    paddingTop: insets.top,
+                    paddingBottom: insets.bottom,
+                  },
+                ]}
+              >
+                <View style={styles.modalContent}>
+                  <View style={styles.header}>
+                    <Pressable style={styles.cancelButton} onPress={onClose}>
+                      <IconCancelOutlined
+                        fill={theme.text.primary}
+                      />
+                    </Pressable>
 
-                  <Text style={styles.title}>{t('common.addCity')}</Text>
+                    <Text style={styles.title}>{t('common.addCity')}</Text>
 
-                  <View style={styles.confirmButtonPlaceholder}>
-                    <IconConfirmOutlined
-                      fill={theme.text.placeholder}
-                    />
+                    <View style={styles.confirmButtonPlaceholder}>
+                      <IconConfirmOutlined
+                        fill={theme.text.placeholder}
+                      />
+                    </View>
                   </View>
+
+                  <TextInput
+                    style={styles.input}
+                    placeholder={t('addCity.searchPlaceholder')}
+                    placeholderTextColor={theme.text.placeholder}
+                    value={query}
+                    onChangeText={(value) => {
+                      setQuery(value);
+                    }}
+                    onBlur={() => Keyboard.dismiss()}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoFocus
+                  />
+
+                  {isLoading && (
+                    <View style={styles.loadingBlock}>
+                      <LoadingSpinner />
+                    </View>
+                  )}
+
+                  {!isLoading && !isDatabaseLoading && !!dbError && (
+                    <Text style={styles.helperText}>
+                      {t('addCity.databaseUnavailable')}
+                    </Text>
+                  )}
+
+                  {!isLoading && !isDatabaseLoading && !dbError && query.length > 1 && cities.length === 0 && (
+                    <Text style={styles.helperText}>
+                      {t('common.noResults')}
+                    </Text>
+                  )}
+
+                  {!isLoading && cities.length > 0 && (
+                    <ScrollView style={styles.resultsList} showsVerticalScrollIndicator={false}>
+                      {cities.map((city) => (
+                        <Pressable
+                          key={`${city.id}-${city.name}-${city.country}`}
+                          onPress={() => handleSave(city)}
+                          style={({ pressed }) => [
+                            styles.cityItem,
+                            pressed && styles.cityItemPressed,
+                          ]}
+                        >
+                          <Text style={styles.cityText}>
+                            {city.localizedName || city.name}, {city.country}
+                          </Text>
+                          {!!city.localizedName && city.localizedName !== city.name && (
+                            <Text style={styles.citySecondaryText}>{city.name}</Text>
+                          )}
+                          <Text style={styles.cityTimezone}>{city.tz}</Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  )}
                 </View>
-
-                <TextInput
-                  style={styles.input}
-                  placeholder={t('addCity.searchPlaceholder')}
-                  placeholderTextColor={theme.text.placeholder}
-                  value={query}
-                  onChangeText={(value) => {
-                    setQuery(value);
-                  }}
-                  onBlur={() => Keyboard.dismiss()}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoFocus
-                />
-
-                {isLoading && (
-                  <View style={styles.loadingBlock}>
-                    <LoadingSpinner />
-                  </View>
-                )}
-
-                {!isLoading && !isDatabaseLoading && !!dbError && (
-                  <Text style={styles.helperText}>
-                    {t('addCity.databaseUnavailable')}
-                  </Text>
-                )}
-
-                {!isLoading && !isDatabaseLoading && !dbError && query.length > 1 && cities.length === 0 && (
-                  <Text style={styles.helperText}>
-                    {t('common.noResults')}
-                  </Text>
-                )}
-
-                {!isLoading && cities.length > 0 && (
-                  <ScrollView style={styles.resultsList} showsVerticalScrollIndicator={false}>
-                    {cities.map((city) => (
-                      <Pressable
-                        key={`${city.id}-${city.name}-${city.country}`}
-                        onPress={() => handleSave(city)}
-                        style={({ pressed }) => [
-                          styles.cityItem,
-                          pressed && styles.cityItemPressed,
-                        ]}
-                      >
-                        <Text style={styles.cityText}>
-                          {city.localizedName || city.name}, {city.country}
-                        </Text>
-                        {!!city.localizedName && city.localizedName !== city.name && (
-                          <Text style={styles.citySecondaryText}>{city.name}</Text>
-                        )}
-                        <Text style={styles.cityTimezone}>{city.tz}</Text>
-                      </Pressable>
-                    ))}
-                  </ScrollView>
-                )}
               </View>
-            </View>
-          </KeyboardAvoidingView>
-        </View>
-      </ImageBackground>
+            </KeyboardAvoidingView>
+          </View>
+        </ImageBackground>
+      </Animated.View>
     </Modal>
   );
 }

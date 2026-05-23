@@ -1,9 +1,10 @@
-import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View, ImageBackground } from 'react-native';
+import { Animated, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View, ImageBackground } from 'react-native';
 import { useMemo } from 'react';
 
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useI18n } from '@/hooks/use-i18n';
+import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
 
 type ConfirmDialogModalProps = {
   visible: boolean;
@@ -25,40 +26,47 @@ export function ConfirmDialogModal({
   const { theme } = useAppTheme();
   const { t } = useI18n();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isMounted, opacity } = useModalVisibilityAnimation(visible);
   const resolvedConfirmLabel = confirmLabel ?? t('common.delete');
   const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
 
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <Modal
-      visible={visible}
+      visible={isMounted}
       transparent
-      animationType="fade"
+      animationType="none"
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.modalWrapper}
-      >
-        <ImageBackground
-          source={theme.image.modalBackgroundSource}
-          style={styles.backgroundImage}
-          imageStyle={styles.backgroundImageAsset}
-          resizeMode="cover"
+      <Animated.View style={[styles.modalWrapper, { opacity }]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalContainer}
         >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalHeaderText}>{title}</Text>
+          <ImageBackground
+            source={theme.image.modalBackgroundSource}
+            style={styles.backgroundImage}
+            imageStyle={styles.backgroundImageAsset}
+            resizeMode="cover"
+          >
+            <View style={styles.modalContent}>
+              <Text style={styles.modalHeaderText}>{title}</Text>
 
-            <View style={styles.actions}>
-              <Pressable style={[styles.dialogButton, styles.dialogButtonDelete]} onPress={onConfirm}>
-                <Text style={[styles.dialogButtonText, styles.dialogButtonTextDelete]}>{resolvedConfirmLabel}</Text>
-              </Pressable>
-              <Pressable style={[styles.dialogButton, styles.dialogButtonSecondary]} onPress={onClose}>
-                <Text style={[styles.dialogButtonText, styles.dialogButtonTextSecondary]}>{resolvedCancelLabel}</Text>
-              </Pressable>
+              <View style={styles.actions}>
+                <Pressable style={[styles.dialogButton, styles.dialogButtonDelete]} onPress={onConfirm}>
+                  <Text style={[styles.dialogButtonText, styles.dialogButtonTextDelete]}>{resolvedConfirmLabel}</Text>
+                </Pressable>
+                <Pressable style={[styles.dialogButton, styles.dialogButtonSecondary]} onPress={onClose}>
+                  <Text style={[styles.dialogButtonText, styles.dialogButtonTextSecondary]}>{resolvedCancelLabel}</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
-        </ImageBackground>
-      </KeyboardAvoidingView>
+          </ImageBackground>
+        </KeyboardAvoidingView>
+      </Animated.View>
     </Modal>
   );
 }
@@ -67,23 +75,28 @@ function createStyles(theme: UiTheme) {
   return StyleSheet.create({
     modalWrapper: {
       flex: 1,
-      flexDirection: 'column',
-      justifyContent: 'space-evenly',
       backgroundColor: theme.overlay.strong,
-      padding: theme.spacing.modalX,
+    },
+    modalContainer: {
+      flex: 1,
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     backgroundImage: {
-      borderRadius: theme.radius.xl,
+      borderRadius: 36,
       overflow: 'hidden',
+      width: 295,
     },
     backgroundImageAsset: {
       transform: [{ scale: theme.image.modalBackgroundScale }],
     },
     modalContent: {
+      width: 295,
       backgroundColor: theme.surface.elevated,
-      borderRadius: theme.radius.xl,
-      paddingVertical: theme.spacing.modalInnerY,
-      paddingHorizontal: theme.spacing.modalInnerX,
+      borderRadius: 36,
+      paddingVertical: 20,
+      paddingHorizontal: 23,
     },
     modalHeaderText: {
       textAlign: 'center',
@@ -95,7 +108,7 @@ function createStyles(theme: UiTheme) {
       paddingBottom: 24,
     },
     actions: {
-      gap: theme.spacing.modalActionsGap,
+      gap: 10,
     },
     dialogButton: {
       height: 40,

@@ -29,9 +29,6 @@ export const themeBaseScales: ThemeScales = {
     cardY: 14,
     sectionGap: 12,
     modalX: 40,
-    modalInnerX: 23,
-    modalInnerY: 20,
-    modalActionsGap: 10,
   },
   typography: {
     titleSm: {

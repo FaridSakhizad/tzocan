@@ -113,7 +113,7 @@ function createDetailScreenStyles(theme: UiTheme) {
       alignItems: 'center',
       justifyContent: 'center',
       height: 48,
-      borderRadius: theme.radius.lg,
+      borderRadius: 24,
       backgroundColor: theme.surface.button.primary,
     },
     primaryButtonDisabled: {

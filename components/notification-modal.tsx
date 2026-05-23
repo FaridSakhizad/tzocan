@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Animated,
   Modal,
   View,
   Text,
@@ -31,6 +32,7 @@ import IconArrow from '@/assets/images/icon--arrow-1.svg';
 import IconCheckmark from '@/assets/images/icon--checkmark-2.svg';
 
 import { NotificationPickerModal } from '@/components/notification-picker-modal';
+import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
 
 export type NotificationFormValues = {
   year?: number;
@@ -77,6 +79,7 @@ export function NotificationModal({
   const { firstDayOfWeek, timeFormat } = useSettings();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isMounted, opacity } = useModalVisibilityAnimation(visible);
   const DATE_SHIFT_LABELS = useMemo(() => ({
     previousDay: t('common.previousDay'),
     nextDay: t('common.nextDay'),
@@ -564,31 +567,36 @@ export function NotificationModal({
     closePicker();
   };
 
+  if (!isMounted) {
+    return null;
+  }
+
   return (
     <Modal
-      visible={visible}
+      visible={isMounted}
       transparent
-      animationType="fade"
+      animationType="none"
       onRequestClose={onClose}
     >
-      <ImageBackground
-        source={theme.image.modalBackgroundSource}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalContainer}
+      <Animated.View style={[styles.backgroundImage, { opacity }]}>
+        <ImageBackground
+          source={theme.image.modalBackgroundSource}
+          style={styles.backgroundImage}
+          resizeMode="cover"
         >
-          <View
-            style={[
-              styles.modalContent,
-              {
-                paddingTop: insets.top,
-                paddingBottom: insets.bottom,
-              },
-            ]}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalContainer}
           >
+            <View
+              style={[
+                styles.modalContent,
+                {
+                  paddingTop: insets.top,
+                  paddingBottom: insets.bottom,
+                },
+              ]}
+            >
             <ScrollView
               style={styles.modalScroll}
               contentContainerStyle={styles.modalScrollContent}
@@ -751,6 +759,7 @@ export function NotificationModal({
           </View>
         </KeyboardAvoidingView>
       </ImageBackground>
+      </Animated.View>
 
       <NotificationPickerModal
         visible={isPickerOpen}

@@ -84,9 +84,6 @@ export type UiTheme = {
     cardY: number;
     sectionGap: number;
     modalX: number;
-    modalInnerX: number;
-    modalInnerY: number;
-    modalActionsGap: number;
   };
   typography: {
     titleSm: {

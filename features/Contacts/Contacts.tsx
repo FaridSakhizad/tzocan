@@ -124,12 +124,6 @@ export default function ContactScreen() {
           />
         </View>
 
-        {!canSend && (
-          <Text style={detailScreenStyles.helperText}>
-            {t('contact.validation')}
-          </Text>
-        )}
-
         {wasSubmitted && (
           <Text style={detailScreenStyles.successText}>
             {t('contact.submitted')}

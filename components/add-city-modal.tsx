@@ -364,6 +364,7 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
   const [cities, setCities] = useState<SearchCityRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const hasActiveQuery = query.trim().length > 0;
+
   const { fullHourTimezoneRows, fractionalTimezoneRows } = useMemo(
     () => {
       const rows = ABSTRACT_TIMEZONE_OFFSETS_MINUTES.map((offsetMinutes) =>
@@ -555,6 +556,7 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
 
                       {!hasActiveQuery && cities.length === 0 && (
                         <View style={styles.timezoneSection}>
+                          <Text style={styles.fractionalTimezoneSectionTitle}>GMT</Text>
                           <View style={styles.timezoneGrid}>
                             {fullHourTimezoneRows.map((city) => (
                               <Pressable
@@ -565,7 +567,7 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                                   pressed && styles.timezoneButtonPressed,
                                 ]}
                               >
-                                <Text style={styles.timezoneButtonText}>{city.name}</Text>
+                                <Text style={styles.timezoneButtonText}>{city.name.replace('GMT', '')}</Text>
                               </Pressable>
                             ))}
                           </View>
@@ -583,7 +585,7 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                                     pressed && styles.timezoneButtonPressed,
                                   ]}
                                 >
-                                  <Text style={styles.fractionalTimezoneButtonText}>{city.name}</Text>
+                                  <Text style={styles.fractionalTimezoneButtonText}>{city.name.replace('GMT', '')}</Text>
                                 </Pressable>
                               ))}
                             </View>
@@ -707,6 +709,7 @@ function createStyles(theme: UiTheme) {
     timezoneSection: {
       paddingTop: 14,
       paddingBottom: 20,
+      display: 'flex',
     },
     timezoneGrid: {
       flexDirection: 'row',
@@ -733,7 +736,7 @@ function createStyles(theme: UiTheme) {
       rowGap: 8,
     },
     timezoneButton: {
-      width: '23.5%',
+      width: '15%',
       minHeight: 38,
       borderRadius: theme.radius.md,
       backgroundColor: theme.surface.fieldStrong,
@@ -752,7 +755,7 @@ function createStyles(theme: UiTheme) {
       textAlign: 'center',
     },
     fractionalTimezoneButton: {
-      width: '23.5%',
+      width: '15%',
       minHeight: 38,
       borderRadius: theme.radius.md,
       backgroundColor: theme.surface.fieldStrong,

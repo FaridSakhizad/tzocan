@@ -432,6 +432,7 @@ function AbstractTimezonePicker({
     <View style={styles.timezonePickerSection}>
       <Pressable
         onPress={() => {
+          Keyboard.dismiss();
           setIsExpanded((prev) => !prev);
         }}
         style={({ pressed }) => [

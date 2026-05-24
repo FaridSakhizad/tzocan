@@ -2,8 +2,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ImageBackground, Text, TextInput, View } from 'react-native';
-import { useFonts } from 'expo-font';
+import { ImageBackground, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { ThemeProvider } from '@react-navigation/native';
@@ -19,42 +18,6 @@ SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
   anchor: '(tabs)',
-};
-
-const setDefaultFont = () => {
-  if ((globalThis as { __tzcDefaultFontPatched?: boolean }).__tzcDefaultFontPatched) {
-    return;
-  }
-
-  const oldTextRender = (Text as any).render;
-
-  (Text as any).render = function (...args: any[]) {
-    const origin = oldTextRender.call(this, ...args);
-
-    return {
-      ...origin,
-      props: {
-        ...origin.props,
-        style: [{ fontFamily: 'Roboto' }, origin.props.style],
-      },
-    };
-  };
-
-  const oldTextInputRender = (TextInput as any).render;
-
-  (TextInput as any).render = function (...args: any[]) {
-    const origin = oldTextInputRender.call(this, ...args);
-
-    return {
-      ...origin,
-      props: {
-        ...origin.props,
-        style: [{ fontFamily: 'Roboto' }, origin.props.style],
-      },
-    };
-  };
-
-  (globalThis as { __tzcDefaultFontPatched?: boolean }).__tzcDefaultFontPatched = true;
 };
 
 function AppShell() {
@@ -93,21 +56,9 @@ function AppShell() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
-    'Roboto': require('@/assets/fonts/Roboto/Roboto-VariableFont_wdth,wght.ttf'),
-    'Roboto-Italic': require('@/assets/fonts/Roboto/Roboto-Italic-VariableFont_wdth,wght.ttf'),
-  });
-
   useEffect(() => {
-    if (fontsLoaded) {
-      setDefaultFont();
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) {
-    return null;
-  }
+    SplashScreen.hideAsync();
+  }, []);
 
   return (
     <DatabaseProvider>

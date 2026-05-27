@@ -6,6 +6,7 @@ import { MainMenuModal } from '@/components/main-menu-modal';
 import { NotificationFormValues, NotificationModal } from '@/components/notification-modal';
 import { useEditMode } from '@/contexts/edit-mode-context';
 import { useSelectedCities } from '@/contexts/selected-cities-context';
+import { useSupportModal } from '@/contexts/support-modal-context';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import { RouteNamePaths } from '@/types/router';
 import { getCityDisplayName } from '@/utils/city-display';
@@ -21,6 +22,7 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
   const globalParams = useGlobalSearchParams<{ cityId?: string }>();
   const { isEditMode } = useEditMode();
   const { selectedCities, addCity, addNotification } = useSelectedCities();
+  const { openSupportModal } = useSupportModal();
   const localizedCityNames = useLocalizedCityNames(selectedCities.map((city) => city.cityId));
   const [isAddCityModalVisible, setIsAddCityModalVisible] = React.useState(false);
   const [isAddNotificationModalVisible, setIsAddNotificationModalVisible] = React.useState(false);
@@ -92,6 +94,15 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
 
   const handleCloseAddNotificationModal = () => {
     setIsAddNotificationModalVisible(false);
+  };
+
+  const handleOpenSupportModal = () => {
+    if (isEditMode) {
+      return;
+    }
+
+    forceCloseMainMenu();
+    openSupportModal();
   };
 
   const handleSaveNotification = async (values: NotificationFormValues) => {
@@ -174,6 +185,7 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
           onClose={onClose}
           onAddNotification={handleOpenAddNotificationModal}
           onAddCity={handleOpenAddCityModal}
+          onSupport={handleOpenSupportModal}
           onContact={handleOpenContactScreen}
           onSettings={handleOpenSettingsScreen}
           onAbout={handleOpenAboutScreen}

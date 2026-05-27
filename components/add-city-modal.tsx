@@ -412,6 +412,7 @@ function AbstractTimezoneQuickButtons({
 }
 
 type AbstractTimezonePickerProps = {
+  searchInputFocused: boolean;
   triggerLabel: string;
   options: SearchCityRow[];
   onSelect: (city: SearchCityRow) => void;
@@ -420,6 +421,7 @@ type AbstractTimezonePickerProps = {
 };
 
 function AbstractTimezonePicker({
+  searchInputFocused,
   triggerLabel,
   onSelect,
   options,
@@ -427,6 +429,13 @@ function AbstractTimezonePicker({
   styles,
 }: AbstractTimezonePickerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isVisuallyActive = isExpanded && !searchInputFocused;
+
+  useEffect(() => {
+    if (searchInputFocused) {
+      setIsExpanded(false);
+    }
+  }, [searchInputFocused]);
 
   return (
     <View style={styles.timezonePickerSection}>
@@ -444,25 +453,25 @@ function AbstractTimezonePicker({
           fill={theme.text.primary}
           style={[
             styles.timezonePickerIcon,
-            isExpanded && styles.timezonePickerIconExpanded,
+            isVisuallyActive && styles.timezonePickerIconExpanded,
           ]}
         />
 
         <Text style={[
           styles.timezonePickerTriggerText,
-          isExpanded && styles.timezonePickerTriggerTextExpanded,
+          isVisuallyActive && styles.timezonePickerTriggerTextExpanded,
         ]}>{triggerLabel}</Text>
 
         <IconArrow
           fill={theme.text.primary}
           style={[
             styles.timezonePickerTriggerIcon,
-            isExpanded && styles.timezonePickerTriggerIconExpanded,
+            isVisuallyActive && styles.timezonePickerTriggerIconExpanded,
           ]}
         />
       </Pressable>
 
-      {isExpanded && (
+      {isExpanded && !searchInputFocused && (
         <ScrollView
           style={styles.timezonePickerListScroll}
           contentContainerStyle={styles.timezonePickerList}
@@ -701,6 +710,7 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
                       <AbstractTimezonePicker
                         options={abstractTimezoneRows}
                         onSelect={handleSave}
+                        searchInputFocused={isSearchInputFocused}
                         theme={theme}
                         triggerLabel={t('addCity.chooseTimezone')}
                         styles={styles}

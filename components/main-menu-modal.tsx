@@ -21,6 +21,7 @@ type MainMenuModalProps = {
   onClose: () => void;
   onAddNotification: () => void;
   onAddCity: () => void;
+  onSupport: () => void;
   onContact: () => void;
   onSettings: () => void;
   onAbout: () => void;
@@ -32,6 +33,7 @@ export function MainMenuModal({
   onClose,
   onAddNotification,
   onAddCity,
+  onSupport,
   onContact,
   onSettings,
   onAbout,
@@ -60,6 +62,11 @@ export function MainMenuModal({
   const handleOpenSettings = () => {
     onClose();
     onSettings();
+  };
+
+  const handleOpenSupport = () => {
+    onClose();
+    onSupport();
   };
 
   const handleOpenAbout = () => {
@@ -115,6 +122,10 @@ export function MainMenuModal({
 
                   <Pressable style={styles.menuButton} onPress={handleOpenSettings}>
                     <Text style={styles.menuButtonText}>{t('common.settings')}</Text>
+                  </Pressable>
+
+                  <Pressable style={styles.menuButton} onPress={handleOpenSupport}>
+                    <Text style={styles.menuButtonText}>{t('common.support')}</Text>
                   </Pressable>
 
                   <Pressable style={styles.menuButton} onPress={handleOpenContact}>

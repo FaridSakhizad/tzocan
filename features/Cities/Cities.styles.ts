@@ -11,6 +11,7 @@ export function createStyles(theme: UiTheme) {
     listContainer: {
       flex: 1,
     },
+    supportButtonRow: {},
     citiesList: {
       paddingHorizontal: 20,
       paddingVertical: 0,

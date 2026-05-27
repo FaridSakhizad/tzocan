@@ -31,6 +31,7 @@ import { TIME_REFRESH_INTERVAL_MS } from '@/constants/app-config';
 import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import { useScrollFit } from '@/hooks/use-scroll-fit';
+import { useSupportModal } from '@/contexts/support-modal-context';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { getCityDisplayName } from '@/utils/city-display';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
@@ -47,6 +48,7 @@ import DeleteIcon from '../../assets/images/icon--delete-3.svg';
 import RepeatIcon from '../../assets/images/icon--repeat-1.svg';
 import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
 import IconAddNotification from '@/assets/images/icon--notification-3--outlined.svg';
+import { SupportCtaButton } from '@/components/support-cta-button';
 import { createStyles } from './styles';
 
 const NOTIFICATION_SWITCH_THUMB_TRAVEL = 16;
@@ -548,6 +550,7 @@ export default function Notifications() {
   const { theme } = useAppTheme();
   const { t, locale, weekdayShortLabels } = useI18n();
   const { sortState, setSortState, isSortPickerVisible, closeSortPicker } = useNotificationsSort();
+  const { openSupportModal } = useSupportModal();
   const { selectedCities, reorderCities, removeCity, removeNotification, toggleNotification, updateNotification, addNotification, addCity } = useSelectedCities();
   const { timeFormat, firstDayOfWeek } = useSettings();
   const { isEditMode } = useEditMode();
@@ -1083,6 +1086,9 @@ export default function Notifications() {
 
   return (
     <GestureHandlerRootView style={styles.rootContainer}>
+      <View style={styles.supportButtonRow}>
+        <SupportCtaButton onPress={openSupportModal} />
+      </View>
       <View style={styles.container} onLayout={handleContainerLayout}>
         {(selectedCities.length === 0 || totalNotifications === 0) && (
           <View style={styles.emptyState}>

@@ -23,11 +23,13 @@ import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import { useScrollFit } from '@/hooks/use-scroll-fit';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { CityOrderMode, useNotificationsSort } from '@/contexts/notifications-sort-context';
+import { useSupportModal } from '@/contexts/support-modal-context';
 import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
 import { sortCitiesByOrder } from '@/utils/city-sorting';
 import { getTimezoneDifferenceLabel } from '@/utils/timezone-offset';
 import { getRelativeDayLabelForTimezone } from '@/utils/timezone-relative-day';
 import { formatInTimezone, formatPartsInTimezone } from '@/utils/abstract-timezone';
+import { SupportCtaButton } from '@/components/support-cta-button';
 
 import IconDelete1 from '@/assets/images/icon--delete-1.svg';
 import IconNotification2 from '@/assets/images/icon--notification-2.svg';
@@ -82,6 +84,7 @@ export default function Cities() {
   const { timeFormat, timeOffsetMinutes, setTimeOffsetMinutes } = useSettings();
   const { isEditMode } = useEditMode();
   const { sortState, setSortState, isSortPickerVisible, closeSortPicker } = useNotificationsSort();
+  const { openSupportModal } = useSupportModal();
   const isFocused = useIsFocused();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const localizedCityNames = useLocalizedCityNames(selectedCities.map((city) => city.cityId));
@@ -341,6 +344,10 @@ export default function Cities() {
 
   return (
     <GestureHandlerRootView style={{flex: 1 }}>
+      <View style={styles.supportButtonRow}>
+        <SupportCtaButton onPress={openSupportModal} />
+      </View>
+
       <View style={styles.mainView}>
         {selectedCities.length === 0 ? (
           <View style={styles.emptyState}>

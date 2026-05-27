@@ -28,6 +28,9 @@ export function createStyles(theme: UiTheme) {
       paddingBottom: 20,
       paddingHorizontal: theme.spacing.screenX,
     },
+    supportButtonRow: {
+      paddingBottom: 16,
+    },
     cityName: {
       fontSize: 20,
       lineHeight: 30,

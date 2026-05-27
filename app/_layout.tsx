@@ -13,6 +13,7 @@ import { SettingsProvider } from '@/contexts/settings-context';
 import { AppThemeProvider, useAppTheme } from '@/contexts/app-theme-context';
 import { EditModeProvider } from '@/contexts/edit-mode-context';
 import { NotificationsSortProvider } from '@/contexts/notifications-sort-context';
+import { SupportModalProvider } from '@/contexts/support-modal-context';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -67,7 +68,9 @@ export default function RootLayout() {
           <SelectedCitiesProvider>
             <EditModeProvider>
               <NotificationsSortProvider>
-                <AppShell />
+                <SupportModalProvider>
+                  <AppShell />
+                </SupportModalProvider>
               </NotificationsSortProvider>
             </EditModeProvider>
           </SelectedCitiesProvider>

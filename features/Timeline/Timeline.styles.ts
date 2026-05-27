@@ -40,6 +40,7 @@ export function createStyles(theme: UiTheme) {
       position: 'relative',
       zIndex: 100,
     },
+    supportButtonRow: {},
     referenceRowHeader: {
       paddingHorizontal: 22,
       paddingBottom: 3,

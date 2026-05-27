@@ -22,6 +22,7 @@ import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
+import { useSupportModal } from '@/contexts/support-modal-context';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
 import {
@@ -38,6 +39,7 @@ import DeleteIcon from '../../assets/images/icon--delete-3.svg';
 import RepeatIcon from '../../assets/images/icon--repeat-1.svg';
 import IconAddNotification from '@/assets/images/icon--notification-3--outlined.svg';
 import IconDelete from '@/assets/images/icon--x-2--outlined.svg';
+import { SupportCtaButton } from '@/components/support-cta-button';
 
 import { createStyles } from './styles';
 
@@ -369,6 +371,7 @@ export default function EditCity() {
   const isFocused = useIsFocused();
   const { theme } = useAppTheme();
   const { t, locale, weekdayShortLabels } = useI18n();
+  const { openSupportModal } = useSupportModal();
   const { cityId } = useLocalSearchParams<{ cityId: string }>();
   const { selectedCities, updateCityName, addNotification, updateNotification, removeNotification, toggleNotification } = useSelectedCities();
   const { timeFormat, firstDayOfWeek } = useSettings();
@@ -490,6 +493,9 @@ export default function EditCity() {
   return (
     <>
       <ScrollView style={styles.container}>
+        <View style={styles.supportButtonRow}>
+          <SupportCtaButton onPress={openSupportModal} />
+        </View>
         <View style={styles.editCityHeader}>
           <Text style={styles.cityName}>{getCityBaseName(city, localizedCityNames[city.cityId])}</Text>
           {!city.isAbstractTimezone && !!city.country && (

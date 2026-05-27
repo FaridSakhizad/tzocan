@@ -9,6 +9,7 @@ export function createStyles(theme: UiTheme) {
     container: {
       flex: 1,
     },
+    supportButtonRow: {},
     listContent: {},
     timeSortedList: {
       flex: 1,

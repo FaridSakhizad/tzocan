@@ -28,6 +28,8 @@ import { useSettings } from '@/contexts/settings-context';
 import { useI18n } from '@/hooks/use-i18n';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import { useScrollFit } from '@/hooks/use-scroll-fit';
+import { useSupportModal } from '@/contexts/support-modal-context';
+import { SupportCtaButton } from '@/components/support-cta-button';
 
 import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
 import { sortCitiesByOrder } from '@/utils/city-sorting';
@@ -111,6 +113,7 @@ export default function TimelineScreen() {
   const { timeFormat } = useSettings();
   const { isEditMode } = useEditMode();
   const { sortState, setSortState, isSortPickerVisible, closeSortPicker } = useNotificationsSort();
+  const { openSupportModal } = useSupportModal();
   const { width } = useWindowDimensions();
   const isFocused = useIsFocused();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -580,6 +583,9 @@ export default function TimelineScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
+      <View style={styles.supportButtonRow}>
+        <SupportCtaButton onPress={openSupportModal} />
+      </View>
       <Animated.View style={[styles.timelineContent, { opacity: contentOpacity }]}>
         <View style={styles.referenceRow}>
           <View style={styles.referenceRowHeader}>

@@ -76,7 +76,7 @@ export function createStyles(theme: UiTheme) {
     middleMarker: {
       position: 'absolute',
       zIndex: 1,
-      elevation: 1,
+      elevation: 0,
       top: 21,
       bottom: 0,
       width: TIMELINE_CELL_WIDTH,

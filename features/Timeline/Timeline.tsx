@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { Animated, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -401,14 +401,42 @@ export default function TimelineScreen() {
   }, []);
 
   const handlePickerDayChange = useCallback(
-    (_event: DateTimePickerEvent, nextDate?: Date) => {
+    (event: DateTimePickerEvent, nextDate?: Date) => {
+      if (Platform.OS === 'android') {
+        if (event.type === 'dismissed') {
+          setIsDayPickerVisible(false);
+          return;
+        }
+
+        if (nextDate) {
+          const nextDay = getLocalDayStart(nextDate);
+          const currentDay = getLocalDayStart(selectedDay);
+
+          setIsDayPickerVisible(false);
+
+          if (nextDay.getTime() === currentDay.getTime()) {
+            return;
+          }
+
+          runDayTransition(() => {
+            const currentOffsetWithinDay = focusedHourIndex - getHourIndexForDate(selectedDay);
+            const nextFocusedHourIndex = getHourIndexForDate(nextDay) + currentOffsetWithinDay;
+
+            setSelectedDay(nextDay);
+            setFocusedHourIndex(nextFocusedHourIndex);
+          });
+        }
+
+        return;
+      }
+
       if (!nextDate) {
         return;
       }
 
       setPickerDraftDay(getLocalDayStart(nextDate));
     },
-    []
+    [focusedHourIndex, runDayTransition, selectedDay]
   );
 
   const handleApplyPickedDay = useCallback(() => {
@@ -760,21 +788,32 @@ export default function TimelineScreen() {
         onApply={handleApplyCitySort}
       />
 
-      <NotificationPickerModal
-        visible={isDayPickerVisible}
-        title={t('timeline.chooseDay')}
-        onClose={handleCloseDayPicker}
-        onApply={handleApplyPickedDay}
-      >
+      {Platform.OS === 'ios' ? (
+        <NotificationPickerModal
+          visible={isDayPickerVisible}
+          title={t('timeline.chooseDay')}
+          onClose={handleCloseDayPicker}
+          onApply={handleApplyPickedDay}
+        >
+          <DateTimePicker
+            value={pickerDraftDay}
+            mode="date"
+            display="spinner"
+            onChange={handlePickerDayChange}
+            style={styles.datePicker}
+            textColor={theme.text.primary}
+          />
+        </NotificationPickerModal>
+      ) : null}
+
+      {Platform.OS === 'android' && isDayPickerVisible ? (
         <DateTimePicker
           value={pickerDraftDay}
           mode="date"
-          display="spinner"
+          display="default"
           onChange={handlePickerDayChange}
-          style={styles.datePicker}
-          textColor={theme.text.primary}
         />
-      </NotificationPickerModal>
+      ) : null}
     </GestureHandlerRootView>
   );
 }

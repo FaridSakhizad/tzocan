@@ -84,7 +84,7 @@
   "addCity.searchPlaceholder": "Nombre de la ciudad o zona horaria...",
   "addCity.chooseTimezone": "Elegir GMT / UTC",
   "addCity.databaseUnavailable": "La búsqueda de ciudades no está disponible temporalmente.",
-  "support.description": "La app TimeCross se puede usar completamente gratis. Si te ayuda, puedes apoyar su futuro.",
+  "support.description": "La app TimeCross se puede usar completamente gratis.\nSi te ayuda, puedes apoyar su futuro.",
   "support.futureDevelopment": "Desarrollo futuro...",
   "support.unavailable": "Las compras dentro de la app no están disponibles ahora mismo.",
   "notifications.helper": "Agrega al menos una ciudad primero",

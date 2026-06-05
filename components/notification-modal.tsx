@@ -289,13 +289,51 @@ export function NotificationModal({
     setPickerDraftCityId(selectedCityId ?? null);
   }, [visible, initialNotification, selectedCityId]);
 
-  const handleDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      if (event.type === 'dismissed') {
+        closePicker();
+
+        return;
+      }
+
+      if (selectedDate) {
+        setPickerDraftDate(selectedDate);
+        setNotificationDate(selectedDate);
+        setHasDate(true);
+        setRepeat(RepeatMode.none);
+        setWeekdays([]);
+        setPickerDraftRepeat(RepeatMode.none);
+        setPickerDraftWeekdays([]);
+        closePicker();
+      }
+
+      return;
+    }
+
     if (selectedDate) {
       setPickerDraftDate(selectedDate);
     }
   };
 
-  const handleTimeChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+  const handleTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      if (event.type === 'dismissed') {
+        closePicker();
+
+        return;
+      }
+
+      if (selectedDate) {
+        setPickerDraftTime(selectedDate);
+        setNotificationTime(selectedDate);
+        setIsTimeSelected(true);
+        closePicker();
+      }
+
+      return;
+    }
+
     if (selectedDate) {
       setPickerDraftTime(selectedDate);
     }
@@ -384,6 +422,9 @@ export function NotificationModal({
     isTimeSelected &&
     (mode === 'edit' || !cityOptions || selectedCityId !== null && selectedCityId !== undefined);
   const isPickerOpen = activePicker !== null;
+  const isAndroidNativeDateTimePicker =
+    Platform.OS === 'android' && (activePicker === 'time' || activePicker === 'date');
+  const isPickerModalVisible = isPickerOpen && !isAndroidNativeDateTimePicker;
   const isCityPicker = activePicker === 'city';
   const effectiveTimezone = selectedCityOption?.timezone || cityTimezone;
 
@@ -549,6 +590,7 @@ export function NotificationModal({
       transparent
       animationType="none"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <Animated.View style={[styles.backgroundImage, { opacity }]}>
         <ImageBackground
@@ -734,7 +776,7 @@ export function NotificationModal({
       </Animated.View>
 
       <NotificationPickerModal
-        visible={isPickerOpen}
+        visible={isPickerModalVisible}
         title={pickerTitle}
         onClose={handleClosePicker}
         onApply={applyPicker}
@@ -947,6 +989,25 @@ export function NotificationModal({
           </View>
         )}
       </NotificationPickerModal>
+
+      {Platform.OS === 'android' && activePicker === 'time' ? (
+        <DateTimePicker
+          value={pickerDraftTime}
+          mode="time"
+          is24Hour={timeFormat === '24h'}
+          display="default"
+          onChange={handleTimeChange}
+        />
+      ) : null}
+
+      {Platform.OS === 'android' && activePicker === 'date' ? (
+        <DateTimePicker
+          value={pickerDraftDate}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+        />
+      ) : null}
     </Modal>
   );
 }

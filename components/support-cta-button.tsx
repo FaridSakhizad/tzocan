@@ -1,9 +1,11 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, Platform } from 'react-native';
 import { useMemo } from 'react';
 
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useI18n } from '@/hooks/use-i18n';
+
+import HeartIcon from '@/assets/images/icon--heart-1.svg';
 
 type SupportCtaButtonProps = {
   onPress: () => void;
@@ -14,8 +16,13 @@ export function SupportCtaButton({ onPress }: SupportCtaButtonProps) {
   const { t } = useI18n();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  if (Platform.OS === 'android') {
+    return null;
+  }
+
   return (
     <Pressable onPress={onPress} style={styles.button}>
+      <HeartIcon fill={theme.text.primary} style={styles.buttonIcon} />
       <Text style={styles.buttonText}>{t('common.sayThanks')}</Text>
     </Pressable>
   );
@@ -28,6 +35,14 @@ function createStyles(theme: UiTheme) {
       backgroundColor: theme.surface.cardAlt,
       paddingVertical: 12,
       paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    buttonIcon: {
+      width: 14,
+      height: 12,
     },
     buttonText: {
       color: theme.text.primary,

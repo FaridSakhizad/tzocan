@@ -84,7 +84,7 @@
   "addCity.searchPlaceholder": "Имя города или часовой пояс...",
   "addCity.chooseTimezone": "Выбрать GMT / UTC",
   "addCity.databaseUnavailable": "Поиск городов временно недоступен.",
-  "support.description": "Приложением TimeCross можно полностью пользоваться бесплатно. Если оно вам помогает, вы можете поддержать его будущее.",
+  "support.description": "Приложением TimeCross можно полностью пользоваться бесплатно.\nЕсли оно вам помогает, вы можете поддержать его будущее.",
   "support.futureDevelopment": "Будущая разработка...",
   "support.unavailable": "Встроенные покупки сейчас недоступны.",
   "notifications.helper": "Сначала добавьте хотя бы один город",

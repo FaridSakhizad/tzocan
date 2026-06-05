@@ -40,6 +40,7 @@ export function ConfirmDialogModal({
       transparent
       animationType="none"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <Animated.View style={[styles.modalWrapper, { opacity }]}>
         <KeyboardAvoidingView

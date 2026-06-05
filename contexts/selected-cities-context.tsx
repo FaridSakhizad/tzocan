@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { CityRow } from '@/components/add-city-modal';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 import { getDateTimePartsInTimezone } from '@/utils/abstract-timezone';
+import type * as ExpoNotifications from 'expo-notifications';
 
 export type CityNotification = {
   id: string;
@@ -47,20 +48,32 @@ type SelectedCitiesContextType = {
 };
 
 const STORAGE_KEY = '@tzalac_cities';
+let notificationsModulePromise: Promise<typeof ExpoNotifications | null> | null = null;
 
 function generateSelectedCityId() {
   return Date.now() + Math.floor(Math.random() * 1000);
 }
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+function isAndroidExpoGo() {
+  return Platform.OS === 'android' && Constants.appOwnership === 'expo';
+}
+
+async function getNotificationsModule() {
+  if (isAndroidExpoGo()) {
+    return null;
+  }
+
+  if (!notificationsModulePromise) {
+    notificationsModulePromise = import('expo-notifications')
+      .then((module) => module)
+      .catch((error) => {
+        console.warn('Notifications module is unavailable in this runtime', error);
+        return null;
+      });
+  }
+
+  return notificationsModulePromise;
+}
 
 function getTriggerDateForTimezone(
   timezone: string,
@@ -113,6 +126,12 @@ async function scheduleNotification(
   repeat: RepeatMode = RepeatMode.none,
   weekdays: number[] = []
 ): Promise<string[] | null> {
+  const Notifications = await getNotificationsModule();
+
+  if (!Notifications) {
+    return null;
+  }
+
   if (hour === undefined || minute === undefined) {
     console.warn('Cannot schedule notification: missing time values');
     return null;
@@ -275,6 +294,12 @@ async function scheduleNotification(
 }
 
 async function cancelNotificationIds(notification: CityNotification): Promise<void> {
+  const Notifications = await getNotificationsModule();
+
+  if (!Notifications) {
+    return;
+  }
+
   const ids = notification.notificationIds && notification.notificationIds.length > 0
     ? notification.notificationIds
     : notification.notificationId
@@ -285,6 +310,12 @@ async function cancelNotificationIds(notification: CityNotification): Promise<vo
 }
 
 async function requestNotificationPermissions(): Promise<boolean> {
+  const Notifications = await getNotificationsModule();
+
+  if (!Notifications) {
+    return false;
+  }
+
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
 
@@ -297,6 +328,12 @@ async function requestNotificationPermissions(): Promise<boolean> {
 }
 
 async function hasNotificationPermissions(): Promise<boolean> {
+  const Notifications = await getNotificationsModule();
+
+  if (!Notifications) {
+    return false;
+  }
+
   const { status } = await Notifications.getPermissionsAsync();
 
   return status === 'granted';
@@ -315,6 +352,30 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     loadCities();
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    void getNotificationsModule().then((Notifications) => {
+      if (!isActive || !Notifications) {
+        return;
+      }
+
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+        }),
+      });
+    });
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const loadCities = async () => {

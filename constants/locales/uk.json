@@ -84,7 +84,7 @@
   "addCity.searchPlaceholder": "Назва міста або часовий пояс...",
   "addCity.chooseTimezone": "Обрати GMT / UTC",
   "addCity.databaseUnavailable": "Пошук міст тимчасово недоступний.",
-  "support.description": "Застосунком TimeCross можна повністю користуватися безкоштовно. Якщо він вам допомагає, ви можете підтримати його майбутнє.",
+  "support.description": "Застосунком TimeCross можна повністю користуватися безкоштовно.\nЯкщо він вам допомагає, ви можете підтримати його майбутнє.",
   "support.futureDevelopment": "Майбутня розробка...",
   "support.unavailable": "Вбудовані покупки зараз недоступні.",
   "notifications.helper": "Спочатку додайте хоча б одне місто",

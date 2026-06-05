@@ -16,6 +16,7 @@ export function createStyles(theme: UiTheme) {
       backgroundColor: theme.surface.transparent,
       borderTopColor: theme.border.transparent,
       paddingHorizontal: 16,
+      elevation: 0,
     },
     tabBarDisabled: {
       opacity: 0.5,

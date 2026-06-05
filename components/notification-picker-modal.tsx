@@ -43,6 +43,7 @@ export function NotificationPickerModal({
       transparent
       animationType="none"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <Animated.View style={[styles.wrapper, { opacity }]}>
         <Pressable style={styles.overlay} onPress={onClose}>

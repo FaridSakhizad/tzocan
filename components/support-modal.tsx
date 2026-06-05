@@ -10,13 +10,18 @@ import {
   View,
 } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import IconCancelOutlined from '@/assets/images/icon--x-1--outlined.svg';
+import IconCancelOutlined from '@/assets/images/icon--x-3--outlined.svg';
 import type { UiTheme } from '@/constants/ui-theme.types';
-import type { SupportProductId } from '@/constants/support-products';
+import { SUPPORT_PRODUCT_CONFIGS, SupportProductId } from '@/constants/support-products';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useI18n } from '@/hooks/use-i18n';
 import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
+
+import HeartIcon from '@/assets/images/icon--heart-2--outlined.svg';
+import CoffeeIcon from '@/assets/images/icon--coffee-1--outlined.svg';
+import StarIcon from '@/assets/images/icon--star-1--outlined.svg';
 
 type SupportProductRow = {
   id: SupportProductId;
@@ -49,6 +54,7 @@ export function SupportModal({
   const { t } = useI18n();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { isMounted, opacity } = useModalVisibilityAnimation(visible);
+  const insets = useSafeAreaInsets();
   const [isShowingFutureDevelopment, setIsShowingFutureDevelopment] = useState(false);
 
   useEffect(() => {
@@ -71,178 +77,257 @@ export function SupportModal({
       transparent
       animationType="none"
       onRequestClose={onClose}
-      style={styles.supportModal}
+      statusBarTranslucent
     >
-      <Animated.View style={[styles.modalRoot, { opacity }]}>
-        <View style={styles.modalRoot}>
-          <Pressable
-            style={StyleSheet.absoluteFillObject}
-            onPress={onClose}
-          />
-
+      <Animated.View style={[styles.backgroundImage, { opacity }]}>
+        <ImageBackground
+          source={theme.image.modalBackgroundSource}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          <View style={styles.modalBg}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.modalContainer}
-            pointerEvents="box-none"
           >
-            <View style={styles.modalPad} />
-
-            <Pressable style={styles.overlayCloseButton} onPress={onClose}>
-              <IconCancelOutlined fill={theme.text.primary} />
-            </Pressable>
-
-            <ImageBackground
-              source={theme.image.modalBackgroundSource}
-              style={styles.backgroundImage}
-              imageStyle={styles.backgroundImageAsset}
-              resizeMode="cover"
+            <View
+              style={[
+                styles.safeArea,
+                {
+                  paddingTop: insets.top,
+                  paddingBottom: insets.bottom,
+                },
+              ]}
             >
-              <View style={styles.modalContent}>
-                <View style={styles.menuCard}>
-                  {!isShowingFutureDevelopment ? (
+              <View style={[
+                styles.modalContent,
+              ]}>
+                <View style={styles.pad}>
+                  <Pressable onPress={onClose} style={styles.cancelButton}>
+                    <IconCancelOutlined fill={theme.text.primary} />
+                  </Pressable>
+                </View>
+
+                <View
+                  style={[
+                    styles.content,
+                    isShowingFutureDevelopment && styles.contentFuture,
+                  ]}
+                >
+                  <View style={styles.header}>
                     <Text style={styles.descriptionText}>{t('support.description')}</Text>
-                  ) : null}
+                  </View>
 
-                  {isLoading ? (
-                    <Text style={styles.stateText}>{t('common.loading')}</Text>
-                  ) : null}
+                  {isLoading && (
+                    <View style={styles.productButtonBox}>
+                      <Text style={styles.stateText}>{t('common.loading')}</Text>
+                    </View>
+                  )}
 
-                  {!isLoading && isUnavailable ? (
-                    <Text style={styles.stateText}>{t('support.unavailable')}</Text>
-                  ) : null}
+                  {!isLoading && (
+                    <View style={styles.productButtonBox}>
+                      {isShowingFutureDevelopment && (
+                        <Pressable
+                          style={[
+                            styles.productButton,
+                            styles.productButtonBack,
+                          ]}
+                          onPress={() => {
+                            setIsShowingFutureDevelopment(false);
+                          }}
+                        >
+                          <Text style={styles.productButtonText}>{t('common.goBack')}</Text>
+                        </Pressable>
+                      )}
 
-                  {!isLoading ? (
-                    visibleProducts.map((product) => (
-                      <Pressable
-                        key={product.id}
-                        style={[styles.menuButton, product.isDisabled && styles.menuButtonDisabled]}
-                        onPress={() => {
-                          onPurchase(product.id);
-                        }}
-                        disabled={product.isDisabled}
-                      >
-                        <Text style={styles.menuButtonText}>{product.label}</Text>
-                        {product.price ? (
-                          <Text style={styles.menuButtonPrice}>{product.price}</Text>
-                        ) : null}
-                      </Pressable>
-                    ))
-                  ) : null}
+                      {visibleProducts.map((product) => (
+                        <Pressable
+                          key={product.id}
+                          style={[
+                            styles.productButton,
+                            product.tier === 'standard' && styles.productButtonWithIcon,
+                            product.tier === 'future' && styles.productButtonFuture,
+                            product.isDisabled && styles.productButtonDisabled,
+                          ]}
+                          onPress={() => {
+                            onPurchase(product.id);
+                          }}
+                          disabled={product.isDisabled}
+                        >
+                          {product.tier === 'standard' && (
+                            <View style={styles.productButtonIcon}>
+                              {product.id === SUPPORT_PRODUCT_CONFIGS[0].id && (
+                                <HeartIcon fill={theme.text.primary} />
+                              )}
 
-                  {!isLoading && !isShowingFutureDevelopment ? (
-                    <Pressable
-                      style={styles.menuButton}
-                      onPress={() => {
-                        setIsShowingFutureDevelopment(true);
-                      }}
-                    >
-                      <Text style={styles.menuButtonText}>{t('support.futureDevelopment')}</Text>
-                    </Pressable>
-                  ) : null}
+                              {product.id === SUPPORT_PRODUCT_CONFIGS[1].id && (
+                                <CoffeeIcon fill={theme.text.primary} />
+                              )}
 
-                  {!isLoading && isShowingFutureDevelopment ? (
-                    <Pressable
-                      style={styles.menuButton}
-                      onPress={() => {
-                        setIsShowingFutureDevelopment(false);
-                      }}
-                    >
-                      <Text style={styles.menuButtonText}>{t('common.goBack')}</Text>
-                    </Pressable>
-                  ) : null}
+                              {product.id === SUPPORT_PRODUCT_CONFIGS[2].id && (
+                                <StarIcon fill={theme.text.primary} />
+                              )}
+                            </View>
+                          )}
+
+                          <Text style={[
+                            styles.productButtonText,
+                            product.tier === 'future' && styles.productButtonTextFuture,
+                          ]}>{product.label}</Text>
+
+                          <View style={styles.productButtonPriceBox}>
+                            {product.price && <Text style={[
+                              styles.productButtonPrice,
+                              product.tier === 'future' && styles.productButtonPriceFuture
+                            ]}>{product.price}</Text>}
+                          </View>
+                        </Pressable>
+                      ))}
+
+                      {!isShowingFutureDevelopment && (
+                        <Pressable
+                          style={styles.productButton}
+                          onPress={() => {
+                            setIsShowingFutureDevelopment(true);
+                          }}
+                        >
+                          <Text style={styles.productButtonText}>{t('support.futureDevelopment')}</Text>
+                        </Pressable>
+                      )}
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.pad}>
+                  {(!isLoading && isUnavailable) && <Text style={styles.stateText}>{t('support.unavailable')}</Text>}
                 </View>
               </View>
-            </ImageBackground>
-
-            <View style={styles.modalPad} />
+            </View>
           </KeyboardAvoidingView>
-        </View>
+          </View>
+        </ImageBackground>
       </Animated.View>
     </Modal>
   );
 }
 
 function createStyles(theme: UiTheme) {
-  const isContrastBlack = theme.name === 'contrastBlack';
-
   return StyleSheet.create({
-    supportModal: {},
-    modalRoot: { flex: 1 },
+    backgroundImage: {
+      flex: 1,
+    },
     modalContainer: {
       flex: 1,
-      flexDirection: 'column',
-      justifyContent: 'space-evenly',
-      backgroundColor: theme.overlay.strong,
-      padding: theme.spacing.modalX,
+      backgroundColor: theme.overlay.medium,
     },
-    modalPad: {
+    safeArea: {
       flex: 1,
     },
-    overlayCloseButton: {
+    modalBg: {
+      flex: 1,
+      backgroundColor: theme.overlay.medium,
+    },
+    modalContent: {
+      minHeight: '100%',
+      maxHeight: '100%',
+    },
+    modalContentFuture: {},
+    header: {
+      width: '100%',
+      maxWidth: 305,
+      marginHorizontal: 'auto',
+      minHeight: 90,
+    },
+    pad: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 16,
+      color: theme.text.primary,
+      textAlign: 'center',
+    },
+    cancelButton: {
       width: 50,
       height: 50,
       alignItems: 'center',
       justifyContent: 'center',
-      alignSelf: 'center',
-      marginBottom: 10,
     },
-    backgroundImage: {
-      display: 'flex',
-      borderRadius: theme.radius.xl,
-      overflow: 'hidden',
-      shadowColor: isContrastBlack ? '#ffffff' : '#000000',
-      shadowOffset: {
-        width: 0,
-        height: 10,
-      },
-      shadowOpacity: isContrastBlack ? 0.28 : 0.16,
-      shadowRadius: isContrastBlack ? 24 : 18,
-      elevation: 16,
+    content: {
+      paddingBottom: 90,
     },
-    backgroundImageAsset: {
-      transform: [{ scale: theme.image.modalBackgroundScale }],
-    },
-    modalContent: {
-      backgroundColor: theme.surface.transparent,
-      borderRadius: theme.radius.xl,
-      paddingVertical: 15,
-      paddingHorizontal: 23,
-      gap: theme.spacing.sectionGap,
-    },
-    menuCard: {
-      flexDirection: 'column',
-    },
+    contentFuture: {},
     descriptionText: {
-      fontSize: theme.typography.body.fontSize,
+      fontSize: 16,
       lineHeight: 20,
       color: theme.text.primary,
-      marginBottom: 8,
+      marginBottom: 16,
+      textAlign: 'center',
     },
-    menuButton: {
-      height: 50,
+    productButtonBox: {
+      width: '100%',
+      maxWidth: 295,
+      margin: 'auto',
+      gap: 20,
+    },
+    productButton: {
+      minHeight: 50,
       justifyContent: 'space-between',
       alignItems: 'center',
       flexDirection: 'row',
-      gap: theme.spacing.md,
+      paddingVertical: 10,
+      paddingHorizontal: 15,
+      borderRadius: 25,
+      backgroundColor: theme.surface.button.subtle,
     },
-    menuButtonDisabled: {
-      opacity: 0.5,
+    productButtonBack: {
+      backgroundColor: theme.surface.button.subtleWeak,
     },
-    menuButtonText: {
-      fontSize: theme.typography.titleLg.fontSize,
+    productButtonFuture: {
+      paddingLeft: 20,
+      justifyContent: 'flex-start',
+    },
+    productButtonIcon: {
+      width: 30,
+      height: 30,
+      marginRight: 5,
+    },
+    productButtonWithIcon: {
+      paddingLeft: 10,
+    },
+    productButtonDisabled: {
+      // opacity: 0.5,
+    },
+    productButtonText: {
+      textAlign: 'center',
+      margin: 'auto',
+      fontSize: 15,
       color: theme.text.primary,
     },
-    menuButtonPrice: {
-      fontSize: theme.typography.titleLg.fontSize,
+    productButtonTextFuture: {
+      marginLeft: 0,
+      textAlign: 'left',
+    },
+    productButtonPriceBox: {
+      width: 30,
+      alignItems: 'flex-end',
+    },
+    productButtonPrice: {
+      width: 40,
+      fontSize: 15,
+      fontWeight: 'bold',
       color: theme.text.primary,
+    },
+    productButtonPriceFuture: {
+      color: theme.text.warning,
     },
     stateText: {
       fontSize: theme.typography.body.fontSize,
       lineHeight: 20,
       color: theme.text.primary,
-      minHeight: 24,
       marginBottom: 8,
-      textAlignVertical: 'center',
+      textAlign: 'center',
     },
   });
 }

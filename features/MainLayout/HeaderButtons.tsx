@@ -62,6 +62,25 @@ export default function HeaderButtons() {
     [currentEditCityId, selectedCities]
   );
 
+  const totalNotifications = React.useMemo(
+    () => selectedCities.reduce((count, city) => count + (city.notifications?.length || 0), 0),
+    [selectedCities]
+  );
+
+  const hasEditableItems = React.useMemo(() => {
+    if (isNotificationsScreen) {
+      return totalNotifications > 0;
+    }
+
+    if (isIndexScreen || isTimelineScreen) {
+      return selectedCities.length > 0;
+    }
+
+    return true;
+  }, [isIndexScreen, isNotificationsScreen, isTimelineScreen, selectedCities.length, totalNotifications]);
+
+  const isEditButtonDisabled = !isEditMode && !hasEditableItems;
+
   const notificationCityOptions = React.useMemo(
     () => selectedCities.map((city) => ({
       id: city.id,
@@ -221,6 +240,24 @@ export default function HeaderButtons() {
             </Pressable>
 
             <Pressable
+              onPress={handleOpenAddCityModal}
+              disabled={isEditMode}
+              style={[styles.headerButton, isEditMode && styles.headerButtonDisabled]}
+            >
+              {isAddCityModalVisible ? (
+                <IconAddLocationFilled
+                  style={styles.headerButtonIcon}
+                  fill={theme.text.primary}
+                />
+              ) : (
+                <IconAddLocationOutlined
+                  style={styles.headerButtonIcon}
+                  fill={theme.text.primary}
+                />
+              )}
+            </Pressable>
+
+            <Pressable
               onPress={handleOpenDeleteCityModal}
               style={[
                 styles.headerButton,
@@ -256,9 +293,11 @@ export default function HeaderButtons() {
           <>
             <Pressable
               onPress={toggleEditMode}
+              disabled={isEditButtonDisabled}
               style={[
                 styles.headerButton,
                 styles.headerButtonEditCitiesList,
+                isEditButtonDisabled && styles.headerButtonDisabled,
               ]}
             >
               {isEditMode ? (

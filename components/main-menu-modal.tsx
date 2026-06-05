@@ -84,6 +84,7 @@ export function MainMenuModal({
       transparent
       animationType="none"
       onRequestClose={onClose}
+      statusBarTranslucent
       style={styles.mainMenuModal}
     >
       <Animated.View style={[styles.modalRoot, { opacity }]}>
@@ -124,9 +125,11 @@ export function MainMenuModal({
                     <Text style={styles.menuButtonText}>{t('common.settings')}</Text>
                   </Pressable>
 
-                  <Pressable style={styles.menuButton} onPress={handleOpenSupport}>
-                    <Text style={styles.menuButtonText}>{t('common.support')}</Text>
-                  </Pressable>
+                  {Platform.OS !== 'android' ? (
+                    <Pressable style={styles.menuButton} onPress={handleOpenSupport}>
+                      <Text style={styles.menuButtonText}>{t('common.support')}</Text>
+                    </Pressable>
+                  ) : null}
 
                   <Pressable style={styles.menuButton} onPress={handleOpenContact}>
                     <Text style={styles.menuButtonText}>{t('common.contact')}</Text>

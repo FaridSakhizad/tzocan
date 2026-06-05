@@ -611,6 +611,7 @@ export function AddCityModal({ visible, onClose, onSave }: AddCityModalProps) {
       transparent
       animationType="none"
       onRequestClose={onClose}
+      statusBarTranslucent
     >
       <Animated.View style={[styles.backgroundImage, { opacity }]}>
         <ImageBackground

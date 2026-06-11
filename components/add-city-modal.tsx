@@ -107,10 +107,11 @@ async function searchCitiesInDb(
 
        UNION ALL
 
-       SELECT city_id, 0 AS match_rank
+       SELECT
+         city_id,
+         CASE WHEN locale = ? THEN 0 ELSE 1 END AS match_rank
        FROM city_aliases
-       WHERE locale = ?
-         AND name_norm LIKE ?
+       WHERE name_norm LIKE ?
      ),
      dedup AS (
        SELECT city_id, MIN(match_rank) AS match_rank

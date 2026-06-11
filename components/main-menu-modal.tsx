@@ -121,10 +121,6 @@ export function MainMenuModal({
                     <Text style={styles.menuButtonText}>{t('common.addCity')}</Text>
                   </Pressable>
 
-                  <Pressable style={styles.menuButton} onPress={handleOpenSupport}>
-                    <Text style={styles.menuButtonText}>{t('common.support')}</Text>
-                  </Pressable>
-
                   <Pressable style={styles.menuButton} onPress={handleOpenSettings}>
                     <Text style={styles.menuButtonText}>{t('common.settings')}</Text>
                   </Pressable>
@@ -135,6 +131,12 @@ export function MainMenuModal({
 
                   <Pressable style={styles.menuButton} onPress={handleOpenAbout}>
                     <Text style={styles.menuButtonText}>{t('common.about')}</Text>
+                  </Pressable>
+
+                  <View style={styles.menuSeparator} />
+
+                  <Pressable style={styles.menuButton} onPress={handleOpenSupport}>
+                    <Text style={styles.menuButtonText}>{t('common.sayThanks')}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -204,6 +206,12 @@ function createStyles(theme: UiTheme) {
     menuButton: {
       height: 50,
       justifyContent: 'center',
+    },
+    menuSeparator: {
+      height: 1,
+      backgroundColor: theme.overlay.strong,
+      marginVertical: 5,
+      opacity: 0.2
     },
     menuButtonDisabled: {
       opacity: 0.5,

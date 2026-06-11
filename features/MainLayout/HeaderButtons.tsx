@@ -66,6 +66,7 @@ export default function HeaderButtons() {
     () => selectedCities.reduce((count, city) => count + (city.notifications?.length || 0), 0),
     [selectedCities]
   );
+  const hasAnyAppData = selectedCities.length > 0 || totalNotifications > 0;
 
   const hasEditableItems = React.useMemo(() => {
     if (isNotificationsScreen) {
@@ -291,32 +292,38 @@ export default function HeaderButtons() {
 
         {!isDetailScreen && (
           <>
-            <Pressable
-              onPress={toggleEditMode}
-              disabled={isEditButtonDisabled}
-              style={[
-                styles.headerButton,
-                styles.headerButtonEditCitiesList,
-                isEditButtonDisabled && styles.headerButtonDisabled,
-              ]}
-            >
-              {isEditMode ? (
-                <IconCheckmarkFilled
-                  style={styles.headerButtonIcon}
-                  fill={theme.text.primary}
-                />
-              ) : (
-                <IconEditOutlined
-                  style={styles.headerButtonIcon}
-                  fill={theme.text.primary}
-                />
-              )}
-            </Pressable>
+            {hasAnyAppData && (
+              <Pressable
+                onPress={toggleEditMode}
+                disabled={isEditButtonDisabled}
+                style={[
+                  styles.headerButton,
+                  styles.headerButtonEditCitiesList,
+                  isEditButtonDisabled && styles.headerButtonDisabled,
+                ]}
+              >
+                {isEditMode ? (
+                  <IconCheckmarkFilled
+                    style={styles.headerButtonIcon}
+                    fill={theme.text.primary}
+                  />
+                ) : (
+                  <IconEditOutlined
+                    style={styles.headerButtonIcon}
+                    fill={theme.text.primary}
+                  />
+                )}
+              </Pressable>
+            )}
 
             <Pressable
               onPress={handleOpenAddNotificationModal}
               disabled={isEditMode || selectedCities.length === 0}
-              style={[styles.headerButton, (isEditMode || selectedCities.length === 0) && styles.headerButtonDisabled]}
+              style={[
+                styles.headerButton,
+                styles.headerButtonAddNotification,
+                (isEditMode || selectedCities.length === 0) && styles.headerButtonDisabled
+              ]}
             >
               {isAddNotificationModalVisible ? (
                 <IconAddNotificationOutlined
@@ -334,7 +341,11 @@ export default function HeaderButtons() {
             <Pressable
               onPress={handleOpenAddCityModal}
               disabled={isEditMode}
-              style={[styles.headerButton, isEditMode && styles.headerButtonDisabled]}
+              style={[
+                styles.headerButton,
+                styles.headerButtonAddCity,
+                isEditMode && styles.headerButtonDisabled
+              ]}
             >
               {isAddCityModalVisible ? (
                 <IconAddLocationFilled
@@ -349,7 +360,7 @@ export default function HeaderButtons() {
               )}
             </Pressable>
 
-            {isSortScreen && (
+            {isSortScreen && hasAnyAppData && (
               <Pressable
                 onPress={openSortPicker}
                 disabled={isEditMode}

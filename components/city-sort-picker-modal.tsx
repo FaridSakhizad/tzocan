@@ -61,9 +61,12 @@ export function CitySortPickerModal({
   const styles = createStyles(theme);
 
   const handleToggleCityOrder = (sortFamily: 'name' | 'timezone') => {
-    const currentDirection = sortFamily === 'name'
-      ? getCityOrderDirection(cityOrder.startsWith('name') ? cityOrder : 'none')
-      : getCityOrderDirection(cityOrder.startsWith('timezone') ? cityOrder : 'none');
+    const currentCityOrderMatchesFamily =
+      sortFamily === 'name'
+        ? cityOrder.startsWith('name')
+        : cityOrder.startsWith('timezone');
+    const currentCityOrder = currentCityOrderMatchesFamily ? cityOrder : 'none';
+    const currentDirection = getCityOrderDirection(currentCityOrder);
     const nextDirection = getNextDirectionalMode(currentDirection);
 
     onChangeCityOrder(`${sortFamily}-${nextDirection}` as CityOrderMode);

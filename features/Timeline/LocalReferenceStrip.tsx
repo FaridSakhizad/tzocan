@@ -242,9 +242,9 @@ function LocalReferenceStripComponent({
                 ) : timeFormat === '12h' ? (
                   <View style={styles.hourLabelRow}>
                     <Text style={styles.hourBlockHour}>{cell.label.hour}</Text>
-                    {cell.label.suffix ? (
+                    {cell.label.suffix && (
                       <Text style={styles.hourBlockAmPm}>{cell.label.suffix}</Text>
-                    ) : null}
+                    )}
                   </View>
                 ) : (
                   <Text style={styles.hourBlockHour}>{cell.label.hour}</Text>

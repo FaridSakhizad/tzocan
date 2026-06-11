@@ -225,12 +225,17 @@ export function NotificationModal({
     const cityStamp = Date.UTC(cityYear, cityMonth - 1, cityDay);
     const localStamp = Date.UTC(localYear, localMonth - 1, localDay);
     const dayDiff = Math.round((localStamp - cityStamp) / 86400000);
-    const monthOrYearShiftText =
-      localYear > cityYear ? DATE_SHIFT_LABELS.nextYear
-        : localYear < cityYear ? DATE_SHIFT_LABELS.previousYear
-          : localMonth > cityMonth ? DATE_SHIFT_LABELS.nextMonth
-            : localMonth < cityMonth ? DATE_SHIFT_LABELS.previousMonth
-              : '';
+    let monthOrYearShiftText = '';
+
+    if (localYear > cityYear) {
+      monthOrYearShiftText = DATE_SHIFT_LABELS.nextYear;
+    } else if (localYear < cityYear) {
+      monthOrYearShiftText = DATE_SHIFT_LABELS.previousYear;
+    } else if (localMonth > cityMonth) {
+      monthOrYearShiftText = DATE_SHIFT_LABELS.nextMonth;
+    } else if (localMonth < cityMonth) {
+      monthOrYearShiftText = DATE_SHIFT_LABELS.previousMonth;
+    }
 
     const dayShiftText =
       dayDiff < 0
@@ -283,7 +288,14 @@ export function NotificationModal({
       initialPickerTime.setHours(12, 0, 0, 0);
     }
     setPickerDraftTime(initialPickerTime);
-    setPickerDraftDate(hasDateInSource && source?.year && source?.month && source?.day ? new Date(source.year, source.month - 1, source.day) : new Date());
+
+    let nextPickerDraftDate = new Date();
+
+    if (hasDateInSource && source?.year && source?.month && source?.day) {
+      nextPickerDraftDate = new Date(source.year, source.month - 1, source.day);
+    }
+
+    setPickerDraftDate(nextPickerDraftDate);
     setPickerDraftRepeat(source ? getEffectiveRepeatMode(source) : RepeatMode.none);
     setPickerDraftWeekdays(source?.weekdays || []);
     setPickerDraftCityId(selectedCityId ?? null);
@@ -990,7 +1002,7 @@ export function NotificationModal({
         )}
       </NotificationPickerModal>
 
-      {Platform.OS === 'android' && activePicker === 'time' ? (
+      {Platform.OS === 'android' && activePicker === 'time' && (
         <DateTimePicker
           value={pickerDraftTime}
           mode="time"
@@ -998,16 +1010,16 @@ export function NotificationModal({
           display="default"
           onChange={handleTimeChange}
         />
-      ) : null}
+      )}
 
-      {Platform.OS === 'android' && activePicker === 'date' ? (
+      {Platform.OS === 'android' && activePicker === 'date' && (
         <DateTimePicker
           value={pickerDraftDate}
           mode="date"
           display="default"
           onChange={handleDateChange}
         />
-      ) : null}
+      )}
     </Modal>
   );
 }

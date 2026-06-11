@@ -1,4 +1,4 @@
-export const CONTACT_EMAIL = process.env.EXPO_PUBLIC_CONTACT_EMAIL ?? '';
+export const CONTACT_EMAIL = 'support@timecross.app';
 
 export const TIME_REFRESH_INTERVAL_MS = 5000;
 export const MODAL_ANIMATION_DURATION_MS = 150;

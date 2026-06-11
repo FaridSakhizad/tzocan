@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, Platform } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { useMemo } from 'react';
 
 import type { UiTheme } from '@/constants/ui-theme.types';
@@ -15,10 +15,6 @@ export function SupportCtaButton({ onPress }: SupportCtaButtonProps) {
   const { theme } = useAppTheme();
   const { t } = useI18n();
   const styles = useMemo(() => createStyles(theme), [theme]);
-
-  if (Platform.OS === 'android') {
-    return null;
-  }
 
   return (
     <Pressable onPress={onPress} style={styles.button}>

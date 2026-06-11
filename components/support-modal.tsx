@@ -124,7 +124,20 @@ export function SupportModal({
                     </View>
                   )}
 
-                  {!isLoading && (
+                  {!isLoading && isUnavailable && (
+                    <View style={styles.productButtonBox}>
+                      <Text style={styles.stateText}>{t('support.unavailable')}</Text>
+
+                      <Pressable
+                        style={[styles.productButton, styles.productButtonClose]}
+                        onPress={onClose}
+                      >
+                        <Text style={styles.productButtonText}>{t('common.close')}</Text>
+                      </Pressable>
+                    </View>
+                  )}
+
+                  {!isLoading && !isUnavailable && (
                     <View style={styles.productButtonBox}>
                       {isShowingFutureDevelopment && (
                         <Pressable
@@ -198,9 +211,7 @@ export function SupportModal({
                   )}
                 </View>
 
-                <View style={styles.pad}>
-                  {(!isLoading && isUnavailable) && <Text style={styles.stateText}>{t('support.unavailable')}</Text>}
-                </View>
+                <View style={styles.pad} />
               </View>
             </View>
           </KeyboardAvoidingView>
@@ -283,6 +294,9 @@ function createStyles(theme: UiTheme) {
     },
     productButtonBack: {
       backgroundColor: theme.surface.button.subtleWeak,
+    },
+    productButtonClose: {
+      justifyContent: 'center',
     },
     productButtonFuture: {
       paddingLeft: 20,

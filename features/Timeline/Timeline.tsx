@@ -806,14 +806,14 @@ export default function TimelineScreen() {
         </NotificationPickerModal>
       ) : null}
 
-      {Platform.OS === 'android' && isDayPickerVisible ? (
+      {Platform.OS === 'android' && isDayPickerVisible && (
         <DateTimePicker
           value={pickerDraftDay}
           mode="date"
           display="default"
           onChange={handlePickerDayChange}
         />
-      ) : null}
+      )}
     </GestureHandlerRootView>
   );
 }

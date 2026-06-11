@@ -98,7 +98,7 @@ function createStyles(theme: UiTheme) {
       backgroundColor: theme.surface.transparent,
     },
     cardWide: {
-      maxHeight: '90%',
+      maxHeight: '100%',
       width: '100%',
       paddingHorizontal: theme.spacing.screenX,
     },

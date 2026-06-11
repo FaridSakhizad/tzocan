@@ -121,15 +121,13 @@ export function MainMenuModal({
                     <Text style={styles.menuButtonText}>{t('common.addCity')}</Text>
                   </Pressable>
 
+                  <Pressable style={styles.menuButton} onPress={handleOpenSupport}>
+                    <Text style={styles.menuButtonText}>{t('common.support')}</Text>
+                  </Pressable>
+
                   <Pressable style={styles.menuButton} onPress={handleOpenSettings}>
                     <Text style={styles.menuButtonText}>{t('common.settings')}</Text>
                   </Pressable>
-
-                  {Platform.OS !== 'android' ? (
-                    <Pressable style={styles.menuButton} onPress={handleOpenSupport}>
-                      <Text style={styles.menuButtonText}>{t('common.support')}</Text>
-                    </Pressable>
-                  ) : null}
 
                   <Pressable style={styles.menuButton} onPress={handleOpenContact}>
                     <Text style={styles.menuButtonText}>{t('common.contact')}</Text>

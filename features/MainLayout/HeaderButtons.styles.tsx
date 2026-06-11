@@ -20,6 +20,12 @@ export function createStyles(theme: UiTheme) {
       alignItems: 'center',
       marginHorizontal: 5,
     },
+    headerButtonAddNotification: {
+      marginLeft: 'auto'
+    },
+    headerButtonAddCity: {
+      marginRight: 'auto'
+    },
     headerButtonEditCitiesList: {
       marginLeft: 0,
       marginRight: 'auto'

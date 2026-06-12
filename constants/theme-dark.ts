@@ -22,7 +22,7 @@ export const themeDark: UiTheme = {
   surface: {
     transparent: 'rgba(62, 63, 86, 0)',
     elevated: 'rgba(62, 63, 86, 0.3)',
-    elevatedSoft: 'rgba(62, 63, 86, 0.15)',
+    elevatedSoft: 'rgba(9, 9, 14, 0.3)',
     elevatedMuted: 'rgba(62, 63, 86, 0.1)',
     card: 'rgba(74, 75, 99, 0.7)',
     cardSoft: 'rgba(62, 63, 86, 0.2)',

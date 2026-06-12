@@ -43,12 +43,12 @@ export function createStyles(theme: UiTheme) {
       borderRadius: 15,
       paddingHorizontal: 8,
       paddingVertical: 6,
-      backgroundColor: 'rgba(62, 63, 86, 0.2)',
+      backgroundColor: theme.surface.button.subtleWeak,
       alignItems: 'center',
       justifyContent: 'center',
     },
     sortPickerItemActive: {
-      backgroundColor: 'rgba(62, 63, 86, 0.3)',
+      backgroundColor: theme.surface.elevated,
     },
     sortPickerItemText: {
       textAlign: 'center',

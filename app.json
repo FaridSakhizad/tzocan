@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.timecross"
+      "bundleIdentifier": "com.faridsakhizad.timecross"
     },
     "android": {
       "adaptiveIcon": {

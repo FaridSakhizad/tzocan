@@ -22,7 +22,7 @@ export const themePaperLight: UiTheme = {
   surface: {
     transparent: 'rgba(0, 0, 0, 0)',
     elevated: 'rgba(255, 250, 242, 0.72)',
-    elevatedSoft: 'rgba(255, 248, 239, 0.54)',
+    elevatedSoft: 'rgba(255,255,255,0.54)',
     elevatedMuted: 'rgba(246, 239, 229, 0.48)',
     card: 'rgba(245, 238, 228, 0.82)',
     cardSoft: 'rgba(251, 246, 239, 0.66)',

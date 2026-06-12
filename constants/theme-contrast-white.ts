@@ -22,7 +22,7 @@ export const themeContrastWhite: UiTheme = {
   surface: {
     transparent: 'rgba(255, 255, 255, 0)',
     elevated: 'rgba(255, 255, 255, 0.95)',
-    elevatedSoft: 'rgba(255, 255, 255, 0.95)',
+    elevatedSoft: 'rgba(0, 0, 0, 0.1)',
     elevatedMuted: 'rgba(248, 248, 248, 0.95)',
     card: 'rgba(255, 255, 255, 0.95)',
     cardSoft: 'rgba(252, 252, 252, 0.95)',

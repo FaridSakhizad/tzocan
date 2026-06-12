@@ -1,7 +1,5 @@
 const { getDefaultConfig } = require("expo/metro-config");
 
-console.log('*** METRO CONFIG LOADED ***');
-
 module.exports = (() => {
   const config = getDefaultConfig(__dirname);
 

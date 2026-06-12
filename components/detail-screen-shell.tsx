@@ -149,14 +149,14 @@ function createDetailScreenStyles(theme: UiTheme) {
       paddingHorizontal: 15,
       backgroundColor: 'rgba(255, 255, 255, 0.05)',
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.7)',
+      borderColor: theme.text.secondary,
       alignItems: 'center',
       justifyContent: 'center',
       minWidth: 95,
     },
     optionButtonActive: {
       backgroundColor: 'rgba(62, 63, 86, 0.2)',
-      borderColor: 'rgba(255, 255, 255, 0.75)',
+      borderColor: theme.text.secondary,
     },
     optionButtonText: {
       color: theme.text.primary,

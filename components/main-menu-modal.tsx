@@ -15,6 +15,7 @@ import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useI18n } from '@/hooks/use-i18n';
 import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
+import HeartIcon from '@/assets/images/icon--heart-1.svg';
 
 type MainMenuModalProps = {
   visible: boolean;
@@ -136,7 +137,10 @@ export function MainMenuModal({
                   <View style={styles.menuSeparator} />
 
                   <Pressable style={styles.menuButton} onPress={handleOpenSupport}>
-                    <Text style={styles.menuButtonText}>{t('common.sayThanks')}</Text>
+                    <View style={styles.menuButtonInline}>
+                      <HeartIcon fill={theme.text.primary} style={styles.menuButtonHeartIcon} />
+                      <Text style={styles.menuButtonText}>{t('common.sayThanks')}</Text>
+                    </View>
                   </Pressable>
                 </View>
               </View>
@@ -188,7 +192,7 @@ function createStyles(theme: UiTheme) {
       transform: [{ scale: theme.image.modalBackgroundScale }],
     },
     modalContent: {
-      backgroundColor: theme.surface.transparent,
+      backgroundColor: theme.surface.elevated,
       borderRadius: theme.radius.xl,
       paddingVertical: 15,
       paddingHorizontal: 23,
@@ -206,6 +210,15 @@ function createStyles(theme: UiTheme) {
     menuButton: {
       height: 50,
       justifyContent: 'center',
+    },
+    menuButtonInline: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    menuButtonHeartIcon: {
+      width: 14,
+      height: 12,
     },
     menuSeparator: {
       height: 1,

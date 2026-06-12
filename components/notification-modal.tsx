@@ -33,6 +33,7 @@ import IconCheckmark from '@/assets/images/icon--checkmark-2.svg';
 
 import { NotificationPickerModal } from '@/components/notification-picker-modal';
 import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
+import { getReminderCalendarOptions, type ReminderCalendarOption } from '@/utils/reminder-calendar';
 import {
   getDatePartsInTimezone as getAbstractDatePartsInTimezone,
   getDateTimePartsInTimezone,
@@ -49,6 +50,8 @@ export type NotificationFormValues = {
   label?: string;
   notes?: string;
   url?: string;
+  calendarId?: string | null;
+  calendarTitle?: string;
 };
 
 type NotificationModalProps = {
@@ -93,14 +96,14 @@ export function NotificationModal({
     nextYear: t('common.nextYear'),
   }), [t]);
   const REPEAT_LABELS = useMemo(() => ({
-    todayOnly: t('notification.repeat.never'),
-    daily: t('notification.repeat.daily'),
-    weekly: t('notification.repeat.weekly'),
-    monthly: t('notification.repeat.monthly'),
-    yearly: t('notification.repeat.yearly'),
-    chooseRepeat: t('notification.repeatPlaceholder'),
-    chooseSpecificWeekdays: t('notification.repeat.specificWeekdays'),
-    weekdaysNotSelected: t('notification.repeat.notSelected'),
+    todayOnly: t('reminder.repeat.never'),
+    daily: t('reminder.repeat.daily'),
+    weekly: t('reminder.repeat.weekly'),
+    monthly: t('reminder.repeat.monthly'),
+    yearly: t('reminder.repeat.yearly'),
+    chooseRepeat: t('reminder.repeatPlaceholder'),
+    chooseSpecificWeekdays: t('reminder.repeat.specificWeekdays'),
+    weekdaysNotSelected: t('reminder.repeat.notSelected'),
     weekdays: weekdayShortLabels,
   }), [t, weekdayShortLabels]);
   const [notificationDate, setNotificationDate] = useState(new Date());
@@ -113,7 +116,7 @@ export function NotificationModal({
   const [isTimeSelected, setIsTimeSelected] = useState(false);
   const [repeat, setRepeat] = useState<RepeatMode>(RepeatMode.none);
   const [weekdays, setWeekdays] = useState<number[]>([]);
-  const [activePicker, setActivePicker] = useState<'city' | 'time' | 'date' | 'repeat' | 'weekdays' | null>(null);
+  const [activePicker, setActivePicker] = useState<'city' | 'time' | 'date' | 'repeat' | 'weekdays' | 'calendar' | null>(null);
   const [notificationLabel, setNotificationLabel] = useState('');
   const [notificationNotes, setNotificationNotes] = useState('');
   const [notificationUrl, setNotificationUrl] = useState('');
@@ -123,6 +126,12 @@ export function NotificationModal({
   const [pickerDraftRepeat, setPickerDraftRepeat] = useState<RepeatMode>(RepeatMode.none);
   const [pickerDraftWeekdays, setPickerDraftWeekdays] = useState<number[]>([]);
   const [pickerDraftCityId, setPickerDraftCityId] = useState<number | null>(null);
+  const [selectedCalendarId, setSelectedCalendarId] = useState<string | null>(null);
+  const [selectedCalendarTitle, setSelectedCalendarTitle] = useState<string | undefined>();
+  const [pickerDraftCalendarId, setPickerDraftCalendarId] = useState<string | null>(null);
+  const [calendarOptions, setCalendarOptions] = useState<ReminderCalendarOption[]>([]);
+  const [isCalendarSelectionAvailable, setIsCalendarSelectionAvailable] = useState(true);
+  const [isLoadingCalendarOptions, setIsLoadingCalendarOptions] = useState(false);
 
   const formatDateLabel = useCallback((date: Date) => {
     const currentYear = new Date().getFullYear();
@@ -283,6 +292,8 @@ export function NotificationModal({
     setNotificationLabel(source?.label || '');
     setNotificationNotes(source?.notes || '');
     setNotificationUrl(source?.url || '');
+    setSelectedCalendarId(source?.calendarId ?? null);
+    setSelectedCalendarTitle(source?.calendarTitle);
     const initialPickerTime = new Date(time);
     if (!source) {
       initialPickerTime.setHours(12, 0, 0, 0);
@@ -299,6 +310,10 @@ export function NotificationModal({
     setPickerDraftRepeat(source ? getEffectiveRepeatMode(source) : RepeatMode.none);
     setPickerDraftWeekdays(source?.weekdays || []);
     setPickerDraftCityId(selectedCityId ?? null);
+    setPickerDraftCalendarId(source?.calendarId ?? null);
+    setCalendarOptions([]);
+    setIsCalendarSelectionAvailable(true);
+    setIsLoadingCalendarOptions(false);
   }, [visible, initialNotification, selectedCityId]);
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -376,6 +391,8 @@ export function NotificationModal({
         label,
         notes,
         url,
+        calendarId: selectedCalendarId,
+        calendarTitle: selectedCalendarTitle,
       };
 
       const didSave = await onSave(values);
@@ -424,6 +441,8 @@ export function NotificationModal({
 
     return REPEAT_LABELS.yearly;
   })();
+  const selectedCalendarOption = calendarOptions.find((calendar) => calendar.id === selectedCalendarId) || null;
+  const calendarLabel = selectedCalendarOption?.label || selectedCalendarTitle || null;
 
   const canSelectCity =
     citySelectionMode === 'selectable' &&
@@ -438,42 +457,47 @@ export function NotificationModal({
     Platform.OS === 'android' && (activePicker === 'time' || activePicker === 'date');
   const isPickerModalVisible = isPickerOpen && !isAndroidNativeDateTimePicker;
   const isCityPicker = activePicker === 'city';
+  const isCalendarPicker = activePicker === 'calendar';
   const effectiveTimezone = selectedCityOption?.timezone || cityTimezone;
 
   const pickerTitle = (() => {
     if (activePicker === 'city') {
-      return t('notification.chooseCity');
+      return t('reminder.chooseCity');
     }
 
     if (activePicker === 'time') {
-      return t('notification.chooseTime');
+      return t('reminder.chooseTime');
     }
 
     if (activePicker === 'date') {
-      return t('notification.chooseDate');
+      return t('reminder.chooseDate');
+    }
+
+    if (activePicker === 'calendar') {
+      return t('reminder.chooseCalendar');
     }
 
     if (activePicker === 'weekdays') {
-      return t('notification.chooseWeekdays');
+      return t('reminder.chooseWeekdays');
     }
 
     if (activePicker === 'repeat') {
-      return t('notification.chooseRepeat');
+      return t('reminder.chooseRepeat');
     }
 
-    return null
+    return null;
   })();
 
   const modalTitle = (() => {
     if (mode === 'edit') {
-      return t('notification.title.edit');
+      return t('reminder.title.edit');
     }
 
     if (citySelectionMode === 'locked') {
-      return t('notification.title.add');
+      return t('reminder.title.add');
     }
 
-    return t('notification.title.new');
+    return t('reminder.title.new');
   })();
 
   const localPreviewInfo = useMemo(() => {
@@ -532,6 +556,29 @@ export function NotificationModal({
     setPickerDraftWeekdays(weekdays);
     setActivePicker('repeat');
   };
+  const openCalendarPicker = async () => {
+    if (isLoadingCalendarOptions) {
+      return;
+    }
+
+    setIsLoadingCalendarOptions(true);
+
+    try {
+      const result = await getReminderCalendarOptions();
+
+      setIsCalendarSelectionAvailable(result.available);
+
+      if (!result.available) {
+        return;
+      }
+
+      setCalendarOptions(result.options);
+      setPickerDraftCalendarId(selectedCalendarId);
+      setActivePicker('calendar');
+    } finally {
+      setIsLoadingCalendarOptions(false);
+    }
+  };
   const openWeekdaysPicker = () => {
     setPickerDraftWeekdays(weekdays);
     setActivePicker('weekdays');
@@ -587,6 +634,12 @@ export function NotificationModal({
 
     if (activePicker === 'city' && onSelectCityId && pickerDraftCityId !== null) {
       onSelectCityId(pickerDraftCityId);
+    }
+
+    if (activePicker === 'calendar') {
+      const nextCalendar = calendarOptions.find((calendar) => calendar.id === pickerDraftCalendarId) || null;
+      setSelectedCalendarId(pickerDraftCalendarId);
+      setSelectedCalendarTitle(nextCalendar?.label);
     }
 
     closePicker();
@@ -649,7 +702,7 @@ export function NotificationModal({
                     {selectedCityOption?.label ? (
                       <Text style={[styles.actionButtonText, styles.citySelectText]}>{selectedCityOption?.label}</Text>
                     ) : (
-                      <Text style={[styles.actionButtonHintText, styles.actionButtonHintTextCity]}>{t('notification.cityPlaceholder')}</Text>
+                      <Text style={[styles.actionButtonHintText, styles.actionButtonHintTextCity]}>{t('reminder.cityPlaceholder')}</Text>
                     )}
                     <IconArrow style={styles.citySelectIcon} fill={theme.text.primary} />
                   </Pressable>
@@ -663,7 +716,7 @@ export function NotificationModal({
 
                 <TextInput
                   style={styles.labelInput}
-                  placeholder={t('notification.labelPlaceholder')}
+                  placeholder={t('reminder.labelPlaceholder')}
                   placeholderTextColor={theme.text.placeholder}
                   value={notificationLabel}
                   onChangeText={setNotificationLabel}
@@ -672,7 +725,7 @@ export function NotificationModal({
 
                 <TextInput
                   style={styles.notesInput}
-                  placeholder={t('notification.notesPlaceholder')}
+                  placeholder={t('reminder.notesPlaceholder')}
                   placeholderTextColor={theme.text.placeholder}
                   value={notificationNotes}
                   onChangeText={setNotificationNotes}
@@ -681,7 +734,7 @@ export function NotificationModal({
 
                 <TextInput
                   style={styles.urlInput}
-                  placeholder={t('notification.urlPlaceholder')}
+                  placeholder={t('reminder.urlPlaceholder')}
                   placeholderTextColor={theme.text.placeholder}
                   value={notificationUrl}
                   onChangeText={setNotificationUrl}
@@ -713,7 +766,7 @@ export function NotificationModal({
                   ) : (
                     <View style={styles.actionButtonHint}>
                       <IconClock style={styles.actionButtonHintIcon} fill={theme.text.primary} />
-                      <Text style={styles.actionButtonHintText}>{t('notification.timePlaceholder')}</Text>
+                      <Text style={styles.actionButtonHintText}>{t('reminder.timePlaceholder')}</Text>
                     </View>
                   )}
                 </Pressable>
@@ -758,7 +811,7 @@ export function NotificationModal({
                   ) : (
                     <View style={styles.actionButtonHint}>
                       <IconCalendar style={[styles.actionButtonHintIcon, styles.actionButtonHintIconCalendar]} fill={theme.text.primary} />
-                      <Text style={styles.actionButtonHintText}>{t('notification.datePlaceholder')}</Text>
+                      <Text style={styles.actionButtonHintText}>{t('reminder.datePlaceholder')}</Text>
                     </View>
                   )}
                 </Pressable>
@@ -779,6 +832,25 @@ export function NotificationModal({
                     </View>
                   )}
                 </Pressable>
+
+                <Pressable
+                  style={[styles.singleActionButton, isLoadingCalendarOptions && styles.actionButtonDisabled]}
+                  onPress={() => {
+                    void openCalendarPicker();
+                  }}
+                  disabled={isLoadingCalendarOptions}
+                >
+                  <View style={styles.actionButtonHint}>
+                    <IconCalendar style={[styles.actionButtonHintIcon, styles.actionButtonHintIconCalendar]} fill={theme.text.primary} />
+                    <Text style={calendarLabel ? styles.actionButtonText : styles.actionButtonHintText}>
+                      {calendarLabel || t('reminder.calendarPlaceholder')}
+                    </Text>
+                  </View>
+                </Pressable>
+
+                {!isCalendarSelectionAvailable && (
+                  <Text style={styles.inlineHelperText}>{t('reminder.calendarUnavailable')}</Text>
+                )}
               </View>
 
             </ScrollView>
@@ -792,9 +864,9 @@ export function NotificationModal({
         title={pickerTitle}
         onClose={handleClosePicker}
         onApply={applyPicker}
-        showActions={activePicker !== 'city'}
+        showActions={activePicker !== 'city' && activePicker !== 'calendar'}
         closeActionType={activePicker === 'weekdays' ? 'back' : null}
-        wide={isCityPicker}
+        wide={isCityPicker || isCalendarPicker}
       >
         {isCityPicker && cityOptions && (
           <ScrollView style={styles.cityPickerList}>
@@ -819,6 +891,46 @@ export function NotificationModal({
                 >
                   <Text style={styles.cityPickerItemText}>{city.label}</Text>
                   {!!city.hint && <Text style={styles.cityPickerItemHint}>{city.hint}</Text>}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        {isCalendarPicker && (
+          <ScrollView style={styles.cityPickerList}>
+            <Pressable
+              style={[styles.cityPickerItem, pickerDraftCalendarId === null && styles.cityPickerItemActive]}
+              onPress={() => {
+                setPickerDraftCalendarId(null);
+                setSelectedCalendarId(null);
+                setSelectedCalendarTitle(undefined);
+                closePicker();
+              }}
+            >
+              <Text style={styles.cityPickerItemText}>{t('reminder.calendar.none')}</Text>
+            </Pressable>
+
+            {calendarOptions.map((calendar, idx) => {
+              const selected = pickerDraftCalendarId === calendar.id;
+
+              return (
+                <Pressable
+                  key={`calendar-picker-${calendar.id}`}
+                  style={[
+                    styles.cityPickerItem,
+                    selected && styles.cityPickerItemActive,
+                    (1 + idx) === calendarOptions.length && styles.cityPickerItemLast,
+                  ]}
+                  onPress={() => {
+                    setPickerDraftCalendarId(calendar.id);
+                    setSelectedCalendarId(calendar.id);
+                    setSelectedCalendarTitle(calendar.label);
+                    closePicker();
+                  }}
+                >
+                  <Text style={styles.cityPickerItemText}>{calendar.label}</Text>
+                  {!!calendar.hint && <Text style={styles.cityPickerItemHint}>{calendar.hint}</Text>}
                 </Pressable>
               );
             })}
@@ -1193,6 +1305,12 @@ function createStyles(theme: UiTheme) {
     marginBottom: theme.spacing.lg,
     fontSize: theme.typography.control.fontSize,
     fontWeight: '600',
+  },
+  inlineHelperText: {
+    marginTop: -6,
+    marginBottom: theme.spacing.lg,
+    color: theme.text.placeholder,
+    fontSize: 13,
   },
   notificationTime: {},
   localTimeBox: {

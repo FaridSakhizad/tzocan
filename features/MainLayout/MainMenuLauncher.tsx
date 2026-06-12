@@ -121,7 +121,9 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
       values.notes,
       values.url,
       values.repeat,
-      values.weekdays
+      values.weekdays,
+      values.calendarId,
+      values.calendarTitle
     );
 
     if (didSave) {

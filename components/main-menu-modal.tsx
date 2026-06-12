@@ -115,7 +115,7 @@ export function MainMenuModal({
                     onPress={handleAddNotification}
                     disabled={!canAddNotification}
                   >
-                    <Text style={styles.menuButtonText}>{t('common.addNotification')}</Text>
+                    <Text style={styles.menuButtonText}>{t('common.addReminder')}</Text>
                   </Pressable>
 
                   <Pressable style={styles.menuButton} onPress={handleAddCity}>

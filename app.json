@@ -45,6 +45,13 @@
         }
       ],
       "@react-native-community/datetimepicker",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Allow $(PRODUCT_NAME) to access your calendars.",
+          "remindersPermission": "Allow $(PRODUCT_NAME) to access your reminders."
+        }
+      ],
       "expo-mail-composer",
       "expo-localization",
       "expo-iap"

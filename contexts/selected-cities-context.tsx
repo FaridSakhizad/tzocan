@@ -5,6 +5,10 @@ import Constants from 'expo-constants';
 import { CityRow } from '@/components/add-city-modal';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 import { getDateTimePartsInTimezone } from '@/utils/abstract-timezone';
+import {
+  createReminderCalendarEntryIds,
+  deleteReminderCalendarEntryIds,
+} from '@/utils/reminder-calendar';
 import type * as ExpoNotifications from 'expo-notifications';
 
 export type CityNotification = {
@@ -20,6 +24,10 @@ export type CityNotification = {
   label?: string;
   notes?: string;
   url?: string;
+  calendarId?: string | null;
+  calendarTitle?: string;
+  calendarEventId?: string;
+  calendarEventIds?: string[];
   enabled: boolean;
   inactiveReason?: 'permission' | 'past';
   notificationId?: string;
@@ -40,8 +48,8 @@ type SelectedCitiesContextType = {
   removeCity: (cityId: number) => void;
   updateCityName: (cityId: number, customName: string) => void;
   reorderCities: (cities: SelectedCity[]) => void;
-  addNotification: (cityId: number, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat?: RepeatMode, weekdays?: number[]) => Promise<boolean>;
-  updateNotification: (cityId: number, notificationId: string, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat?: RepeatMode, weekdays?: number[]) => Promise<boolean>;
+  addNotification: (cityId: number, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat?: RepeatMode, weekdays?: number[], calendarId?: string | null, calendarTitle?: string) => Promise<boolean>;
+  updateNotification: (cityId: number, notificationId: string, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat?: RepeatMode, weekdays?: number[], calendarId?: string | null, calendarTitle?: string) => Promise<boolean>;
   removeNotification: (cityId: number, notificationId: string) => Promise<void>;
   toggleNotification: (cityId: number, notificationId: string, enabled: boolean) => Promise<boolean>;
   isLoaded: boolean;
@@ -309,6 +317,10 @@ async function cancelNotificationIds(notification: CityNotification): Promise<vo
   await Promise.all(ids.map((id) => Notifications.cancelScheduledNotificationAsync(id)));
 }
 
+async function cancelReminderCalendarEvents(notification: CityNotification): Promise<void> {
+  await deleteReminderCalendarEntryIds(notification.calendarEventId, notification.calendarEventIds);
+}
+
 async function requestNotificationPermissions(): Promise<boolean> {
   const Notifications = await getNotificationsModule();
 
@@ -546,7 +558,21 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     return () => subscription.remove();
   }, [isLoaded]);
 
-  const addNotification = async (cityId: number, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat: RepeatMode = RepeatMode.none, weekdays: number[] = []) => {
+  const addNotification = async (
+    cityId: number,
+    hour: number,
+    minute: number,
+    year?: number,
+    month?: number,
+    day?: number,
+    label?: string,
+    notes?: string,
+    url?: string,
+    repeat: RepeatMode = RepeatMode.none,
+    weekdays: number[] = [],
+    calendarId?: string | null,
+    calendarTitle?: string
+  ) => {
     const city = selectedCitiesRef.current.find(c => c.id === cityId);
     if (!city) return false;
 
@@ -561,6 +587,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     );
 
     let notificationIds: string[] | null = null;
+    let calendarEventIds: string[] | null = null;
 
     let inactiveReason: CityNotification['inactiveReason'] = isInactivePastOneTime ? 'past' : undefined;
 
@@ -578,6 +605,39 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    if (!isInactivePastOneTime && calendarId) {
+      calendarEventIds = await createReminderCalendarEntryIds(city, {
+        hour,
+        minute,
+        year,
+        month,
+        day,
+        label,
+        notes,
+        url,
+        repeat,
+        weekdays,
+        calendarId,
+      });
+
+      if (calendarEventIds === null) {
+        if (notificationIds && notificationIds.length > 0) {
+          const cleanupNotification: CityNotification = {
+            id: '',
+            hour,
+            minute,
+            enabled: true,
+            notificationId: notificationIds[0],
+            notificationIds,
+          };
+
+          await cancelNotificationIds(cleanupNotification);
+        }
+
+        return false;
+      }
+    }
+
     const newNotification: CityNotification = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: Date.now(),
@@ -591,6 +651,10 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       label,
       notes,
       url,
+      calendarId: calendarId ?? null,
+      calendarTitle,
+      calendarEventId: calendarEventIds?.[0],
+      calendarEventIds: calendarEventIds || undefined,
       enabled: true,
       inactiveReason,
       notificationId: notificationIds?.[0],
@@ -617,7 +681,22 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
-  const updateNotification = async (cityId: number, notificationId: string, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat: RepeatMode = RepeatMode.none, weekdays: number[] = []) => {
+  const updateNotification = async (
+    cityId: number,
+    notificationId: string,
+    hour: number,
+    minute: number,
+    year?: number,
+    month?: number,
+    day?: number,
+    label?: string,
+    notes?: string,
+    url?: string,
+    repeat: RepeatMode = RepeatMode.none,
+    weekdays: number[] = [],
+    calendarId?: string | null,
+    calendarTitle?: string
+  ) => {
     const city = selectedCitiesRef.current.find(c => c.id === cityId);
     const notification = city?.notifications?.find(n => n.id === notificationId);
 
@@ -634,6 +713,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     );
 
     let newSystemNotificationIds: string[] | null = null;
+    let newCalendarEventIds: string[] | null = null;
     let inactiveReason: CityNotification['inactiveReason'] = isInactivePastOneTime ? 'past' : undefined;
 
     if (!notification.enabled) {
@@ -654,7 +734,41 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    if (notification.enabled && !isInactivePastOneTime && calendarId) {
+      newCalendarEventIds = await createReminderCalendarEntryIds(city, {
+        hour,
+        minute,
+        year,
+        month,
+        day,
+        label,
+        notes,
+        url,
+        repeat,
+        weekdays,
+        calendarId,
+      });
+
+      if (newCalendarEventIds === null) {
+        if (newSystemNotificationIds && newSystemNotificationIds.length > 0) {
+          const cleanupNotification: CityNotification = {
+            id: '',
+            hour,
+            minute,
+            enabled: true,
+            notificationId: newSystemNotificationIds[0],
+            notificationIds: newSystemNotificationIds,
+          };
+
+          await cancelNotificationIds(cleanupNotification);
+        }
+
+        return false;
+      }
+    }
+
     await cancelNotificationIds(notification);
+    await cancelReminderCalendarEvents(notification);
 
     setSelectedCities((prev) => {
       const newCities = prev.map((c) => {
@@ -675,6 +789,10 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
                     label,
                     notes,
                     url,
+                    calendarId: calendarId ?? null,
+                    calendarTitle,
+                    calendarEventId: newCalendarEventIds?.[0],
+                    calendarEventIds: newCalendarEventIds || undefined,
                     enabled: notification.enabled,
                     inactiveReason,
                     notificationId: newSystemNotificationIds?.[0],
@@ -702,6 +820,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
 
     if (notification) {
       await cancelNotificationIds(notification);
+      await cancelReminderCalendarEvents(notification);
     }
 
     setSelectedCities((prev) => {
@@ -739,6 +858,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       );
 
       let newNotificationId: string[] | null = null;
+      let newCalendarEventIds: string[] | null = null;
       let inactiveReason: CityNotification['inactiveReason'] = isInactivePastOneTime ? 'past' : undefined;
 
       if (!isInactivePastOneTime) {
@@ -767,6 +887,39 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      if (!isInactivePastOneTime && notification.calendarId) {
+        newCalendarEventIds = await createReminderCalendarEntryIds(city, {
+          hour: notification.hour,
+          minute: notification.minute,
+          year: notification.year,
+          month: notification.month,
+          day: notification.day,
+          label: notification.label,
+          notes: notification.notes,
+          url: notification.url,
+          repeat: getEffectiveRepeatMode(notification),
+          weekdays: notification.weekdays || [],
+          calendarId: notification.calendarId,
+        });
+
+        if (newCalendarEventIds === null) {
+          if (newNotificationId && newNotificationId.length > 0) {
+            const cleanupNotification: CityNotification = {
+              id: '',
+              hour: notification.hour,
+              minute: notification.minute,
+              enabled: true,
+              notificationId: newNotificationId[0],
+              notificationIds: newNotificationId,
+            };
+
+            await cancelNotificationIds(cleanupNotification);
+          }
+
+          return false;
+        }
+      }
+
       setSelectedCities((prev) => {
         const newCities = prev.map((c) => {
           if (c.id === cityId) {
@@ -778,6 +931,8 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
                       ...n,
                       enabled: true,
                       inactiveReason,
+                      calendarEventId: newCalendarEventIds?.[0],
+                      calendarEventIds: newCalendarEventIds || undefined,
                       notificationId: newNotificationId?.[0],
                       notificationIds: newNotificationId || undefined,
                     }
@@ -796,6 +951,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       return true;
     } else {
       await cancelNotificationIds(notification);
+      await cancelReminderCalendarEvents(notification);
 
       setSelectedCities((prev) => {
         const newCities = prev.map((c) => {
@@ -804,7 +960,15 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
               ...c,
               notifications: (c.notifications || []).map(n =>
                 n.id === notificationId
-                  ? { ...n, enabled: false, inactiveReason: undefined, notificationId: undefined, notificationIds: undefined }
+                  ? {
+                      ...n,
+                      enabled: false,
+                      inactiveReason: undefined,
+                      calendarEventId: undefined,
+                      calendarEventIds: undefined,
+                      notificationId: undefined,
+                      notificationIds: undefined,
+                    }
                   : n
               ),
             };

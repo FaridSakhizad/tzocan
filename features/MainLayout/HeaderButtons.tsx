@@ -190,7 +190,9 @@ export default function HeaderButtons() {
       values.notes,
       values.url,
       values.repeat,
-      values.weekdays
+      values.weekdays,
+      values.calendarId,
+      values.calendarTitle
     );
 
     if (didSave) {

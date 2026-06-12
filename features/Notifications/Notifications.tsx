@@ -371,11 +371,11 @@ function getNotificationCreatedAt(notification: CityNotification) {
 
 function getInactiveReasonLabel(notification: CityNotification, t: (key: string) => string) {
   if (notification.inactiveReason === 'permission') {
-    return t('notification.inactive.permission');
+    return t('reminder.inactive.permission');
   }
 
   if (notification.inactiveReason === 'past') {
-    return t('notification.inactive.past');
+    return t('reminder.inactive.past');
   }
 
   return null;
@@ -795,7 +795,9 @@ export default function Notifications() {
       values.notes,
       values.url,
       values.repeat,
-      values.weekdays
+      values.weekdays,
+      values.calendarId,
+      values.calendarTitle
     );
   };
 
@@ -815,7 +817,9 @@ export default function Notifications() {
       values.notes,
       values.url,
       values.repeat,
-      values.weekdays
+      values.weekdays,
+      values.calendarId,
+      values.calendarTitle
     );
 
     if (didSave) {
@@ -907,7 +911,7 @@ export default function Notifications() {
           {!!notification.label && notification.label.length > 0 ? (
             <Text style={styles.notificationLabel}>{notification.label}</Text>
           ) : (
-            <Text style={styles.notificationLabelEmpty}>{t('common.notification')}</Text>
+            <Text style={styles.notificationLabelEmpty}>{t('common.reminder')}</Text>
           )}
 
           {!!notification.notes && (
@@ -1079,7 +1083,7 @@ export default function Notifications() {
   const renderAddNotificationFooter = () => {
     return (
       <Pressable onPress={handleOpenAddNotificationModal} style={styles.addNotificationFooterButton}>
-        <Text style={styles.addNotificationFooterText}>{t('common.addNotification')}</Text>
+        <Text style={styles.addNotificationFooterText}>{t('common.addReminder')}</Text>
       </Pressable>
     );
   };
@@ -1109,7 +1113,7 @@ export default function Notifications() {
                 style={styles.emptyStateButton}
               >
                 <IconAddNotification  style={styles.emptyStateButtonIcon} fill={theme.surface.button.primary} />
-                <Text style={styles.emptyStateButtonText}>{t('common.addNotification')}</Text>
+                <Text style={styles.emptyStateButtonText}>{t('common.addReminder')}</Text>
               </Pressable>
             )}
           </View>

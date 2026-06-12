@@ -8,6 +8,10 @@ import { useI18n } from '@/hooks/use-i18n';
 import { useSettings } from '@/contexts/settings-context';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { ThemeName } from '@/constants/ui-theme';
+import {
+  getReminderCalendarPermissionState,
+  requestReminderCalendarPermission,
+} from '@/utils/reminder-calendar';
 
 export default function Settings() {
   const detailScreenStyles = useDetailScreenStyles();
@@ -18,11 +22,20 @@ export default function Settings() {
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
   const [permissionCanAskAgain, setPermissionCanAskAgain] = useState(true);
   const [isPermissionLoading, setIsPermissionLoading] = useState(false);
+  const [calendarPermissionGranted, setCalendarPermissionGranted] = useState<boolean | null>(null);
+  const [calendarPermissionCanAskAgain, setCalendarPermissionCanAskAgain] = useState(true);
+  const [isCalendarPermissionLoading, setIsCalendarPermissionLoading] = useState(false);
 
   const refreshNotificationPermission = async () => {
     const permission = await Notifications.getPermissionsAsync();
     setPermissionGranted(permission.granted);
     setPermissionCanAskAgain(permission.canAskAgain);
+  };
+
+  const refreshCalendarPermission = async () => {
+    const permission = await getReminderCalendarPermissionState();
+    setCalendarPermissionGranted(permission.granted);
+    setCalendarPermissionCanAskAgain(permission.canAskAgain);
   };
 
   useEffect(() => {
@@ -31,6 +44,7 @@ export default function Settings() {
     }
 
     refreshNotificationPermission();
+    void refreshCalendarPermission();
   }, [isFocused]);
 
   const handleEnableNotifications = async () => {
@@ -47,6 +61,18 @@ export default function Settings() {
 
   const handleOpenSystemSettings = async () => {
     await Linking.openSettings();
+  };
+
+  const handleEnableCalendarAccess = async () => {
+    setIsCalendarPermissionLoading(true);
+
+    try {
+      const permission = await requestReminderCalendarPermission();
+      setCalendarPermissionGranted(permission.granted);
+      setCalendarPermissionCanAskAgain(permission.canAskAgain);
+    } finally {
+      setIsCalendarPermissionLoading(false);
+    }
   };
 
   const themeOptions: { value: ThemeName; label: string }[] = [
@@ -233,6 +259,35 @@ export default function Settings() {
                 : permissionCanAskAgain
                   ? t('settings.notifications.enable')
                   : t('settings.notifications.openSettings')}
+            </Text>
+          </Pressable>
+        )}
+      </View>
+
+      <View style={[detailScreenStyles.card, detailScreenStyles.cardWithGap]}>
+        <View style={detailScreenStyles.settingInfoNoMargin}>
+          <Text style={detailScreenStyles.settingLabel}>{t('settings.calendar.label')}</Text>
+          <Text style={detailScreenStyles.settingHint}>
+            {calendarPermissionGranted
+              ? t('settings.calendar.enabled')
+              : calendarPermissionCanAskAgain
+                ? t('settings.calendar.canAsk')
+                : t('settings.calendar.blocked')}
+          </Text>
+        </View>
+
+        {calendarPermissionGranted !== true && (
+          <Pressable
+            style={detailScreenStyles.optionButton}
+            onPress={calendarPermissionCanAskAgain ? handleEnableCalendarAccess : handleOpenSystemSettings}
+            disabled={isCalendarPermissionLoading}
+          >
+            <Text style={[detailScreenStyles.optionButtonText, detailScreenStyles.notificationsOptionButtonText]}>
+              {isCalendarPermissionLoading
+                ? t('common.loading')
+                : calendarPermissionCanAskAgain
+                  ? t('settings.calendar.enable')
+                  : t('settings.calendar.openSettings')}
             </Text>
           </Pressable>
         )}

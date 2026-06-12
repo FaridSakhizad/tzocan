@@ -160,11 +160,11 @@ function formatScheduledTime(hour: number, minute: number, timeFormat: TimeForma
 
 function getInactiveReasonLabel(notification: CityNotification, t: (key: string) => string) {
   if (notification.inactiveReason === 'permission') {
-    return t('notification.inactive.permission');
+    return t('reminder.inactive.permission');
   }
 
   if (notification.inactiveReason === 'past') {
-    return t('notification.inactive.past');
+    return t('reminder.inactive.past');
   }
 
   return null;
@@ -438,7 +438,9 @@ export default function EditCity() {
         values.notes,
         values.url,
         values.repeat,
-        values.weekdays
+        values.weekdays,
+        values.calendarId,
+        values.calendarTitle
       );
     }
 
@@ -453,7 +455,9 @@ export default function EditCity() {
       values.notes,
       values.url,
       values.repeat,
-      values.weekdays
+      values.weekdays,
+      values.calendarId,
+      values.calendarTitle
     );
   };
 
@@ -551,7 +555,7 @@ export default function EditCity() {
                       {!!notification.label && notification.label.length > 0 ? (
                         <Text style={styles.notificationLabel}>{notification.label}</Text>
                       ) : (
-                        <Text style={styles.notificationLabelEmpty}>{t('common.notification')}</Text>
+                        <Text style={styles.notificationLabelEmpty}>{t('common.reminder')}</Text>
                       )}
                       {!!notification.notes && (
                         <Text style={styles.notificationNotes}>{notification.notes}</Text>
@@ -669,7 +673,7 @@ export default function EditCity() {
           )}
 
           <Pressable onPress={handleOpenAddNotificationModal} style={styles.addNotificationButton}>
-            <Text style={styles.addNotificationButtonText}>{t('common.addNotification')}</Text>
+            <Text style={styles.addNotificationButtonText}>{t('common.addReminder')}</Text>
           </Pressable>
         </View>
       </ScrollView>

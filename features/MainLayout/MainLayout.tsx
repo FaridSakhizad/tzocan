@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Tabs, usePathname } from 'expo-router';
 import { View } from 'react-native';
 import { BottomTabBar, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useEditMode } from '@/contexts/edit-mode-context';
+import { useSelectedCities } from '@/contexts/selected-cities-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 
@@ -50,9 +51,17 @@ export default function TabLayout() {
   const pathname = usePathname();
 
   const { theme } = useAppTheme();
+  const { selectedCities } = useSelectedCities();
+  const { isEditMode, setIsEditMode } = useEditMode();
 
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [isMainMenuVisible, setIsMainMenuVisible] = React.useState(false);
+
+  useEffect(() => {
+    if (selectedCities.length === 0 && isEditMode) {
+      setIsEditMode(false);
+    }
+  }, [isEditMode, selectedCities.length, setIsEditMode]);
 
   return (
     <>

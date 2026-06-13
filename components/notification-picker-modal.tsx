@@ -1,5 +1,5 @@
 import { ReactNode, useMemo } from 'react';
-import { Animated, Modal, Pressable, StyleSheet, ScrollView, Text, View, ImageBackground } from 'react-native';
+import { Animated, Modal, Pressable, StyleProp, StyleSheet, Text, View, ViewStyle, ImageBackground } from 'react-native';
 
 import IconCancelOutlined from '@/assets/images/icon--x-1--outlined.svg';
 import IconConfirmOutlined from '@/assets/images/icon--checkmark-1--outlined.svg';
@@ -14,9 +14,13 @@ type NotificationPickerModalProps = {
   title: string | null;
   onClose: () => void;
   onApply?: () => void;
-  showActions?: boolean;
+  showHeader?: boolean;
+  showClose?: boolean;
+  showApply?: boolean;
+  closeByOverlayTap?: boolean;
   children: ReactNode;
   closeActionType?: string | null;
+  customWindowStyle?: StyleProp<ViewStyle>
 };
 
 export function NotificationPickerModal({
@@ -24,9 +28,13 @@ export function NotificationPickerModal({
   title,
   onClose,
   onApply,
-  showActions = true,
+  showHeader = true,
+  showClose = true,
+  showApply = true,
+  closeByOverlayTap = true,
   children,
-  closeActionType = null
+  closeActionType = null,
+  customWindowStyle = {},
 }: NotificationPickerModalProps) {
   const insets = useSafeAreaInsets();
 
@@ -47,45 +55,58 @@ export function NotificationPickerModal({
       statusBarTranslucent
     >
       <Animated.View style={[styles.wrapper, { opacity }]}>
-        <ScrollView style={styles.scrollContainer}
-          contentContainerStyle={[
-            styles.scrollContentContainer,
+        {closeByOverlayTap && <Pressable style={styles.overlay} onPress={onClose} />}
+
+        <View
+          style={[
+            styles.cardFrame,
             {
               paddingTop: insets.top + 20,
-              paddingBottom: insets.bottom + 20,
-            }
+              paddingBottom: 20,
+            },
           ]}
+          pointerEvents="box-none"
         >
-          <Pressable style={styles.overlay} onPress={onClose} />
           <Pressable onPress={() => undefined}>
-            <ImageBackground
-              source={theme.image.modalBackgroundSource}
-              style={styles.backgroundImage}
-              imageStyle={styles.backgroundImageAsset}
-              resizeMode="cover"
-            >
-              <View style={styles.container}>
+          <ImageBackground
+            source={theme.image.modalBackgroundSource}
+            style={[
+              styles.backgroundImage,
+              customWindowStyle
+            ]}
+            imageStyle={styles.backgroundImageAsset}
+            resizeMode="cover"
+          >
+            <View style={styles.container}>
+              {showHeader && (
                 <View style={styles.header}>
-                  {showActions && (
+                  {showClose ? (
                     <Pressable style={styles.headerButton} onPress={onClose}>
                       {closeActionType === 'back' ? <IconBackOutlined fill={theme.text.primary} /> : <IconCancelOutlined fill={theme.text.primary} />}
                     </Pressable>
+                  ) : (
+                    <View style={styles.headerButtonPlaceholder} />
                   )}
 
                   <Text style={styles.title}>{title}</Text>
 
-                  {showActions && (
+                  {showApply ? (
                     <Pressable style={styles.headerButton} onPress={onApply}>
                       <IconConfirmOutlined fill={theme.text.primary} />
                     </Pressable>
+                  ) : (
+                    <View style={styles.headerButtonPlaceholder} />
                   )}
                 </View>
+              )}
 
+              <View style={styles.body}>
                 {children}
               </View>
-            </ImageBackground>
+            </View>
+          </ImageBackground>
           </Pressable>
-        </ScrollView>
+        </View>
       </Animated.View>
     </Modal>
   );
@@ -97,21 +118,15 @@ function createStyles(theme: UiTheme) {
   return StyleSheet.create({
     wrapper: {
       flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
       backgroundColor: theme.overlay.strong,
     },
     overlay: {
       ...StyleSheet.absoluteFillObject,
     },
-    scrollContainer: {
+    cardFrame: {
       flex: 1,
       width: '100%',
-    },
-    scrollContentContainer: {
-      padding: theme.spacing.screenX,
-      minHeight: '100%',
-      alignItems: 'center',
+      paddingHorizontal: theme.spacing.screenX,
       justifyContent: 'center',
     },
     backgroundImage: {
@@ -121,6 +136,7 @@ function createStyles(theme: UiTheme) {
       borderBottomRightRadius: theme.radius.panelBottom,
       overflow: 'hidden',
       minWidth: 280,
+      maxHeight: '100%',
       alignSelf: 'center',
       shadowColor: isContrastBlack ? '#ffffff' : '#000000',
       shadowOffset: {
@@ -135,7 +151,13 @@ function createStyles(theme: UiTheme) {
       transform: [{ scale: theme.image.modalBackgroundScale }],
     },
     container: {
-      backgroundColor: theme.surface.elevatedSoft,
+      backgroundColor: theme.overlay.medium,
+      maxHeight: '100%',
+      minHeight: 0,
+    },
+    body: {
+      flexShrink: 1,
+      minHeight: 0,
     },
     header: {
       flexDirection: 'row',
@@ -149,6 +171,10 @@ function createStyles(theme: UiTheme) {
       height: 50,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    headerButtonPlaceholder: {
+      width: 50,
+      height: 50,
     },
     title: {
       color: theme.text.primary,

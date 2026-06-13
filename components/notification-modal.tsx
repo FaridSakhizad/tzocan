@@ -441,18 +441,15 @@ export function NotificationModal({
 
     return REPEAT_LABELS.yearly;
   })();
-  const selectedCalendarOption = calendarOptions.find((calendar) => calendar.id === selectedCalendarId) || null;
-  const calendarLabel = selectedCalendarOption?.label || selectedCalendarTitle || null;
-  const calendarPlaceholder = Platform.OS === 'ios'
+  const selectedReminderListOption = calendarOptions.find((calendar) => calendar.id === selectedCalendarId) || null;
+  const reminderListLabel = selectedReminderListOption?.label || selectedCalendarTitle || null;
+  const reminderListPlaceholder = Platform.OS === 'ios'
     ? t('reminder.reminderListPlaceholder')
     : t('reminder.calendarPlaceholder');
-  const calendarPickerTitle = Platform.OS === 'ios'
+  const reminderListPickerTitle = Platform.OS === 'ios'
     ? t('reminder.chooseReminderList')
     : t('reminder.chooseCalendar');
-  const calendarNoneLabel = Platform.OS === 'ios'
-    ? t('reminder.reminderList.none')
-    : t('reminder.calendar.none');
-  const calendarUnavailableLabel = Platform.OS === 'ios'
+  const reminderListUnavailableLabel = Platform.OS === 'ios'
     ? t('reminder.reminderListUnavailable')
     : t('reminder.calendarUnavailable');
 
@@ -469,7 +466,7 @@ export function NotificationModal({
     Platform.OS === 'android' && (activePicker === 'time' || activePicker === 'date');
   const isPickerModalVisible = isPickerOpen && !isAndroidNativeDateTimePicker;
   const isCityPicker = activePicker === 'city';
-  const isCalendarPicker = activePicker === 'calendar';
+  const isReminderListPicker = activePicker === 'calendar';
   const effectiveTimezone = selectedCityOption?.timezone || cityTimezone;
 
   const pickerTitle = (() => {
@@ -486,7 +483,7 @@ export function NotificationModal({
     }
 
     if (activePicker === 'calendar') {
-      return calendarPickerTitle;
+      return reminderListPickerTitle;
     }
 
     if (activePicker === 'weekdays') {
@@ -568,7 +565,7 @@ export function NotificationModal({
     setPickerDraftWeekdays(weekdays);
     setActivePicker('repeat');
   };
-  const openCalendarPicker = async () => {
+  const openReminderListPicker = async () => {
     if (isLoadingCalendarOptions) {
       return;
     }
@@ -848,20 +845,33 @@ export function NotificationModal({
                 <Pressable
                   style={[styles.singleActionButton, isLoadingCalendarOptions && styles.actionButtonDisabled]}
                   onPress={() => {
-                    void openCalendarPicker();
+                    void openReminderListPicker();
                   }}
                   disabled={isLoadingCalendarOptions}
                 >
                   <View style={styles.actionButtonHint}>
                     <IconCalendar style={[styles.actionButtonHintIcon, styles.actionButtonHintIconCalendar]} fill={theme.text.primary} />
-                    <Text style={calendarLabel ? styles.actionButtonText : styles.actionButtonHintText}>
-                      {calendarLabel || calendarPlaceholder}
+                    <Text style={reminderListLabel ? styles.actionButtonText : styles.actionButtonHintText}>
+                      {reminderListLabel || reminderListPlaceholder}
                     </Text>
+                    {!!reminderListLabel && (
+                      <Pressable
+                        style={styles.clearDateButton}
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          setPickerDraftCalendarId(null);
+                          setSelectedCalendarId(null);
+                          setSelectedCalendarTitle(undefined);
+                        }}
+                      >
+                        <IconDelete fill={theme.text.warning} />
+                      </Pressable>
+                    )}
                   </View>
                 </Pressable>
 
                 {!isCalendarSelectionAvailable && (
-                  <Text style={styles.inlineHelperText}>{calendarUnavailableLabel}</Text>
+                  <Text style={styles.inlineHelperText}>{reminderListUnavailableLabel}</Text>
                 )}
               </View>
 
@@ -876,76 +886,78 @@ export function NotificationModal({
         title={pickerTitle}
         onClose={handleClosePicker}
         onApply={applyPicker}
-        showActions={activePicker !== 'city'}
+        showApply={activePicker !== 'city' && activePicker !== 'calendar'}
         closeActionType={activePicker === 'weekdays' ? 'back' : null}
+        closeByOverlayTap={activePicker !== 'city' && activePicker !== 'calendar'}
+        customWindowStyle={(isCityPicker || isReminderListPicker) && {
+          alignSelf: 'stretch',
+        }}
       >
         {isCityPicker && cityOptions && (
-          <View style={styles.reminderPicker}>
-            {cityOptions.map((city, idx) => {
-              const selected = pickerDraftCityId === city.id;
+          <ScrollView
+            style={styles.reminderPickerScroll}
+            contentContainerStyle={styles.reminderPickerScrollContainer}
+          >
+            <View style={styles.reminderPicker}>
+              {cityOptions.map((city, idx) => {
+                const selected = pickerDraftCityId === city.id;
 
-              return (
-                <Pressable
-                  key={`city-picker-${city.id}`}
-                  style={[
-                    styles.cityPickerItem,
-                    selected && styles.cityPickerItemActive,
-                    (1 + idx) === cityOptions.length  && styles.cityPickerItemLast
-                  ]}
-                  onPress={() => {
-                    setPickerDraftCityId(city.id);
-                    if (onSelectCityId) {
-                      onSelectCityId(city.id);
-                    }
-                    closePicker();
-                  }}
-                >
-                  <Text style={styles.cityPickerItemText}>{city.label}</Text>
-                  {!!city.hint && <Text style={styles.cityPickerItemHint}>{city.hint}</Text>}
-                </Pressable>
-              );
-            })}
-          </View>
+                return (
+                  <Pressable
+                    key={`city-picker-${city.id}`}
+                    style={[
+                      styles.cityPickerItem,
+                      selected && styles.cityPickerItemActive,
+                      (1 + idx) === cityOptions.length  && styles.cityPickerItemLast
+                    ]}
+                    onPress={() => {
+                      setPickerDraftCityId(city.id);
+                      if (onSelectCityId) {
+                        onSelectCityId(city.id);
+                      }
+                      closePicker();
+                    }}
+                  >
+                    <Text style={styles.cityPickerItemText}>{city.label}</Text>
+                    {!!city.hint && <Text style={styles.cityPickerItemHint}>{city.hint}</Text>}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </ScrollView>
         )}
 
-        {isCalendarPicker && (
-          <View style={styles.reminderPicker}>
-            <Pressable
-              style={[styles.cityPickerItem, pickerDraftCalendarId === null && styles.cityPickerItemActive]}
-              onPress={() => {
-                setPickerDraftCalendarId(null);
-                setSelectedCalendarId(null);
-                setSelectedCalendarTitle(undefined);
-                closePicker();
-              }}
-            >
-              <Text style={styles.cityPickerItemText}>{calendarNoneLabel}</Text>
-            </Pressable>
+        {isReminderListPicker && (
+          <ScrollView
+            style={styles.reminderPickerScroll}
+            contentContainerStyle={styles.reminderPickerScrollContainer}
+          >
+            <View style={styles.reminderPicker}>
+              {calendarOptions.map((calendar, idx) => {
+                const selected = pickerDraftCalendarId === calendar.id;
 
-            {calendarOptions.map((calendar, idx) => {
-              const selected = pickerDraftCalendarId === calendar.id;
-
-              return (
-                <Pressable
-                  key={`calendar-picker-${calendar.id}`}
-                  style={[
-                    styles.cityPickerItem,
-                    selected && styles.cityPickerItemActive,
-                    (1 + idx) === calendarOptions.length && styles.cityPickerItemLast,
-                  ]}
-                  onPress={() => {
-                    setPickerDraftCalendarId(calendar.id);
-                    setSelectedCalendarId(calendar.id);
-                    setSelectedCalendarTitle(calendar.label);
-                    closePicker();
-                  }}
-                >
-                  <Text style={styles.cityPickerItemText}>{calendar.label}</Text>
-                  {!!calendar.hint && <Text style={styles.cityPickerItemHint}>{calendar.hint}</Text>}
-                </Pressable>
-              );
-            })}
-          </View>
+                return (
+                  <Pressable
+                    key={`calendar-picker-${calendar.id}`}
+                    style={[
+                      styles.cityPickerItem,
+                      selected && styles.cityPickerItemActive,
+                      (1 + idx) === calendarOptions.length && styles.cityPickerItemLast,
+                    ]}
+                    onPress={() => {
+                      setPickerDraftCalendarId(calendar.id);
+                      setSelectedCalendarId(calendar.id);
+                      setSelectedCalendarTitle(calendar.label);
+                      closePicker();
+                    }}
+                  >
+                    <Text style={styles.cityPickerItemText}>{calendar.label}</Text>
+                    {!!calendar.hint && <Text style={styles.cityPickerItemHint}>{calendar.hint}</Text>}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </ScrollView>
         )}
 
         {activePicker === 'time' && (
@@ -1484,10 +1496,16 @@ function createStyles(theme: UiTheme) {
     color: theme.text.onLight,
     marginLeft: 'auto',
   },
-  reminderPicker: {
-    paddingHorizontal: 20,
+  reminderPickerScroll: {
+    width: '100%',
+    flexShrink: 1,
+  },
+  reminderPickerScrollContainer: {
     paddingBottom: 20,
-    overflow: 'scroll',
+  },
+  reminderPicker: {
+    width: '100%',
+    paddingHorizontal: 20,
   },
   datePickerBox: {},
   datePicker: {

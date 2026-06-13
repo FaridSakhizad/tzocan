@@ -122,6 +122,8 @@ export function MainMenuModal({
                     <Text style={styles.menuButtonText}>{t('common.addCity')}</Text>
                   </Pressable>
 
+                  <View style={styles.menuSeparator} />
+
                   <Pressable style={styles.menuButton} onPress={handleOpenSettings}>
                     <Text style={styles.menuButtonText}>{t('common.settings')}</Text>
                   </Pressable>

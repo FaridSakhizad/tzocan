@@ -1,5 +1,5 @@
 import { ReactNode, useMemo } from 'react';
-import { Animated, Modal, Pressable, StyleSheet, Text, View, ImageBackground } from 'react-native';
+import { Animated, Modal, Pressable, StyleSheet, ScrollView, Text, View, ImageBackground } from 'react-native';
 
 import IconCancelOutlined from '@/assets/images/icon--x-1--outlined.svg';
 import IconConfirmOutlined from '@/assets/images/icon--checkmark-1--outlined.svg';
@@ -7,6 +7,7 @@ import IconBackOutlined from '@/assets/images/icon--arrow-2--outlined.svg';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type NotificationPickerModalProps = {
   visible: boolean;
@@ -14,7 +15,6 @@ type NotificationPickerModalProps = {
   onClose: () => void;
   onApply?: () => void;
   showActions?: boolean;
-  wide?: boolean;
   children: ReactNode;
   closeActionType?: string | null;
 };
@@ -25,10 +25,11 @@ export function NotificationPickerModal({
   onClose,
   onApply,
   showActions = true,
-  wide = false,
   children,
   closeActionType = null
 }: NotificationPickerModalProps) {
+  const insets = useSafeAreaInsets();
+
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { isMounted, opacity } = useModalVisibilityAnimation(visible);
@@ -46,8 +47,17 @@ export function NotificationPickerModal({
       statusBarTranslucent
     >
       <Animated.View style={[styles.wrapper, { opacity }]}>
-        <Pressable style={styles.overlay} onPress={onClose}>
-          <Pressable style={[styles.card, wide && styles.cardWide]} onPress={() => undefined}>
+        <ScrollView style={styles.scrollContainer}
+          contentContainerStyle={[
+            styles.scrollContentContainer,
+            {
+              paddingTop: insets.top + 20,
+              paddingBottom: insets.bottom + 20,
+            }
+          ]}
+        >
+          <Pressable style={styles.overlay} onPress={onClose} />
+          <Pressable onPress={() => undefined}>
             <ImageBackground
               source={theme.image.modalBackgroundSource}
               style={styles.backgroundImage}
@@ -75,7 +85,7 @@ export function NotificationPickerModal({
               </View>
             </ImageBackground>
           </Pressable>
-        </Pressable>
+        </ScrollView>
       </Animated.View>
     </Modal>
   );
@@ -86,21 +96,23 @@ function createStyles(theme: UiTheme) {
 
   return StyleSheet.create({
     wrapper: {
-      flex: 1
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.overlay.strong,
     },
     overlay: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    scrollContainer: {
       flex: 1,
-      backgroundColor: theme.overlay.strong,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    card: {
-      backgroundColor: theme.surface.transparent,
-    },
-    cardWide: {
-      maxHeight: '100%',
       width: '100%',
-      paddingHorizontal: theme.spacing.screenX,
+    },
+    scrollContentContainer: {
+      padding: theme.spacing.screenX,
+      minHeight: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     backgroundImage: {
       borderTopLeftRadius: theme.radius.panelTop,
@@ -109,6 +121,7 @@ function createStyles(theme: UiTheme) {
       borderBottomRightRadius: theme.radius.panelBottom,
       overflow: 'hidden',
       minWidth: 280,
+      alignSelf: 'center',
       shadowColor: isContrastBlack ? '#ffffff' : '#000000',
       shadowOffset: {
         width: 0,

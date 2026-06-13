@@ -43,6 +43,14 @@ type ReminderCalendarOptionsResult = {
 
 let reminderCalendarModulePromise: Promise<ReminderCalendarModule | null> | null = null;
 
+function getMockReminderCalendarOptions(): ReminderCalendarOption[] {
+  return Array.from({ length: 30 }, (_, index) => ({
+    id: `mock-reminder-list-${index + 1}`,
+    label: `Reminder List ${index + 1}`,
+    hint: index % 3 === 0 ? 'Mock iOS Simulator Data' : undefined,
+  }));
+}
+
 function isUnsupportedReminderCalendarRuntime() {
   return Constants.appOwnership === 'expo';
 }
@@ -292,6 +300,13 @@ export async function getReminderCalendarOptions(): Promise<ReminderCalendarOpti
   const Calendar = await getReminderCalendarModule();
 
   if (!Calendar) {
+    if (__DEV__ && Platform.OS === 'ios') {
+      return {
+        available: true,
+        options: getMockReminderCalendarOptions(),
+      };
+    }
+
     return {
       available: false,
       options: [],
@@ -301,6 +316,13 @@ export async function getReminderCalendarOptions(): Promise<ReminderCalendarOpti
   const hasPermissions = await ensureReminderCalendarPermissions();
 
   if (!hasPermissions) {
+    if (__DEV__ && Platform.OS === 'ios') {
+      return {
+        available: true,
+        options: getMockReminderCalendarOptions(),
+      };
+    }
+
     return {
       available: false,
       options: [],

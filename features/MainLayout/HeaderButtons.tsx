@@ -9,8 +9,6 @@ import React, { useEffect } from 'react';
 import { createStyles } from '@/features/MainLayout/HeaderButtons.styles';
 import { RouteNamePaths } from '@/types/router';
 import { getCityDisplayName } from '@/utils/city-display';
-import { AddCityModal, CityRow } from '@/components/add-city-modal';
-import { NotificationFormValues, NotificationModal } from '@/components/notification-modal';
 import { Pressable, View } from 'react-native';
 import IconBack from '@/assets/images/icon--arrow-2--outlined.svg';
 import IconAddNotificationOutlined from '@/assets/images/icon--add-notification-1--outlined.svg';
@@ -23,6 +21,7 @@ import IconMiscMenuOutlined from '@/assets/images/icon--menu-2--outlined.svg';
 import IconAddLocationFilled from '@/assets/images/icon--add-location-1--filled.svg';
 import IconAddLocationOutlined from '@/assets/images/icon--add-location-1--outlined.svg';
 import { DeleteCityModal } from '@/components/delete-city-modal';
+import { useMainLayoutAddFlows } from '@/features/MainLayout/use-main-layout-add-flows';
 
 export default function HeaderButtons() {
   const router = useRouter();
@@ -32,15 +31,19 @@ export default function HeaderButtons() {
   const { theme } = useAppTheme();
   const { isEditMode, toggleEditMode } = useEditMode();
   const { openSortPicker, isSortPickerVisible } = useNotificationsSort();
-  const { selectedCities, addCity, addNotification, removeCity } = useSelectedCities();
+  const { selectedCities, removeCity } = useSelectedCities();
   const localizedCityNames = useLocalizedCityNames(selectedCities.map((city) => city.cityId));
 
   const styles = React.useMemo(() => createStyles(theme), [theme]);
-
-  const [isAddCityModalVisible, setIsAddCityModalVisible] = React.useState(false);
-  const [isAddNotificationModalVisible, setIsAddNotificationModalVisible] = React.useState(false);
-  const [selectedNotificationCityId, setSelectedNotificationCityId] = React.useState<number | null>(null);
   const [isDeleteCityModalVisible, setIsDeleteCityModalVisible] = React.useState(false);
+  const {
+    canAddReminder,
+    isAddCityModalVisible,
+    isAddReminderModalVisible,
+    openAddCityModal,
+    openAddReminderModal,
+    addFlowModals,
+  } = useMainLayoutAddFlows();
 
   const lastActiveTabPathRef = React.useRef<RouteNamePaths.root | RouteNamePaths.timeline | RouteNamePaths.notifications>(RouteNamePaths.root);
 
@@ -82,21 +85,6 @@ export default function HeaderButtons() {
 
   const isEditButtonDisabled = !isEditMode && !hasEditableItems;
 
-  const notificationCityOptions = React.useMemo(
-    () => selectedCities.map((city) => ({
-      id: city.id,
-      label: getCityDisplayName(city, localizedCityNames[city.cityId]),
-      hint: city.tz,
-      timezone: city.tz,
-    })),
-    [localizedCityNames, selectedCities]
-  );
-
-  const selectedNotificationCity = React.useMemo(
-    () => selectedCities.find((city) => city.id === selectedNotificationCityId) || null,
-    [selectedCities, selectedNotificationCityId]
-  );
-
   useEffect(() => {
     if (
       pathname === RouteNamePaths.root ||
@@ -107,23 +95,6 @@ export default function HeaderButtons() {
       lastActiveTabPathRef.current = pathname === RouteNamePaths.cities ? RouteNamePaths.root : pathname;
     }
   }, [pathname]);
-
-  const handleOpenAddCityModal = () => {
-    if (isEditMode) {
-      return;
-    }
-
-    setIsAddCityModalVisible(true);
-  };
-
-  const handleCloseAddCityModal = () => {
-    setIsAddCityModalVisible(false);
-  };
-
-  const handleSaveCity = (city: CityRow) => {
-    addCity(city);
-    setIsAddCityModalVisible(false);
-  };
 
   const handleOpenDeleteCityModal = () => {
     if (pathname !== RouteNamePaths.editCity || !currentEditCity) {
@@ -152,56 +123,6 @@ export default function HeaderButtons() {
     router.navigate(lastActiveTabPathRef.current);
   };
 
-  const handleOpenAddNotificationModal = () => {
-    if (isEditMode || selectedCities.length === 0) {
-      return;
-    }
-
-    const currentCityId = pathname === RouteNamePaths.editCity && globalParams.cityId
-      ? Number(globalParams.cityId)
-      : null;
-
-    const defaultCityId =
-      currentCityId && selectedCities.some((city) => city.id === currentCityId)
-        ? currentCityId
-        : null;
-
-    setSelectedNotificationCityId(defaultCityId);
-    setIsAddNotificationModalVisible(true);
-  };
-
-  const handleCloseAddNotificationModal = () => {
-    setIsAddNotificationModalVisible(false);
-  };
-
-  const handleSaveNotification = async (values: NotificationFormValues) => {
-    if (!selectedNotificationCityId) {
-      return false;
-    }
-
-    const didSave = await addNotification(
-      selectedNotificationCityId,
-      values.hour,
-      values.minute,
-      values.year,
-      values.month,
-      values.day,
-      values.label,
-      values.notes,
-      values.url,
-      values.repeat,
-      values.weekdays,
-      values.calendarId,
-      values.calendarTitle
-    );
-
-    if (didSave) {
-      setIsAddNotificationModalVisible(false);
-    }
-
-    return didSave;
-  };
-
   return (
     <>
       <View style={{
@@ -225,11 +146,11 @@ export default function HeaderButtons() {
             </Pressable>
 
             <Pressable
-              onPress={handleOpenAddNotificationModal}
-              disabled={isEditMode || selectedCities.length === 0}
-              style={[styles.headerButton, (isEditMode || selectedCities.length === 0) && styles.headerButtonDisabled]}
+              onPress={openAddReminderModal}
+              disabled={isEditMode || !canAddReminder}
+              style={[styles.headerButton, (isEditMode || !canAddReminder) && styles.headerButtonDisabled]}
             >
-              {isAddNotificationModalVisible ? (
+              {isAddReminderModalVisible ? (
                 <IconAddNotificationOutlined
                   style={styles.headerButtonIcon}
                   fill={theme.text.primary}
@@ -243,7 +164,7 @@ export default function HeaderButtons() {
             </Pressable>
 
             <Pressable
-              onPress={handleOpenAddCityModal}
+              onPress={openAddCityModal}
               disabled={isEditMode}
               style={[styles.headerButton, isEditMode && styles.headerButtonDisabled]}
             >
@@ -319,15 +240,15 @@ export default function HeaderButtons() {
             )}
 
             <Pressable
-              onPress={handleOpenAddNotificationModal}
-              disabled={isEditMode || selectedCities.length === 0}
+              onPress={openAddReminderModal}
+              disabled={isEditMode || !canAddReminder}
               style={[
                 styles.headerButton,
                 styles.headerButtonAddNotification,
-                (isEditMode || selectedCities.length === 0) && styles.headerButtonDisabled
+                (isEditMode || !canAddReminder) && styles.headerButtonDisabled
               ]}
             >
-              {isAddNotificationModalVisible ? (
+              {isAddReminderModalVisible ? (
                 <IconAddNotificationOutlined
                   style={styles.headerButtonIcon}
                   fill={theme.text.primary}
@@ -341,7 +262,7 @@ export default function HeaderButtons() {
             </Pressable>
 
             <Pressable
-              onPress={handleOpenAddCityModal}
+              onPress={openAddCityModal}
               disabled={isEditMode}
               style={[
                 styles.headerButton,
@@ -388,25 +309,7 @@ export default function HeaderButtons() {
           </>
         )}
       </View>
-
-      <AddCityModal
-        visible={isAddCityModalVisible}
-        onClose={handleCloseAddCityModal}
-        onSave={handleSaveCity}
-      />
-
-      <NotificationModal
-        visible={isAddNotificationModalVisible}
-        cityName={selectedNotificationCity ? getCityDisplayName(selectedNotificationCity, localizedCityNames[selectedNotificationCity.cityId]) : ''}
-        mode="add"
-        citySelectionMode={pathname === '/edit-city' ? 'locked' : 'selectable'}
-        cityOptions={notificationCityOptions}
-        selectedCityId={selectedNotificationCityId}
-        onSelectCityId={setSelectedNotificationCityId}
-        initialNotification={null}
-        onClose={handleCloseAddNotificationModal}
-        onSave={handleSaveNotification}
-      />
+      {addFlowModals}
       <DeleteCityModal
         visible={isDeleteCityModalVisible}
         cityName={currentEditCity ? getCityDisplayName(currentEditCity, localizedCityNames[currentEditCity.cityId]) : 'this city'}

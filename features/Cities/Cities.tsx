@@ -31,7 +31,7 @@ import { getRelativeDayLabelForTimezone } from '@/utils/timezone-relative-day';
 import { formatInTimezone, formatPartsInTimezone } from '@/utils/abstract-timezone';
 import { SupportCtaButton } from '@/components/support-cta-button';
 
-import IconDelete1 from '@/assets/images/icon--delete-1.svg';
+import IconDelete1 from '@/assets/images/icon--delete-2--outlined.svg';
 import IconNotification2 from '@/assets/images/icon--notification-2.svg';
 import IconNotificationsMultiple from '@/assets/images/icon--notifications-multiple-1.svg';
 

@@ -1390,8 +1390,8 @@ function createStyles(theme: UiTheme) {
   localDateShift: {
     fontSize: 11,
     paddingHorizontal: 7,
-    height: 14,
-    borderRadius: theme.radius.pillSm,
+    minHeight: 14,
+    borderRadius: 65536,
     lineHeight: 13,
     backgroundColor: theme.surface.button.primary,
     color: theme.text.onLight,
@@ -1403,8 +1403,8 @@ function createStyles(theme: UiTheme) {
   localTimeDayShift: {
     fontSize: 11,
     paddingHorizontal: 7,
-    height: 14,
-    borderRadius: theme.radius.pillSm,
+    minHeight: 14,
+    borderRadius: 65536,
     lineHeight: 13,
     backgroundColor: theme.surface.button.primary,
     color: theme.text.onLight,
@@ -1470,8 +1470,8 @@ function createStyles(theme: UiTheme) {
   dayShiftText: {
     fontSize: 11,
     paddingHorizontal: 7,
-    height: 14,
-    borderRadius: theme.radius.pillSm,
+    minHeight: 14,
+    borderRadius: 65536,
     lineHeight: 13,
     backgroundColor: theme.surface.button.primary,
     color: theme.text.onLight,

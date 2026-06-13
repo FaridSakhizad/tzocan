@@ -49,11 +49,9 @@ import RepeatIcon from '../../assets/images/icon--repeat-1.svg';
 import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
 import IconAddNotification from '@/assets/images/icon--notification-3--outlined.svg';
 import { SupportCtaButton } from '@/components/support-cta-button';
-import { createStyles } from './styles';
+import { createStyles } from './Notifications.styles';
 
 const NOTIFICATION_SWITCH_THUMB_TRAVEL = 16;
-const CITY_SORT_SECTION_HEIGHT = 148;
-
 function NotificationToggleSwitch({
   enabled,
   onPress,
@@ -561,6 +559,7 @@ export default function Notifications() {
   const [isAddNotificationModalVisible, setIsAddNotificationModalVisible] = useState(false);
   const [selectedAddNotificationCityId, setSelectedAddNotificationCityId] = useState<number | null>(null);
   const [draftSortState, setDraftSortState] = useState(sortState);
+  const [citySortSectionHeight, setCitySortSectionHeight] = useState(0);
   const {
     scrollEnabled,
     handleContainerLayout,
@@ -691,7 +690,7 @@ export default function Notifications() {
     opacity: citySortSectionAnimation,
     height: citySortSectionAnimation.interpolate({
       inputRange: [0, 1],
-      outputRange: [0, CITY_SORT_SECTION_HEIGHT],
+      outputRange: [0, citySortSectionHeight],
     }),
     transform: [
       {
@@ -701,7 +700,80 @@ export default function Notifications() {
         }),
       },
     ],
-  }), [citySortSectionAnimation]);
+  }), [citySortSectionAnimation, citySortSectionHeight]);
+
+  const renderCitySortSectionContent = () => (
+    <>
+      <Text style={styles.sortPickerSectionTitle}>
+        {t('notifications.cityOrder')}
+      </Text>
+
+      <Pressable
+        onPress={() => setDraftSortState((currentState) => ({ ...currentState, cityOrder: 'none' }))}
+        style={[
+          styles.sortPickerItem,
+          draftSortState.cityOrder === 'none' && styles.sortPickerItemActive,
+        ]}
+      >
+        <Text
+          style={[
+            styles.sortPickerItemText,
+            draftSortState.cityOrder === 'none' && styles.sortPickerItemTextActive,
+          ]}
+        >
+          {t('notifications.customCityOrder')}
+        </Text>
+      </Pressable>
+
+      <Pressable
+        onPress={() => handleToggleDraftCityOrder('name')}
+        style={[
+          styles.sortPickerItem,
+          draftSortState.cityOrder.startsWith('name') && styles.sortPickerItemActive,
+        ]}
+      >
+        <Text
+          style={[
+            styles.sortPickerItemText,
+            draftSortState.cityOrder.startsWith('name') && styles.sortPickerItemTextActive,
+          ]}
+        >
+          {getDirectionalLabel(
+            t('notifications.sortCitiesByName'),
+            getCityOrderDirection(
+              draftSortState.cityOrder.startsWith('name')
+                ? draftSortState.cityOrder
+                : 'none'
+            )
+          )}
+        </Text>
+      </Pressable>
+
+      <Pressable
+        onPress={() => handleToggleDraftCityOrder('timezone')}
+        style={[
+          styles.sortPickerItem,
+          draftSortState.cityOrder.startsWith('timezone') && styles.sortPickerItemActive,
+        ]}
+      >
+        <Text
+          style={[
+            styles.sortPickerItemText,
+            draftSortState.cityOrder.startsWith('timezone') && styles.sortPickerItemTextActive,
+          ]}
+        >
+          {getDirectionalLabel(
+            t('notifications.sortCitiesByTimezone'),
+            getCityOrderDirection(
+              draftSortState.cityOrder.startsWith('timezone')
+                ? draftSortState.cityOrder
+                : 'none'
+            )
+          )}
+        </Text>
+      </Pressable>
+    </>
+  );
 
   const handleToggleNotification = async (cityId: number, notificationId: string, enabled: boolean) => {
     await toggleNotification(cityId, notificationId, !enabled);
@@ -1299,78 +1371,28 @@ export default function Notifications() {
             </Pressable>
           </View>
 
+          <View
+            pointerEvents="none"
+            importantForAccessibility="no-hide-descendants"
+            style={styles.sortPickerMeasure}
+            onLayout={(event) => {
+              const nextHeight = Math.ceil(event.nativeEvent.layout.height);
+
+              if (nextHeight > 0 && nextHeight !== citySortSectionHeight) {
+                setCitySortSectionHeight(nextHeight);
+              }
+            }}
+          >
+            <View style={styles.sortPickerSection}>
+              {renderCitySortSectionContent()}
+            </View>
+          </View>
+
           <Animated.View
             pointerEvents={draftSortState.groupByCity ? 'auto' : 'none'}
             style={[styles.sortPickerSection, styles.sortPickerAnimatedSection, citySortSectionStyle]}
           >
-              <Text style={styles.sortPickerSectionTitle}>
-                {t('notifications.cityOrder')}
-              </Text>
-
-              <Pressable
-                onPress={() => setDraftSortState((currentState) => ({ ...currentState, cityOrder: 'none' }))}
-                style={[
-                  styles.sortPickerItem,
-                  draftSortState.cityOrder === 'none' && styles.sortPickerItemActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.sortPickerItemText,
-                    draftSortState.cityOrder === 'none' && styles.sortPickerItemTextActive,
-                  ]}
-                >
-                  {t('notifications.customCityOrder')}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => handleToggleDraftCityOrder('name')}
-                style={[
-                  styles.sortPickerItem,
-                  draftSortState.cityOrder.startsWith('name') && styles.sortPickerItemActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.sortPickerItemText,
-                    draftSortState.cityOrder.startsWith('name') && styles.sortPickerItemTextActive,
-                  ]}
-                >
-                  {getDirectionalLabel(
-                    t('notifications.sortCitiesByName'),
-                    getCityOrderDirection(
-                      draftSortState.cityOrder.startsWith('name')
-                        ? draftSortState.cityOrder
-                        : 'none'
-                    )
-                  )}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => handleToggleDraftCityOrder('timezone')}
-                style={[
-                  styles.sortPickerItem,
-                  draftSortState.cityOrder.startsWith('timezone') && styles.sortPickerItemActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.sortPickerItemText,
-                    draftSortState.cityOrder.startsWith('timezone') && styles.sortPickerItemTextActive,
-                  ]}
-                >
-                  {getDirectionalLabel(
-                    t('notifications.sortCitiesByTimezone'),
-                    getCityOrderDirection(
-                      draftSortState.cityOrder.startsWith('timezone')
-                        ? draftSortState.cityOrder
-                        : 'none'
-                    )
-                  )}
-                </Text>
-              </Pressable>
+            {renderCitySortSectionContent()}
           </Animated.View>
         </View>
       </NotificationPickerModal>

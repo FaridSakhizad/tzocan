@@ -28,6 +28,13 @@ export function createStyles(theme: UiTheme) {
     sortPickerSection: {
       gap: 14,
     },
+    sortPickerMeasure: {
+      position: 'absolute',
+      left: 20,
+      right: 20,
+      opacity: 0,
+      zIndex: -1,
+    },
     sortPickerAnimatedSection: {
       overflow: 'hidden'
     },
@@ -235,6 +242,7 @@ export function createStyles(theme: UiTheme) {
     notificationLocalTime: {
       flexDirection: 'row',
       gap: 3,
+      alignItems: 'center',
     },
     notificationLocalTimeLabel: {
       fontSize: 13,
@@ -247,13 +255,15 @@ export function createStyles(theme: UiTheme) {
     notificationLocalDayShiftText: {
       fontSize: 11,
       paddingHorizontal: 7,
-      height: 14,
-      borderRadius: theme.radius.pillSm,
+      minHeight: 14,
+      borderRadius: 65536,
       lineHeight: 13,
       backgroundColor: theme.surface.button.primary,
       color: theme.text.onLight,
-      marginBottom: -2,
       marginLeft: 7,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     notificationDate: {
       flexDirection: 'column',
@@ -276,6 +286,7 @@ export function createStyles(theme: UiTheme) {
     notificationLocalDate: {
       flexDirection: 'row',
       gap: 3,
+      alignItems: 'center',
     },
     notificationLocalDateLabel: {
       fontSize: 13,
@@ -288,13 +299,15 @@ export function createStyles(theme: UiTheme) {
     notificationLocalDateShiftText: {
       fontSize: 11,
       paddingHorizontal: 7,
-      height: 14,
-      borderRadius: theme.radius.pillSm,
+      minHeight: 14,
+      borderRadius: 65536,
       lineHeight: 13,
       backgroundColor: theme.surface.button.primary,
       color: theme.text.onLight,
-      marginBottom: -2,
       marginLeft: 7,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     notificationLocalDateShiftTextYear: {
       backgroundColor: theme.text.warning,

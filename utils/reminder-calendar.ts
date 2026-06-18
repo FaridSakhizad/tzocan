@@ -1,20 +1,20 @@
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
 import type * as ExpoCalendar from 'expo-calendar';
 import type { PermissionResponse } from 'expo-modules-core';
+import { Platform } from 'react-native';
 
 import { RepeatMode } from '@/types/notifications';
 import { getDateTimePartsInTimezone } from '@/utils/abstract-timezone';
 
-const CALENDAR_EVENT_DURATION_MINUTES = 60;
+const CALENDAR_EVENT_DURATION_MINUTES = 15;
 
-export type ReminderCalendarOption = {
+export type CalendarOption = {
   id: string;
   label: string;
   hint?: string;
 };
 
-export type ReminderCalendarValues = {
+export type CalendarSyncValues = {
   year?: number;
   month?: number;
   day?: number;
@@ -26,42 +26,35 @@ export type ReminderCalendarValues = {
   notes?: string;
   url?: string;
   calendarId?: string | null;
+  durationMinutes?: number;
 };
 
-type ReminderCalendarCity = {
+type CalendarSyncCity = {
   name: string;
   customName?: string;
   tz: string;
 };
 
-type ReminderCalendarModule = typeof ExpoCalendar;
+type CalendarModule = typeof ExpoCalendar;
 
-type ReminderCalendarOptionsResult = {
+type CalendarOptionsResult = {
   available: boolean;
-  options: ReminderCalendarOption[];
+  options: CalendarOption[];
 };
 
-let reminderCalendarModulePromise: Promise<ReminderCalendarModule | null> | null = null;
+let calendarModulePromise: Promise<CalendarModule | null> | null = null;
 
-function getMockReminderCalendarOptions(): ReminderCalendarOption[] {
-  return Array.from({ length: 30 }, (_, index) => ({
-    id: `mock-reminder-list-${index + 1}`,
-    label: `Reminder List ${index + 1}`,
-    hint: index % 3 === 0 ? 'Mock iOS Simulator Data' : undefined,
-  }));
-}
-
-function isUnsupportedReminderCalendarRuntime() {
+function isUnsupportedCalendarRuntime() {
   return Constants.appOwnership === 'expo';
 }
 
-async function getReminderCalendarModule(): Promise<ReminderCalendarModule | null> {
-  if (isUnsupportedReminderCalendarRuntime()) {
+async function getCalendarModule(): Promise<CalendarModule | null> {
+  if (isUnsupportedCalendarRuntime()) {
     return null;
   }
 
-  if (!reminderCalendarModulePromise) {
-    reminderCalendarModulePromise = import('expo-calendar')
+  if (!calendarModulePromise) {
+    calendarModulePromise = import('expo-calendar')
       .then((module) => module)
       .catch((error) => {
         console.warn('Calendar module is unavailable in this runtime', error);
@@ -70,28 +63,23 @@ async function getReminderCalendarModule(): Promise<ReminderCalendarModule | nul
       });
   }
 
-  return reminderCalendarModulePromise;
+  return calendarModulePromise;
 }
 
-async function ensureReminderCalendarPermissions(): Promise<boolean> {
-  const Calendar = await getReminderCalendarModule();
+async function ensureCalendarPermissions(): Promise<boolean> {
+  const Calendar = await getCalendarModule();
 
   if (!Calendar) {
     return false;
   }
 
   try {
-    const isIosReminderMode = Platform.OS === 'ios';
-    const permissionResponse = isIosReminderMode
-      ? await Calendar.getRemindersPermissionsAsync()
-      : await Calendar.getCalendarPermissionsAsync();
+    const permissionResponse = await Calendar.getCalendarPermissionsAsync();
     const { status: existingStatus } = permissionResponse;
     let finalStatus = existingStatus;
 
     if (existingStatus !== 'granted') {
-      const { status } = isIosReminderMode
-        ? await Calendar.requestRemindersPermissionsAsync()
-        : await Calendar.requestCalendarPermissionsAsync();
+      const { status } = await Calendar.requestCalendarPermissionsAsync();
       finalStatus = status;
     }
 
@@ -103,17 +91,15 @@ async function ensureReminderCalendarPermissions(): Promise<boolean> {
   }
 }
 
-async function getReminderCalendarPermissionResponse(): Promise<PermissionResponse | null> {
-  const Calendar = await getReminderCalendarModule();
+async function getCalendarPermissionResponse(): Promise<PermissionResponse | null> {
+  const Calendar = await getCalendarModule();
 
   if (!Calendar) {
     return null;
   }
 
   try {
-    return Platform.OS === 'ios'
-      ? Calendar.getRemindersPermissionsAsync()
-      : Calendar.getCalendarPermissionsAsync();
+    return Calendar.getCalendarPermissionsAsync();
   } catch (error) {
     console.warn('Failed to get calendar permissions', error);
 
@@ -121,8 +107,8 @@ async function getReminderCalendarPermissionResponse(): Promise<PermissionRespon
   }
 }
 
-export async function getReminderCalendarPermissionState() {
-  const permission = await getReminderCalendarPermissionResponse();
+export async function getCalendarPermissionState() {
+  const permission = await getCalendarPermissionResponse();
 
   return {
     granted: permission?.granted ?? false,
@@ -131,8 +117,8 @@ export async function getReminderCalendarPermissionState() {
   };
 }
 
-export async function requestReminderCalendarPermission() {
-  const Calendar = await getReminderCalendarModule();
+export async function requestCalendarPermission() {
+  const Calendar = await getCalendarModule();
 
   if (!Calendar) {
     return {
@@ -143,9 +129,7 @@ export async function requestReminderCalendarPermission() {
   }
 
   try {
-    const permission = Platform.OS === 'ios'
-      ? await Calendar.requestRemindersPermissionsAsync()
-      : await Calendar.requestCalendarPermissionsAsync();
+    const permission = await Calendar.requestCalendarPermissionsAsync();
 
     return {
       granted: permission.granted,
@@ -180,21 +164,21 @@ function getTriggerDateForTimezone(
   return new Date(now.getTime() + diffMs);
 }
 
-function getReminderCalendarTitle(city: ReminderCalendarCity, label?: string) {
+function getCalendarEventTitle(city: CalendarSyncCity, label?: string) {
   return label?.trim() || city.customName || city.name;
 }
 
-function getReminderCalendarLocation(city: ReminderCalendarCity) {
+function getCalendarEventLocation(city: CalendarSyncCity) {
   return city.customName || city.name;
 }
 
-function buildReminderCalendarNotes(notes?: string) {
+function buildCalendarEventNotes(notes?: string) {
   return notes?.trim() || '';
 }
 
-function buildReminderCalendarOccurrences(
-  city: ReminderCalendarCity,
-  values: ReminderCalendarValues
+function buildCalendarEventOccurrences(
+  city: CalendarSyncCity,
+  values: CalendarSyncValues
 ): Date[] {
   const now = new Date();
   const hasExplicitDate = Boolean(values.year && values.month && values.day);
@@ -265,9 +249,9 @@ function buildReminderCalendarOccurrences(
   return [anchorTrigger];
 }
 
-function buildReminderCalendarRecurrenceRule(
-  Calendar: ReminderCalendarModule,
-  values: ReminderCalendarValues
+function buildCalendarEventRecurrenceRule(
+  Calendar: CalendarModule,
+  values: CalendarSyncValues
 ) {
   if (values.repeat === RepeatMode.none) {
     return null;
@@ -296,33 +280,19 @@ function buildReminderCalendarRecurrenceRule(
   };
 }
 
-export async function getReminderCalendarOptions(): Promise<ReminderCalendarOptionsResult> {
-  const Calendar = await getReminderCalendarModule();
+export async function getCalendarOptions(): Promise<CalendarOptionsResult> {
+  const Calendar = await getCalendarModule();
 
   if (!Calendar) {
-    if (__DEV__ && Platform.OS === 'ios') {
-      return {
-        available: true,
-        options: getMockReminderCalendarOptions(),
-      };
-    }
-
     return {
       available: false,
       options: [],
     };
   }
 
-  const hasPermissions = await ensureReminderCalendarPermissions();
+  const hasPermissions = await ensureCalendarPermissions();
 
   if (!hasPermissions) {
-    if (__DEV__ && Platform.OS === 'ios') {
-      return {
-        available: true,
-        options: getMockReminderCalendarOptions(),
-      };
-    }
-
     return {
       available: false,
       options: [],
@@ -330,8 +300,7 @@ export async function getReminderCalendarOptions(): Promise<ReminderCalendarOpti
   }
 
   try {
-    const entityType = Platform.OS === 'ios' ? Calendar.EntityTypes.REMINDER : Calendar.EntityTypes.EVENT;
-    const calendars = await Calendar.getCalendarsAsync(entityType);
+    const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
     const options = calendars
       .filter((calendar) => {
         if (!calendar.allowsModifications) {
@@ -355,9 +324,7 @@ export async function getReminderCalendarOptions(): Promise<ReminderCalendarOpti
         id: calendar.id,
         label: calendar.title || calendar.name || calendar.ownerAccount || calendar.id,
         hint:
-          Platform.OS === 'android'
-            ? calendar.ownerAccount || undefined
-            : calendar.source?.name || undefined,
+          calendar.ownerAccount || calendar.source?.name || undefined,
       }));
 
     return {
@@ -365,7 +332,7 @@ export async function getReminderCalendarOptions(): Promise<ReminderCalendarOpti
       options,
     };
   } catch (error) {
-    console.warn('Failed to load reminder calendar options', error);
+    console.warn('Failed to load calendar options', error);
 
     return {
       available: false,
@@ -374,76 +341,66 @@ export async function getReminderCalendarOptions(): Promise<ReminderCalendarOpti
   }
 }
 
-export async function createReminderCalendarEntryIds(
-  city: ReminderCalendarCity,
-  values: ReminderCalendarValues
+export async function createCalendarEntryIds(
+  city: CalendarSyncCity,
+  values: CalendarSyncValues
 ): Promise<string[] | null> {
   if (!values.calendarId) {
     return [];
   }
 
-  const Calendar = await getReminderCalendarModule();
+  const Calendar = await getCalendarModule();
 
   if (!Calendar) {
     return null;
   }
 
-  const hasPermissions = await ensureReminderCalendarPermissions();
+  const hasPermissions = await ensureCalendarPermissions();
 
   if (!hasPermissions) {
     return null;
   }
 
   try {
-    const eventStartDates = buildReminderCalendarOccurrences(city, values);
+    const eventStartDates = buildCalendarEventOccurrences(city, values);
     const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const title = getReminderCalendarTitle(city, values.label);
-    const location = getReminderCalendarLocation(city);
-    const notes = buildReminderCalendarNotes(values.notes);
-    const recurrenceRule = buildReminderCalendarRecurrenceRule(Calendar, values);
+    const title = getCalendarEventTitle(city, values.label);
+    const location = getCalendarEventLocation(city);
+    const notes = buildCalendarEventNotes(values.notes);
+    const recurrenceRule = buildCalendarEventRecurrenceRule(Calendar, values);
     const ids: string[] = [];
+    const durationMinutes = values.durationMinutes ?? CALENDAR_EVENT_DURATION_MINUTES;
 
     for (const startDate of eventStartDates) {
-      const id = Platform.OS === 'ios'
-        ? await Calendar.createReminderAsync(values.calendarId, {
-            title,
-            notes,
-            url: values.url,
-            startDate,
-            dueDate: startDate,
-            timeZone: localTimezone,
-            alarms: [{ relativeOffset: 0 }],
-            recurrenceRule,
-          })
-        : await Calendar.createEventAsync(values.calendarId, {
-            title,
-            location,
-            notes,
-            url: values.url,
-            startDate,
-            endDate: new Date(startDate.getTime() + CALENDAR_EVENT_DURATION_MINUTES * 60000),
-            timeZone: localTimezone,
-            allDay: false,
-            alarms: [{ relativeOffset: 0 }],
-            recurrenceRule,
-          });
+      const id = await Calendar.createEventAsync(values.calendarId, {
+        title,
+        location,
+        notes,
+        url: values.url,
+        startDate,
+        endDate: new Date(startDate.getTime() + durationMinutes * 60000),
+        timeZone: localTimezone,
+        allDay: false,
+        alarms: [{ relativeOffset: 0 }],
+        recurrenceRule,
+      });
 
       ids.push(id);
     }
 
     return ids;
   } catch (error) {
-    console.warn('Failed to create reminder calendar entries', error);
+    console.warn('Failed to create calendar entries', error);
 
     return null;
   }
 }
 
-export async function deleteReminderCalendarEntryIds(
+export async function deleteCalendarEntryIds(
   calendarEventId?: string,
   calendarEventIds?: string[]
 ): Promise<void> {
-  const Calendar = await getReminderCalendarModule();
+  const Calendar = await getCalendarModule();
 
   if (!Calendar) {
     return;
@@ -459,11 +416,7 @@ export async function deleteReminderCalendarEntryIds(
   await Promise.all(
     ids.map(async (id) => {
       try {
-        if (Platform.OS === 'ios') {
-          await Calendar.deleteReminderAsync(id);
-        } else {
-          await Calendar.deleteEventAsync(id);
-        }
+        await Calendar.deleteEventAsync(id);
       } catch (error) {
         console.warn('Failed to delete calendar entry', error);
       }

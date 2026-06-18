@@ -104,7 +104,8 @@ export function useMainLayoutAddFlows({
       values.repeat,
       values.weekdays,
       values.calendarId,
-      values.calendarTitle
+      values.calendarTitle,
+      values.durationMinutes
     );
 
     if (didSave) {

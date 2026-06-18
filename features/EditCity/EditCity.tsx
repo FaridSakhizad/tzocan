@@ -440,7 +440,8 @@ export default function EditCity() {
         values.repeat,
         values.weekdays,
         values.calendarId,
-        values.calendarTitle
+        values.calendarTitle,
+        values.durationMinutes
       );
     }
 
@@ -457,7 +458,8 @@ export default function EditCity() {
       values.repeat,
       values.weekdays,
       values.calendarId,
-      values.calendarTitle
+      values.calendarTitle,
+      values.durationMinutes
     );
   };
 

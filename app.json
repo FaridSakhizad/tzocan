@@ -48,8 +48,7 @@
       [
         "expo-calendar",
         {
-          "calendarPermission": "Allow $(PRODUCT_NAME) to access your calendars.",
-          "remindersPermission": "Allow $(PRODUCT_NAME) to access your reminders."
+          "calendarPermission": "Allow $(PRODUCT_NAME) to access your calendars."
         }
       ],
       "expo-mail-composer",

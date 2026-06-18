@@ -6,8 +6,8 @@ import { CityRow } from '@/components/add-city-modal';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 import { getDateTimePartsInTimezone } from '@/utils/abstract-timezone';
 import {
-  createReminderCalendarEntryIds,
-  deleteReminderCalendarEntryIds,
+  createCalendarEntryIds,
+  deleteCalendarEntryIds,
 } from '@/utils/reminder-calendar';
 import type * as ExpoNotifications from 'expo-notifications';
 
@@ -26,6 +26,7 @@ export type CityNotification = {
   url?: string;
   calendarId?: string | null;
   calendarTitle?: string;
+  durationMinutes?: number;
   calendarEventId?: string;
   calendarEventIds?: string[];
   enabled: boolean;
@@ -48,8 +49,8 @@ type SelectedCitiesContextType = {
   removeCity: (cityId: number) => void;
   updateCityName: (cityId: number, customName: string) => void;
   reorderCities: (cities: SelectedCity[]) => void;
-  addNotification: (cityId: number, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat?: RepeatMode, weekdays?: number[], calendarId?: string | null, calendarTitle?: string) => Promise<boolean>;
-  updateNotification: (cityId: number, notificationId: string, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat?: RepeatMode, weekdays?: number[], calendarId?: string | null, calendarTitle?: string) => Promise<boolean>;
+  addNotification: (cityId: number, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat?: RepeatMode, weekdays?: number[], calendarId?: string | null, calendarTitle?: string, durationMinutes?: number) => Promise<boolean>;
+  updateNotification: (cityId: number, notificationId: string, hour: number, minute: number, year?: number, month?: number, day?: number, label?: string, notes?: string, url?: string, repeat?: RepeatMode, weekdays?: number[], calendarId?: string | null, calendarTitle?: string, durationMinutes?: number) => Promise<boolean>;
   removeNotification: (cityId: number, notificationId: string) => Promise<void>;
   toggleNotification: (cityId: number, notificationId: string, enabled: boolean) => Promise<boolean>;
   isLoaded: boolean;
@@ -317,8 +318,8 @@ async function cancelNotificationIds(notification: CityNotification): Promise<vo
   await Promise.all(ids.map((id) => Notifications.cancelScheduledNotificationAsync(id)));
 }
 
-async function cancelReminderCalendarEvents(notification: CityNotification): Promise<void> {
-  await deleteReminderCalendarEntryIds(notification.calendarEventId, notification.calendarEventIds);
+async function cancelCalendarEvents(notification: CityNotification): Promise<void> {
+  await deleteCalendarEntryIds(notification.calendarEventId, notification.calendarEventIds);
 }
 
 async function requestNotificationPermissions(): Promise<boolean> {
@@ -571,7 +572,8 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     repeat: RepeatMode = RepeatMode.none,
     weekdays: number[] = [],
     calendarId?: string | null,
-    calendarTitle?: string
+    calendarTitle?: string,
+    durationMinutes?: number
   ) => {
     const city = selectedCitiesRef.current.find(c => c.id === cityId);
     if (!city) return false;
@@ -606,7 +608,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     }
 
     if (!isInactivePastOneTime && calendarId) {
-      calendarEventIds = await createReminderCalendarEntryIds(city, {
+      calendarEventIds = await createCalendarEntryIds(city, {
         hour,
         minute,
         year,
@@ -618,6 +620,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
         repeat,
         weekdays,
         calendarId,
+        durationMinutes,
       });
 
       if (calendarEventIds === null) {
@@ -653,6 +656,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       url,
       calendarId: calendarId ?? null,
       calendarTitle,
+      durationMinutes,
       calendarEventId: calendarEventIds?.[0],
       calendarEventIds: calendarEventIds || undefined,
       enabled: true,
@@ -695,7 +699,8 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     repeat: RepeatMode = RepeatMode.none,
     weekdays: number[] = [],
     calendarId?: string | null,
-    calendarTitle?: string
+    calendarTitle?: string,
+    durationMinutes?: number
   ) => {
     const city = selectedCitiesRef.current.find(c => c.id === cityId);
     const notification = city?.notifications?.find(n => n.id === notificationId);
@@ -735,7 +740,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     }
 
     if (notification.enabled && !isInactivePastOneTime && calendarId) {
-      newCalendarEventIds = await createReminderCalendarEntryIds(city, {
+      newCalendarEventIds = await createCalendarEntryIds(city, {
         hour,
         minute,
         year,
@@ -747,6 +752,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
         repeat,
         weekdays,
         calendarId,
+        durationMinutes,
       });
 
       if (newCalendarEventIds === null) {
@@ -768,7 +774,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     }
 
     await cancelNotificationIds(notification);
-    await cancelReminderCalendarEvents(notification);
+    await cancelCalendarEvents(notification);
 
     setSelectedCities((prev) => {
       const newCities = prev.map((c) => {
@@ -791,6 +797,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
                     url,
                     calendarId: calendarId ?? null,
                     calendarTitle,
+                    durationMinutes,
                     calendarEventId: newCalendarEventIds?.[0],
                     calendarEventIds: newCalendarEventIds || undefined,
                     enabled: notification.enabled,
@@ -820,7 +827,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
 
     if (notification) {
       await cancelNotificationIds(notification);
-      await cancelReminderCalendarEvents(notification);
+      await cancelCalendarEvents(notification);
     }
 
     setSelectedCities((prev) => {
@@ -888,7 +895,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       }
 
       if (!isInactivePastOneTime && notification.calendarId) {
-        newCalendarEventIds = await createReminderCalendarEntryIds(city, {
+        newCalendarEventIds = await createCalendarEntryIds(city, {
           hour: notification.hour,
           minute: notification.minute,
           year: notification.year,
@@ -900,6 +907,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
           repeat: getEffectiveRepeatMode(notification),
           weekdays: notification.weekdays || [],
           calendarId: notification.calendarId,
+          durationMinutes: notification.durationMinutes,
         });
 
         if (newCalendarEventIds === null) {
@@ -951,7 +959,7 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       return true;
     } else {
       await cancelNotificationIds(notification);
-      await cancelReminderCalendarEvents(notification);
+      await cancelCalendarEvents(notification);
 
       setSelectedCities((prev) => {
         const newCities = prev.map((c) => {

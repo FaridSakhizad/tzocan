@@ -9,8 +9,8 @@ import { useSettings } from '@/contexts/settings-context';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { ThemeName } from '@/constants/ui-theme';
 import {
-  getReminderCalendarPermissionState,
-  requestReminderCalendarPermission,
+  getCalendarPermissionState,
+  requestCalendarPermission,
 } from '@/utils/reminder-calendar';
 
 export default function Settings() {
@@ -33,7 +33,7 @@ export default function Settings() {
   };
 
   const refreshCalendarPermission = async () => {
-    const permission = await getReminderCalendarPermissionState();
+    const permission = await getCalendarPermissionState();
     setCalendarPermissionGranted(permission.granted);
     setCalendarPermissionCanAskAgain(permission.canAskAgain);
   };
@@ -67,7 +67,7 @@ export default function Settings() {
     setIsCalendarPermissionLoading(true);
 
     try {
-      const permission = await requestReminderCalendarPermission();
+      const permission = await requestCalendarPermission();
       setCalendarPermissionGranted(permission.granted);
       setCalendarPermissionCanAskAgain(permission.canAskAgain);
     } finally {

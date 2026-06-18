@@ -100,7 +100,7 @@ export function MainMenuModal({
             style={styles.modalContainer}
             pointerEvents="box-none"
           >
-            <View style={styles.modalPad} />
+            <View style={[styles.modalPad, styles.modalPadTop]} />
 
             <ImageBackground
               source={theme.image.modalBackgroundSource}
@@ -171,6 +171,9 @@ function createStyles(theme: UiTheme) {
     },
     modalPad: {
       flex: 1,
+    },
+    modalPadTop: {
+      marginBottom: 80,
     },
     closeButton: {
       width: 60,

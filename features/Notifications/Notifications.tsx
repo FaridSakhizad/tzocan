@@ -329,6 +329,328 @@ function getNotificationLocalDate(cityTz: string, notification: CityNotification
   return formatDateLabel(getNotificationTriggerDate(cityTz, notification), locale);
 }
 
+function getNotificationAnchorDateParts(cityTz: string, notification: CityNotification) {
+  if (notification.year && notification.month && notification.day) {
+    return {
+      year: notification.year,
+      month: notification.month,
+      day: notification.day,
+    };
+  }
+
+  if (typeof notification.createdAt === 'number' && Number.isFinite(notification.createdAt)) {
+    const createdAtParts = getDatePartsInTimezone(new Date(notification.createdAt), cityTz);
+
+    return {
+      year: createdAtParts.year,
+      month: createdAtParts.month,
+      day: createdAtParts.day,
+    };
+  }
+
+  const cityNow = getDatePartsInTimezone(new Date(), cityTz);
+
+  return {
+    year: cityNow.year,
+    month: cityNow.month,
+    day: cityNow.day,
+  };
+}
+
+function getValidCalendarDate(year: number, month: number, day: number) {
+  const candidate = new Date(year, month - 1, day);
+
+  if (
+    candidate.getFullYear() !== year ||
+    candidate.getMonth() !== month - 1 ||
+    candidate.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return candidate;
+}
+
+function getNextNotificationTriggerDate(cityTz: string, notification: CityNotification) {
+  const now = new Date();
+  const repeat = getEffectiveRepeatMode(notification);
+  const cityNow = getDatePartsInTimezone(now, cityTz);
+
+  if (repeat === RepeatMode.none) {
+    if (notification.year && notification.month && notification.day) {
+      const explicitTriggerDate = getTriggerDateForTimezone(
+        cityTz,
+        notification.year,
+        notification.month,
+        notification.day,
+        notification.hour,
+        notification.minute
+      );
+
+      return explicitTriggerDate.getTime() > now.getTime() ? explicitTriggerDate : null;
+    }
+
+    let nextTriggerDate = getTriggerDateForTimezone(
+      cityTz,
+      cityNow.year,
+      cityNow.month,
+      cityNow.day,
+      notification.hour,
+      notification.minute
+    );
+
+    if (nextTriggerDate.getTime() <= now.getTime()) {
+      const nextCityDate = new Date(cityNow.year, cityNow.month - 1, cityNow.day + 1);
+      nextTriggerDate = getTriggerDateForTimezone(
+        cityTz,
+        nextCityDate.getFullYear(),
+        nextCityDate.getMonth() + 1,
+        nextCityDate.getDate(),
+        notification.hour,
+        notification.minute
+      );
+    }
+
+    return nextTriggerDate;
+  }
+
+  if (repeat === RepeatMode.daily) {
+    let nextTriggerDate = getTriggerDateForTimezone(
+      cityTz,
+      cityNow.year,
+      cityNow.month,
+      cityNow.day,
+      notification.hour,
+      notification.minute
+    );
+
+    if (nextTriggerDate.getTime() <= now.getTime()) {
+      const nextCityDate = new Date(cityNow.year, cityNow.month - 1, cityNow.day + 1);
+      nextTriggerDate = getTriggerDateForTimezone(
+        cityTz,
+        nextCityDate.getFullYear(),
+        nextCityDate.getMonth() + 1,
+        nextCityDate.getDate(),
+        notification.hour,
+        notification.minute
+      );
+    }
+
+    return nextTriggerDate;
+  }
+
+  if (repeat === RepeatMode.weekly) {
+    const anchorDateParts = getNotificationAnchorDateParts(cityTz, notification);
+    const fallbackWeekday = new Date(
+      anchorDateParts.year,
+      anchorDateParts.month - 1,
+      anchorDateParts.day
+    ).getDay();
+    const weekdays = notification.weekdays && notification.weekdays.length > 0
+      ? [...new Set(notification.weekdays)]
+      : [fallbackWeekday];
+    const todayWeekday = new Date(cityNow.year, cityNow.month - 1, cityNow.day).getDay();
+
+    let nearestTriggerDate: Date | null = null;
+
+    for (const weekday of weekdays) {
+      let diffDays = (weekday - todayWeekday + 7) % 7;
+      let candidateCityDate = new Date(cityNow.year, cityNow.month - 1, cityNow.day + diffDays);
+      let candidateTriggerDate = getTriggerDateForTimezone(
+        cityTz,
+        candidateCityDate.getFullYear(),
+        candidateCityDate.getMonth() + 1,
+        candidateCityDate.getDate(),
+        notification.hour,
+        notification.minute
+      );
+
+      if (candidateTriggerDate.getTime() <= now.getTime()) {
+        diffDays += 7;
+        candidateCityDate = new Date(cityNow.year, cityNow.month - 1, cityNow.day + diffDays);
+        candidateTriggerDate = getTriggerDateForTimezone(
+          cityTz,
+          candidateCityDate.getFullYear(),
+          candidateCityDate.getMonth() + 1,
+          candidateCityDate.getDate(),
+          notification.hour,
+          notification.minute
+        );
+      }
+
+      if (!nearestTriggerDate || candidateTriggerDate.getTime() < nearestTriggerDate.getTime()) {
+        nearestTriggerDate = candidateTriggerDate;
+      }
+    }
+
+    return nearestTriggerDate;
+  }
+
+  if (repeat === RepeatMode.monthly) {
+    const anchorDateParts = getNotificationAnchorDateParts(cityTz, notification);
+    let year = cityNow.year;
+    let month = cityNow.month;
+
+    for (let index = 0; index < 24; index += 1) {
+      const validCalendarDate = getValidCalendarDate(year, month, anchorDateParts.day);
+
+      if (validCalendarDate) {
+        const candidateTriggerDate = getTriggerDateForTimezone(
+          cityTz,
+          year,
+          month,
+          anchorDateParts.day,
+          notification.hour,
+          notification.minute
+        );
+
+        if (candidateTriggerDate.getTime() > now.getTime()) {
+          return candidateTriggerDate;
+        }
+      }
+
+      const nextMonthDate = new Date(year, month, 1);
+      year = nextMonthDate.getFullYear();
+      month = nextMonthDate.getMonth() + 1;
+    }
+
+    return null;
+  }
+
+  const anchorDateParts = getNotificationAnchorDateParts(cityTz, notification);
+  let year = cityNow.year;
+
+  for (let index = 0; index < 10; index += 1) {
+    const validCalendarDate = getValidCalendarDate(year, anchorDateParts.month, anchorDateParts.day);
+
+    if (validCalendarDate) {
+      const candidateTriggerDate = getTriggerDateForTimezone(
+        cityTz,
+        year,
+        anchorDateParts.month,
+        anchorDateParts.day,
+        notification.hour,
+        notification.minute
+      );
+
+      if (candidateTriggerDate.getTime() > now.getTime()) {
+        return candidateTriggerDate;
+      }
+    }
+
+    year += 1;
+  }
+
+  return null;
+}
+
+function formatTimeLeftLabel(triggerDate: Date | null, t: (key: string) => string) {
+  if (!triggerDate) {
+    return null;
+  }
+
+  const now = new Date();
+
+  if (triggerDate.getTime() <= now.getTime()) {
+    return null;
+  }
+
+  const cursor = new Date(now);
+  cursor.setSeconds(0, 0);
+  const target = new Date(triggerDate);
+  target.setSeconds(0, 0);
+
+  let years = 0;
+  let months = 0;
+  let days = 0;
+  let hours = 0;
+  let minutes = 0;
+
+  while (true) {
+    const next = new Date(cursor);
+    next.setFullYear(next.getFullYear() + 1);
+
+    if (next.getTime() > target.getTime()) {
+      break;
+    }
+
+    years += 1;
+    cursor.setTime(next.getTime());
+  }
+
+  while (true) {
+    const next = new Date(cursor);
+    next.setMonth(next.getMonth() + 1);
+
+    if (next.getTime() > target.getTime()) {
+      break;
+    }
+
+    months += 1;
+    cursor.setTime(next.getTime());
+  }
+
+  while (true) {
+    const next = new Date(cursor);
+    next.setDate(next.getDate() + 1);
+
+    if (next.getTime() > target.getTime()) {
+      break;
+    }
+
+    days += 1;
+    cursor.setTime(next.getTime());
+  }
+
+  while (true) {
+    const next = new Date(cursor);
+    next.setHours(next.getHours() + 1);
+
+    if (next.getTime() > target.getTime()) {
+      break;
+    }
+
+    hours += 1;
+    cursor.setTime(next.getTime());
+  }
+
+  while (true) {
+    const next = new Date(cursor);
+    next.setMinutes(next.getMinutes() + 1);
+
+    if (next.getTime() > target.getTime()) {
+      break;
+    }
+
+    minutes += 1;
+    cursor.setTime(next.getTime());
+  }
+
+  const parts: string[] = [];
+
+  if (years > 0) {
+    parts.push(`${years}${t('common.timeLeftYearsShort')}`);
+  }
+
+  if (months > 0) {
+    parts.push(`${months}${t('common.timeLeftMonthsShort')}`);
+  }
+
+  if (days > 0) {
+    parts.push(`${days}${t('common.timeLeftDaysShort')}`);
+  }
+
+  if (hours > 0) {
+    parts.push(`${hours}${t('common.timeLeftHoursShort')}`);
+  }
+
+  if (minutes > 0 || parts.length === 0) {
+    parts.push(`${minutes}${t('common.timeLeftMinutesShort')}`);
+  }
+
+  return parts.join(' ');
+}
+
 function hasExplicitNotificationDate(notification: CityNotification) {
   return Boolean(notification.year && notification.month && notification.day);
 }
@@ -961,11 +1283,12 @@ export default function Notifications() {
     index: number,
     options?: { showCityName?: boolean }
   ) => {
-    const notificationDateLabel = getNotificationDateLabel(notification, locale);
-    const notificationRepeatLabel = getNotificationRepeatLabel(notification, firstDayOfWeek, weekdayShortLabels, t);
-    const notificationLocalDayShiftLabel = getNotificationLocalDayShiftLabel(city.tz, notification, t);
-    const notificationLocalMonthOrYearShiftLabel = getNotificationLocalMonthOrYearShiftLabel(city.tz, notification, t);
-    const notificationInactiveReasonLabel = getInactiveReasonLabel(notification, t);
+          const notificationDateLabel = getNotificationDateLabel(notification, locale);
+          const notificationRepeatLabel = getNotificationRepeatLabel(notification, firstDayOfWeek, weekdayShortLabels, t);
+          const notificationLocalDayShiftLabel = getNotificationLocalDayShiftLabel(city.tz, notification, t);
+          const notificationLocalMonthOrYearShiftLabel = getNotificationLocalMonthOrYearShiftLabel(city.tz, notification, t);
+          const notificationTimeLeftLabel = formatTimeLeftLabel(getNextNotificationTriggerDate(city.tz, notification), t);
+          const notificationInactiveReasonLabel = getInactiveReasonLabel(notification, t);
 
     return (
       <View
@@ -1018,17 +1341,30 @@ export default function Notifications() {
             </View>
 
             <View style={styles.notificationLocalTime}>
-              <Text style={styles.notificationLocalTimeLabel}>
-                {t('common.yourTime')}
-              </Text>
-              <Text style={styles.notificationLocalTimeText}>
-                {getNotificationLocalTime(city.tz, notification, timeFormat)}
-              </Text>
-
-              {!!notificationLocalDayShiftLabel && (
-                <Text style={styles.notificationLocalDayShiftText}>
-                  {notificationLocalDayShiftLabel}
+              <View style={styles.notificationLocalTimePrimaryRow}>
+                <Text style={styles.notificationLocalTimeLabel}>
+                  {t('common.yourTime')}
                 </Text>
+                <Text style={styles.notificationLocalTimeText}>
+                  {getNotificationLocalTime(city.tz, notification, timeFormat)}
+                </Text>
+
+                {!!notificationLocalDayShiftLabel && (
+                  <Text style={styles.notificationLocalDayShiftText}>
+                    {notificationLocalDayShiftLabel}
+                  </Text>
+                )}
+              </View>
+
+              {!!notificationTimeLeftLabel && (
+                <View style={styles.notificationLocalTimePrimaryRow}>
+                  <Text style={styles.notificationTimeLeftTitle}>
+                    {t('common.timeLeft')}
+                  </Text>
+                  <Text style={styles.notificationTimeLeft}>
+                    {notificationTimeLeftLabel}
+                  </Text>
+                </View>
               )}
             </View>
           </View>

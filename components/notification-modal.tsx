@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Animated,
+  Keyboard,
   Modal,
   View,
   Text,
@@ -143,6 +144,9 @@ export function NotificationModal({
   const [isCalendarSelectionAvailable, setIsCalendarSelectionAvailable] = useState(true);
   const [isLoadingCalendarOptions, setIsLoadingCalendarOptions] = useState(false);
   const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number | undefined>();
+  const dismissTextInputKeyboard = useCallback(() => {
+    Keyboard.dismiss();
+  }, []);
 
   const formatDateLabel = useCallback((date: Date) => {
     const currentYear = new Date().getFullYear();
@@ -383,6 +387,7 @@ export function NotificationModal({
       return;
     }
 
+    dismissTextInputKeyboard();
     setIsSaving(true);
 
     try {
@@ -548,6 +553,7 @@ export function NotificationModal({
   }, [effectiveTimezone, getPreviewInfo, isTimeSelected, notificationTime, pickerDraftTime, pickerDraftDate]);
 
   const openTimePicker = () => {
+    dismissTextInputKeyboard();
     const nextPickerTime = new Date(notificationTime);
 
     if (!isTimeSelected) {
@@ -559,20 +565,24 @@ export function NotificationModal({
   };
 
   const openCityPicker = () => {
+    dismissTextInputKeyboard();
     setPickerDraftCityId(selectedCityId ?? null);
     setActivePicker(NotificationPickerKind.City);
   };
 
   const openDatePicker = () => {
+    dismissTextInputKeyboard();
     setPickerDraftDate(new Date(notificationDate));
     setActivePicker(NotificationPickerKind.Date);
   };
   const openRepeatPicker = () => {
+    dismissTextInputKeyboard();
     setPickerDraftRepeat(repeat);
     setPickerDraftWeekdays(weekdays);
     setActivePicker(NotificationPickerKind.Repeat);
   };
   const openCalendarPicker = async () => {
+    dismissTextInputKeyboard();
     if (isLoadingCalendarOptions) {
       return;
     }
@@ -596,11 +606,13 @@ export function NotificationModal({
     }
   };
   const openWeekdaysPicker = () => {
+    dismissTextInputKeyboard();
     setPickerDraftWeekdays(weekdays);
     setActivePicker(NotificationPickerKind.Weekdays);
   };
 
   const closePicker = () => {
+    dismissTextInputKeyboard();
     setActivePicker(null);
   };
 
@@ -615,6 +627,7 @@ export function NotificationModal({
   };
 
   const clearRepeat = () => {
+    dismissTextInputKeyboard();
     setRepeat(RepeatMode.none);
     setWeekdays([]);
     setPickerDraftRepeat(RepeatMode.none);
@@ -696,10 +709,18 @@ export function NotificationModal({
               style={styles.modalScroll}
               contentContainerStyle={styles.modalScrollContent}
               keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+              onScrollBeginDrag={dismissTextInputKeyboard}
               showsVerticalScrollIndicator
             >
               <View style={styles.header}>
-                <Pressable onPress={onClose} style={styles.headerButton}>
+                <Pressable
+                  onPress={() => {
+                    dismissTextInputKeyboard();
+                    onClose();
+                  }}
+                  style={styles.headerButton}
+                >
                   <IconCancelOutlined fill={theme.text.primary} />
                 </Pressable>
 

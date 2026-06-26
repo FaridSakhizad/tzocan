@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Product,
@@ -26,6 +27,13 @@ type SupportProductRow = {
   isDisabled: boolean;
 };
 
+type SupportPurchasesDebugInfo = {
+  bundleIdentifier: string;
+  requestPayload: string;
+  fetchProductsResponse: string;
+  lastError: string | null;
+};
+
 function isSupportProductId(value: string): value is SupportProductId {
   return SUPPORT_PRODUCT_IDS.includes(value as SupportProductId);
 }
@@ -36,6 +44,15 @@ export function useSupportPurchases() {
   const [purchasingProductId, setPurchasingProductId] = useState<SupportProductId | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUnavailable, setIsUnavailable] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<SupportPurchasesDebugInfo>({
+    bundleIdentifier: Constants.expoConfig?.ios?.bundleIdentifier ?? 'unknown',
+    requestPayload: JSON.stringify({
+      skus: [...SUPPORT_PRODUCT_IDS],
+      type: 'in-app',
+    }, null, 2),
+    fetchProductsResponse: 'Not loaded yet',
+    lastError: null,
+  });
 
   const persistPurchasedProductIds = useCallback(async (productIds: SupportProductId[]) => {
     try {
@@ -107,9 +124,28 @@ export function useSupportPurchases() {
           getAvailablePurchases(),
         ]);
 
+        const safeDebugPayload = {
+          products,
+          availablePurchases: availablePurchases.map((purchase) => ({
+            productId: purchase.productId,
+            transactionId: purchase.transactionId,
+            transactionDate: purchase.transactionDate,
+          })),
+        };
+
         if (!isMounted) {
           return;
         }
+
+        setDebugInfo({
+          bundleIdentifier: Constants.expoConfig?.ios?.bundleIdentifier ?? 'unknown',
+          requestPayload: JSON.stringify({
+            skus: [...SUPPORT_PRODUCT_IDS],
+            type: 'in-app',
+          }, null, 2),
+          fetchProductsResponse: JSON.stringify(safeDebugPayload, null, 2),
+          lastError: null,
+        });
 
         const nextProductsById: Partial<Record<SupportProductId, Product>> = {};
         const fetchedProducts = Array.isArray(products) ? products : [];
@@ -131,6 +167,15 @@ export function useSupportPurchases() {
         console.warn('Failed to initialize support purchases', error);
 
         if (isMounted) {
+          setDebugInfo({
+            bundleIdentifier: Constants.expoConfig?.ios?.bundleIdentifier ?? 'unknown',
+            requestPayload: JSON.stringify({
+              skus: [...SUPPORT_PRODUCT_IDS],
+              type: 'in-app',
+            }, null, 2),
+            fetchProductsResponse: 'No response',
+            lastError: error instanceof Error ? error.message : String(error),
+          });
           setIsUnavailable(true);
           setPurchasingProductId(null);
         }
@@ -204,6 +249,7 @@ export function useSupportPurchases() {
   }, [purchasedProductIds, purchasingProductId]);
 
   return {
+    debugInfo,
     isLoading,
     isUnavailable,
     supportProducts,

@@ -187,7 +187,7 @@ export function createStyles(theme: UiTheme) {
     },
     notificationTime: {
       flexDirection: 'column',
-      gap: 5,
+      gap: 7,
     },
     notificationCityTime: {
       flexDirection: 'row',
@@ -203,16 +203,29 @@ export function createStyles(theme: UiTheme) {
       color: theme.text.primary,
     },
     notificationLocalTime: {
+      gap: 4,
+    },
+    notificationLocalTimePrimaryRow: {
       flexDirection: 'row',
       gap: 3,
     },
     notificationLocalTimeLabel: {
-      fontSize: 13,
+      fontSize: 15,
       color: theme.text.secondary,
     },
     notificationLocalTimeText: {
-      fontSize: 13,
+      fontSize: 15,
       color: theme.text.primary,
+    },
+    notificationTimeLeftTitle: {
+      fontSize: 15,
+      color: theme.text.secondary,
+      paddingLeft: 1,
+    },
+    notificationTimeLeft: {
+      fontSize: 15,
+      color: theme.text.primary,
+      paddingLeft: 1,
     },
     notificationLocalDayShiftText: {
       fontSize: 11,
@@ -227,7 +240,7 @@ export function createStyles(theme: UiTheme) {
     },
     notificationDate: {
       flexDirection: 'column',
-      gap: 5,
+      gap: 7,
     },
     notificationCityDate: {
       flexDirection: 'row',
@@ -246,13 +259,14 @@ export function createStyles(theme: UiTheme) {
     notificationLocalDate: {
       flexDirection: 'row',
       gap: 3,
+      alignItems: 'center'
     },
     notificationLocalDateLabel: {
-      fontSize: 13,
+      fontSize: 15,
       color: theme.text.secondary,
     },
     notificationLocalDateText: {
-      fontSize: 13,
+      fontSize: 15,
       color: theme.text.primary,
     },
     notificationLocalDateShiftText: {

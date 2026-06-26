@@ -5,6 +5,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -39,6 +40,12 @@ type SupportModalProps = {
   products: SupportProductRow[];
   isLoading: boolean;
   isUnavailable: boolean;
+  debugInfo: {
+    bundleIdentifier: string;
+    requestPayload: string;
+    fetchProductsResponse: string;
+    lastError: string | null;
+  };
   onPurchase: (productId: SupportProductId) => void;
 };
 
@@ -48,6 +55,7 @@ export function SupportModal({
   products,
   isLoading,
   isUnavailable,
+  debugInfo,
   onPurchase,
 }: SupportModalProps) {
   const { theme } = useAppTheme();
@@ -209,6 +217,31 @@ export function SupportModal({
                       )}
                     </View>
                   )}
+
+                  <View style={styles.debugBox}>
+                    <Text style={styles.debugTitle}>IAP Debug</Text>
+                    <ScrollView
+                      style={styles.debugScroll}
+                      contentContainerStyle={styles.debugScrollContent}
+                    >
+                      <Text style={styles.debugMetaText}>
+                        bundleIdentifier: {debugInfo.bundleIdentifier}
+                      </Text>
+
+                      <Text style={styles.debugSectionTitle}>request</Text>
+                      <Text style={styles.debugText}>{debugInfo.requestPayload}</Text>
+
+                      {debugInfo.lastError ? (
+                        <>
+                          <Text style={styles.debugSectionTitle}>error</Text>
+                          <Text style={styles.debugErrorText}>{debugInfo.lastError}</Text>
+                        </>
+                      ) : null}
+
+                      <Text style={styles.debugSectionTitle}>response</Text>
+                      <Text style={styles.debugText}>{debugInfo.fetchProductsResponse}</Text>
+                    </ScrollView>
+                  </View>
                 </View>
 
                 <View style={styles.pad} />
@@ -342,6 +375,48 @@ function createStyles(theme: UiTheme) {
       color: theme.text.primary,
       marginBottom: 8,
       textAlign: 'center',
+    },
+    debugBox: {
+      width: '100%',
+      maxWidth: 320,
+      marginTop: 20,
+      marginHorizontal: 'auto',
+      padding: 12,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.surface.fieldStrong,
+      gap: 8,
+    },
+    debugTitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: theme.text.primary,
+    },
+    debugMetaText: {
+      fontSize: 12,
+      color: theme.text.secondary,
+      marginBottom: 8,
+    },
+    debugSectionTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.text.primary,
+      marginBottom: 4,
+    },
+    debugErrorText: {
+      fontSize: 12,
+      color: theme.text.warning,
+      marginBottom: 8,
+    },
+    debugScroll: {
+      maxHeight: 220,
+    },
+    debugScrollContent: {
+      paddingBottom: 4,
+    },
+    debugText: {
+      fontSize: 11,
+      lineHeight: 15,
+      color: theme.text.primary,
     },
   });
 }

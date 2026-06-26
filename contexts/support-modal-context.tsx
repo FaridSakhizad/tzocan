@@ -13,6 +13,7 @@ const SupportModalContext = createContext<SupportModalContextValue | null>(null)
 export function SupportModalProvider({ children }: { children: ReactNode }) {
   const [isSupportModalVisible, setIsSupportModalVisible] = useState(false);
   const {
+    debugInfo,
     isLoading,
     isUnavailable,
     supportProducts,
@@ -38,6 +39,7 @@ export function SupportModalProvider({ children }: { children: ReactNode }) {
         products={supportProducts}
         isLoading={isLoading}
         isUnavailable={isUnavailable}
+        debugInfo={debugInfo}
         onPurchase={purchaseProduct}
       />
     </SupportModalContext.Provider>

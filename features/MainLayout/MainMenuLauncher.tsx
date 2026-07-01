@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRouter } from 'expo-router';
 
+import { SUPPORT_FEATURE_ENABLED } from '@/constants/app-config';
 import { MainMenuModal } from '@/components/main-menu-modal';
 import { useEditMode } from '@/contexts/edit-mode-context';
 import { useSupportModal } from '@/contexts/support-modal-context';
@@ -39,7 +40,7 @@ export default function MainMenuLauncher({ visible, onClose }: MainMenuLauncherP
   });
 
   const handleOpenSupportModal = () => {
-    if (isEditMode) {
+    if (isEditMode || !SUPPORT_FEATURE_ENABLED) {
       return;
     }
 

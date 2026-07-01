@@ -12,6 +12,7 @@ import {
 import { useMemo } from 'react';
 
 import type { UiTheme } from '@/constants/ui-theme.types';
+import { SUPPORT_FEATURE_ENABLED } from '@/constants/app-config';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useI18n } from '@/hooks/use-i18n';
 import { useModalVisibilityAnimation } from '@/hooks/use-modal-visibility-animation';
@@ -136,14 +137,18 @@ export function MainMenuModal({
                     <Text style={styles.menuButtonText}>{t('common.about')}</Text>
                   </Pressable>
 
-                  <View style={styles.menuSeparator} />
+                  {SUPPORT_FEATURE_ENABLED && (
+                    <>
+                      <View style={styles.menuSeparator} />
 
-                  <Pressable style={styles.menuButton} onPress={handleOpenSupport}>
-                    <View style={styles.menuButtonInline}>
-                      <HeartIcon fill={theme.text.primary} style={styles.menuButtonHeartIcon} />
-                      <Text style={styles.menuButtonText}>{t('common.sayThanks')}</Text>
-                    </View>
-                  </Pressable>
+                      <Pressable style={styles.menuButton} onPress={handleOpenSupport}>
+                        <View style={styles.menuButtonInline}>
+                          <HeartIcon fill={theme.text.primary} style={styles.menuButtonHeartIcon} />
+                          <Text style={styles.menuButtonText}>{t('common.sayThanks')}</Text>
+                        </View>
+                      </Pressable>
+                    </>
+                  )}
                 </View>
               </View>
             </ImageBackground>

@@ -155,6 +155,11 @@ export function createStyles(theme: UiTheme) {
       color: theme.text.primary,
       marginLeft: 12
     },
+    dragHandleReveal: {
+      overflow: 'hidden',
+      alignItems: 'flex-start',
+      justifyContent: 'center',
+    },
     deleteCityButton: {
       width: 20,
       height: 20,
@@ -164,6 +169,11 @@ export function createStyles(theme: UiTheme) {
       alignItems: 'center',
       justifyContent: 'center',
       marginLeft: 10,
+    },
+    deleteCityButtonBox: {
+      overflow: 'hidden',
+      alignItems: 'flex-end',
+      justifyContent: 'center',
     },
     deleteButtonIcon: {},
     notificationItem: {

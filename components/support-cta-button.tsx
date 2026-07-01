@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { useMemo } from 'react';
 
+import { SUPPORT_FEATURE_ENABLED } from '@/constants/app-config';
 import type { UiTheme } from '@/constants/ui-theme.types';
 import { useAppTheme } from '@/contexts/app-theme-context';
 import { useI18n } from '@/hooks/use-i18n';
@@ -15,6 +16,10 @@ export function SupportCtaButton({ onPress }: SupportCtaButtonProps) {
   const { theme } = useAppTheme();
   const { t } = useI18n();
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  if (!SUPPORT_FEATURE_ENABLED) {
+    return null;
+  }
 
   return (
     <Pressable onPress={onPress} style={styles.button}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -888,6 +888,32 @@ export default function Notifications() {
     handleContentSizeChange,
   } = useScrollFit();
   const citySortSectionAnimation = useState(() => new Animated.Value(sortState.groupByCity ? 1 : 0))[0];
+  const deleteCityButtonReveal = useRef(new Animated.Value(isEditMode ? 1 : 0)).current;
+  const dragHandleReveal = useRef(new Animated.Value(isEditMode ? 1 : 0)).current;
+  const dragHandleTranslateX = dragHandleReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-20, 0],
+  });
+  const dragHandleWidth = dragHandleReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 30],
+  });
+  const dragHandleOpacity = dragHandleReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+  const deleteCityButtonTranslateX = deleteCityButtonReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [12, 0],
+  });
+  const deleteCityButtonWidth = deleteCityButtonReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 30],
+  });
+  const deleteCityButtonOpacity = deleteCityButtonReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
 
   const [editingTarget, setEditingTarget] = useState<{
     city: SelectedCity;
@@ -927,6 +953,21 @@ export default function Notifications() {
       useNativeDriver: false,
     }).start();
   }, [citySortSectionAnimation, draftSortState.groupByCity]);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(deleteCityButtonReveal, {
+        toValue: isEditMode ? 1 : 0,
+        duration: 200,
+        useNativeDriver: false,
+      }),
+      Animated.timing(dragHandleReveal, {
+        toValue: isEditMode ? 1 : 0,
+        duration: 260,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [deleteCityButtonReveal, dragHandleReveal, isEditMode]);
 
   const citiesWithNotifications = selectedCities.filter(
     (city) => city.notifications && city.notifications.length > 0
@@ -1460,21 +1501,41 @@ export default function Notifications() {
           onLongPress={options?.draggable && isEditMode ? options.drag : undefined}
           style={styles.cityHeader}
         >
-          {options?.draggable && isEditMode && (
-            <Pressable onPressIn={options.drag} style={styles.dragHandle}>
+          <Animated.View
+            pointerEvents={options?.draggable && isEditMode ? 'auto' : 'none'}
+            style={[
+              styles.dragHandleReveal,
+              {
+                width: dragHandleWidth,
+                opacity: dragHandleOpacity,
+                transform: [{ translateX: dragHandleTranslateX }],
+              },
+            ]}
+          >
+            <Pressable onPressIn={options?.draggable && isEditMode ? options.drag : undefined} disabled={!options?.draggable || !isEditMode} style={styles.dragHandle}>
               <Text style={styles.dragHandleText}>☰</Text>
             </Pressable>
-          )}
+          </Animated.View>
 
           <Text style={styles.cityName}>{getCityDisplayName(city, localizedCityNames[city.cityId])}</Text>
 
           <Text style={styles.cityHeaderTime}>{getCurrentTimeInTimezone(city.tz, timeFormat, locale)}</Text>
 
-          {isEditMode && (
-            <Pressable onPress={() => handleOpenDeleteCityModal(city)} style={styles.deleteCityButton}>
+          <Animated.View
+            pointerEvents={isEditMode ? 'auto' : 'none'}
+            style={[
+              styles.deleteCityButtonBox,
+              {
+                width: deleteCityButtonWidth,
+                opacity: deleteCityButtonOpacity,
+                transform: [{ translateX: deleteCityButtonTranslateX }],
+              },
+            ]}
+          >
+            <Pressable onPress={isEditMode ? () => handleOpenDeleteCityModal(city) : undefined} disabled={!isEditMode} style={styles.deleteCityButton}>
               <DeleteIcon fill={theme.text.warning} style={styles.deleteButtonIcon} />
             </Pressable>
-          )}
+          </Animated.View>
         </Pressable>
 
         {notifications.map((notification, idx) => renderNotificationCard(city, notification, idx))}

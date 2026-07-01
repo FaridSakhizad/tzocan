@@ -135,9 +135,35 @@ export default function TimelineScreen() {
     handleContentSizeChange,
   } = useScrollFit();
   const contentOpacity = useRef(new Animated.Value(1)).current;
+  const deleteButtonReveal = useRef(new Animated.Value(isEditMode ? 1 : 0)).current;
+  const dragHandleReveal = useRef(new Animated.Value(isEditMode ? 1 : 0)).current;
   const isDayTransitioningRef = useRef(false);
   const previousTodayRef = useRef(getLocalDayStart(new Date()));
   const previousCurrentHourIndexRef = useRef(getHourIndexForDate(new Date()));
+  const dragHandleTranslateX = dragHandleReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-20, 0],
+  });
+  const dragHandleWidth = dragHandleReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 30],
+  });
+  const dragHandleOpacity = dragHandleReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+  const deleteButtonTranslateX = deleteButtonReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [12, 0],
+  });
+  const deleteButtonWidth = deleteButtonReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 30],
+  });
+  const deleteButtonOpacity = deleteButtonReveal.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
 
   const nowDate = useMemo(() => new Date(nowMs), [nowMs]);
 
@@ -218,6 +244,21 @@ export default function TimelineScreen() {
       setDraftCityOrder(sortState.cityOrder);
     }
   }, [isFocused, isSortPickerVisible, sortState.cityOrder]);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(deleteButtonReveal, {
+        toValue: isEditMode ? 1 : 0,
+        duration: 200,
+        useNativeDriver: false,
+      }),
+      Animated.timing(dragHandleReveal, {
+        toValue: isEditMode ? 1 : 0,
+        duration: 260,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [deleteButtonReveal, dragHandleReveal, isEditMode]);
 
   const hourIndices = useMemo(() => getTimelineHourIndicesForDay(selectedDay), [selectedDay]);
   const startHourIndex = hourIndices[0] ?? getHourIndexForDate(selectedDay);
@@ -511,11 +552,21 @@ export default function TimelineScreen() {
           style={[styles.listItem, options?.isActive && styles.listItemDragging]}
         >
           <View style={styles.listItemHeader}>
-            {isEditMode && canDrag && (
-              <Pressable onPress={options?.drag} style={styles.dragHandle}>
+            <Animated.View
+              pointerEvents={isEditMode && canDrag ? 'auto' : 'none'}
+              style={[
+                styles.dragHandleReveal,
+                {
+                  width: dragHandleWidth,
+                  opacity: dragHandleOpacity,
+                  transform: [{ translateX: dragHandleTranslateX }],
+                },
+              ]}
+            >
+              <Pressable onPress={options?.drag} disabled={!isEditMode || !canDrag} style={styles.dragHandle}>
                 <Text style={styles.dragHandleText}>☰</Text>
               </Pressable>
-            )}
+            </Animated.View>
 
             <Text style={styles.listItemTitle} numberOfLines={1}>
               <Text style={styles.listItemTitleCity}>
@@ -531,14 +582,25 @@ export default function TimelineScreen() {
               {getCurrentTimeInTimezone(city.tz, locale, timeFormat, nowDate)}
             </Text>
 
-            {isEditMode && (
+            <Animated.View
+              pointerEvents={isEditMode ? 'auto' : 'none'}
+              style={[
+                styles.deleteButtonBox,
+                {
+                  width: deleteButtonWidth,
+                  opacity: deleteButtonOpacity,
+                  transform: [{ translateX: deleteButtonTranslateX }],
+                },
+              ]}
+            >
               <Pressable
-                onPress={() => handleOpenDeleteCityModal(city)}
+                onPress={isEditMode ? () => handleOpenDeleteCityModal(city) : undefined}
+                disabled={!isEditMode}
                 style={styles.deleteButton}
               >
                 <IconDelete fill={theme.text.warning} style={styles.deleteButtonIcon} />
               </Pressable>
-            )}
+            </Animated.View>
           </View>
 
           <View style={styles.timelineRowContainer}>

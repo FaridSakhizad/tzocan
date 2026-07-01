@@ -118,6 +118,11 @@ export function createStyles(theme: UiTheme) {
       flexDirection: 'row',
       alignItems: 'center',
     },
+    dragHandleReveal: {
+      overflow: 'hidden',
+      alignItems: 'flex-start',
+      justifyContent: 'center',
+    },
     dragHandle: {
       marginRight: 10,
     },
@@ -136,6 +141,11 @@ export function createStyles(theme: UiTheme) {
       alignItems: 'center',
       justifyContent: 'center',
       marginLeft: 10,
+    },
+    deleteButtonBox: {
+      overflow: 'hidden',
+      alignItems: 'flex-end',
+      justifyContent: 'center',
     },
     deleteButtonIcon: {},
     listItemTitle: {

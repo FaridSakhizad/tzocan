@@ -13,6 +13,7 @@ import {
   ScrollView,
   ImageBackground
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -77,7 +78,15 @@ enum NotificationPickerKind {
   Repeat = 'repeat',
   Weekdays = 'weekdays',
   Calendar = 'calendar',
+  CalendarRequired = 'calendarRequired',
 }
+
+const LAST_SELECTED_CALENDAR_STORAGE_KEY = '@tzalac_last_selected_calendar';
+
+type StoredCalendarSelection = {
+  id: string;
+  title?: string;
+};
 
 export function NotificationModal({
   visible,
@@ -147,6 +156,13 @@ export function NotificationModal({
   const dismissTextInputKeyboard = useCallback(() => {
     Keyboard.dismiss();
   }, []);
+  const effectiveRepeatMode = getEffectiveRepeatMode({
+    repeat,
+    weekdays,
+  });
+  const requiresCalendarForRecurringStartDate =
+    hasDate &&
+    effectiveRepeatMode !== RepeatMode.none;
 
   const formatDateLabel = useCallback((date: Date) => {
     const currentYear = new Date().getFullYear();
@@ -277,60 +293,109 @@ export function NotificationModal({
     };
   }, [DATE_SHIFT_LABELS, formatDateLabel, hasDate, locale, notificationDate, timeFormat]);
 
+  const loadLastSelectedCalendar = useCallback(async () => {
+    try {
+      const stored = await AsyncStorage.getItem(LAST_SELECTED_CALENDAR_STORAGE_KEY);
+
+      if (!stored) {
+        return null;
+      }
+
+      const parsed = JSON.parse(stored) as StoredCalendarSelection;
+
+      if (!parsed?.id) {
+        return null;
+      }
+
+      return parsed;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const persistLastSelectedCalendar = useCallback(async (calendarId: string, calendarTitle?: string) => {
+    try {
+      await AsyncStorage.setItem(
+        LAST_SELECTED_CALENDAR_STORAGE_KEY,
+        JSON.stringify({
+          id: calendarId,
+          title: calendarTitle,
+        } satisfies StoredCalendarSelection)
+      );
+    } catch {
+      // Ignore storage errors and keep the form usable.
+    }
+  }, []);
+
   useEffect(() => {
     if (!visible) {
       return;
     }
 
-    const source = initialNotification ?? null;
-    const hasDateInSource = Boolean(source?.year && source?.month && source?.day);
+    let isCancelled = false;
 
-    if (hasDateInSource && source?.year && source?.month && source?.day) {
-      setNotificationDate(new Date(source.year, source.month - 1, source.day));
-    } else {
-      setNotificationDate(new Date());
-    }
+    const initialize = async () => {
+      const source = initialNotification ?? null;
+      const hasDateInSource = Boolean(source?.year && source?.month && source?.day);
+      const storedCalendar = !source ? await loadLastSelectedCalendar() : null;
 
-    const time = new Date();
-    if (source) {
-      time.setHours(source.hour, source.minute, 0, 0);
-    } else {
-      time.setHours(0, 0, 0, 0);
-    }
-    setNotificationTime(time);
-    setIsTimeSelected(Boolean(source));
-    setRepeat(source ? getEffectiveRepeatMode(source) : RepeatMode.none);
-    setWeekdays(source?.weekdays || []);
+      if (isCancelled) {
+        return;
+      }
 
-    setHasDate(hasDateInSource);
-    setActivePicker(null);
-    setNotificationLabel(source?.label || '');
-    setNotificationNotes(source?.notes || '');
-    setNotificationUrl(source?.url || '');
-    setSelectedCalendarId(source?.calendarId ?? null);
-    setSelectedCalendarTitle(source?.calendarTitle);
-    setSelectedDurationMinutes(source?.durationMinutes);
-    const initialPickerTime = new Date(time);
-    if (!source) {
-      initialPickerTime.setHours(12, 0, 0, 0);
-    }
-    setPickerDraftTime(initialPickerTime);
+      if (hasDateInSource && source?.year && source?.month && source?.day) {
+        setNotificationDate(new Date(source.year, source.month - 1, source.day));
+      } else {
+        setNotificationDate(new Date());
+      }
 
-    let nextPickerDraftDate = new Date();
+      const time = new Date();
+      if (source) {
+        time.setHours(source.hour, source.minute, 0, 0);
+      } else {
+        time.setHours(0, 0, 0, 0);
+      }
+      setNotificationTime(time);
+      setIsTimeSelected(Boolean(source));
+      setRepeat(source ? getEffectiveRepeatMode(source) : RepeatMode.none);
+      setWeekdays(source?.weekdays || []);
 
-    if (hasDateInSource && source?.year && source?.month && source?.day) {
-      nextPickerDraftDate = new Date(source.year, source.month - 1, source.day);
-    }
+      setHasDate(hasDateInSource);
+      setActivePicker(null);
+      setNotificationLabel(source?.label || '');
+      setNotificationNotes(source?.notes || '');
+      setNotificationUrl(source?.url || '');
+      setSelectedCalendarId(source?.calendarId ?? storedCalendar?.id ?? null);
+      setSelectedCalendarTitle(source?.calendarTitle ?? storedCalendar?.title);
+      setSelectedDurationMinutes(source?.durationMinutes);
+      const initialPickerTime = new Date(time);
+      if (!source) {
+        initialPickerTime.setHours(12, 0, 0, 0);
+      }
+      setPickerDraftTime(initialPickerTime);
 
-    setPickerDraftDate(nextPickerDraftDate);
-    setPickerDraftRepeat(source ? getEffectiveRepeatMode(source) : RepeatMode.none);
-    setPickerDraftWeekdays(source?.weekdays || []);
-    setPickerDraftCityId(selectedCityId ?? null);
-    setPickerDraftCalendarId(source?.calendarId ?? null);
-    setCalendarOptions([]);
-    setIsCalendarSelectionAvailable(true);
-    setIsLoadingCalendarOptions(false);
-  }, [visible, initialNotification, selectedCityId]);
+      let nextPickerDraftDate = new Date();
+
+      if (hasDateInSource && source?.year && source?.month && source?.day) {
+        nextPickerDraftDate = new Date(source.year, source.month - 1, source.day);
+      }
+
+      setPickerDraftDate(nextPickerDraftDate);
+      setPickerDraftRepeat(source ? getEffectiveRepeatMode(source) : RepeatMode.none);
+      setPickerDraftWeekdays(source?.weekdays || []);
+      setPickerDraftCityId(selectedCityId ?? null);
+      setPickerDraftCalendarId(source?.calendarId ?? storedCalendar?.id ?? null);
+      setCalendarOptions([]);
+      setIsCalendarSelectionAvailable(true);
+      setIsLoadingCalendarOptions(false);
+    };
+
+    void initialize();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [visible, initialNotification, selectedCityId, loadLastSelectedCalendar]);
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
@@ -344,10 +409,6 @@ export function NotificationModal({
         setPickerDraftDate(selectedDate);
         setNotificationDate(selectedDate);
         setHasDate(true);
-        setRepeat(RepeatMode.none);
-        setWeekdays([]);
-        setPickerDraftRepeat(RepeatMode.none);
-        setPickerDraftWeekdays([]);
         closePicker();
       }
 
@@ -388,6 +449,13 @@ export function NotificationModal({
     }
 
     dismissTextInputKeyboard();
+
+    if (requiresCalendarForRecurringStartDate && !selectedCalendarId) {
+      void openCalendarPicker(NotificationPickerKind.CalendarRequired);
+
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -416,6 +484,9 @@ export function NotificationModal({
       const didSave = await onSave(values);
 
       if (didSave) {
+        if (selectedCalendarId) {
+          await persistLastSelectedCalendar(selectedCalendarId, selectedCalendarTitle);
+        }
         onClose();
       }
     } finally {
@@ -463,6 +534,12 @@ export function NotificationModal({
   const calendarLabel = selectedCalendarOption?.label || selectedCalendarTitle || null;
   const calendarPickerTitle = t('reminder.chooseCalendar');
   const calendarUnavailableLabel = t('reminder.calendarUnavailable');
+  const calendarRequiredHint = t('reminder.calendarRequiredHint');
+  const calendarRequiredDescription = t('reminder.calendarRequiredDescription');
+  const datePlaceholderLabel =
+    effectiveRepeatMode !== RepeatMode.none
+      ? t('reminder.startDatePlaceholder')
+      : t('reminder.datePlaceholder');
 
   const canSelectCity =
     citySelectionMode === 'selectable' &&
@@ -478,7 +555,10 @@ export function NotificationModal({
     (activePicker === NotificationPickerKind.Time || activePicker === NotificationPickerKind.Date);
   const isPickerModalVisible = isPickerOpen && !isAndroidNativeDateTimePicker;
   const isCityPicker = activePicker === NotificationPickerKind.City;
-  const isCalendarPicker = activePicker === NotificationPickerKind.Calendar;
+  const isCalendarPicker =
+    activePicker === NotificationPickerKind.Calendar ||
+    activePicker === NotificationPickerKind.CalendarRequired;
+  const isCalendarRequiredPicker = activePicker === NotificationPickerKind.CalendarRequired;
   const effectiveTimezone = selectedCityOption?.timezone || cityTimezone;
 
   const pickerTitle = (() => {
@@ -494,7 +574,10 @@ export function NotificationModal({
       return t('reminder.chooseDate');
     }
 
-    if (activePicker === NotificationPickerKind.Calendar) {
+    if (
+      activePicker === NotificationPickerKind.Calendar ||
+      activePicker === NotificationPickerKind.CalendarRequired
+    ) {
       return calendarPickerTitle;
     }
 
@@ -551,6 +634,11 @@ export function NotificationModal({
 
     return getPreviewInfo(effectiveTimezone, previewHour, previewMinute, pickerDraftDate);
   }, [effectiveTimezone, getPreviewInfo, isTimeSelected, notificationTime, pickerDraftTime, pickerDraftDate]);
+  const datePickerWeekdayLabel = useMemo(() => {
+    return new Intl.DateTimeFormat(locale, {
+      weekday: 'long',
+    }).format(pickerDraftDate);
+  }, [locale, pickerDraftDate]);
 
   const openTimePicker = () => {
     dismissTextInputKeyboard();
@@ -581,7 +669,9 @@ export function NotificationModal({
     setPickerDraftWeekdays(weekdays);
     setActivePicker(NotificationPickerKind.Repeat);
   };
-  const openCalendarPicker = async () => {
+  const openCalendarPicker = async (
+    pickerKind: NotificationPickerKind.Calendar | NotificationPickerKind.CalendarRequired = NotificationPickerKind.Calendar
+  ) => {
     dismissTextInputKeyboard();
     if (isLoadingCalendarOptions) {
       return;
@@ -600,7 +690,7 @@ export function NotificationModal({
 
       setCalendarOptions(result.options);
       setPickerDraftCalendarId(selectedCalendarId);
-      setActivePicker(NotificationPickerKind.Calendar);
+      setActivePicker(pickerKind);
     } finally {
       setIsLoadingCalendarOptions(false);
     }
@@ -643,20 +733,14 @@ export function NotificationModal({
     if (activePicker === NotificationPickerKind.Date) {
       setNotificationDate(pickerDraftDate);
       setHasDate(true);
-      setRepeat(RepeatMode.none);
-      setWeekdays([]);
-      setPickerDraftRepeat(RepeatMode.none);
-      setPickerDraftWeekdays([]);
     }
 
     if (activePicker === NotificationPickerKind.Repeat) {
-      setHasDate(false);
       setRepeat(pickerDraftRepeat);
       setWeekdays([]);
     }
 
     if (activePicker === NotificationPickerKind.Weekdays) {
-      setHasDate(false);
       setRepeat(RepeatMode.weekly);
       setWeekdays(pickerDraftWeekdays);
     }
@@ -665,7 +749,7 @@ export function NotificationModal({
       onSelectCityId(pickerDraftCityId);
     }
 
-    if (activePicker === NotificationPickerKind.Calendar) {
+    if (activePicker === NotificationPickerKind.Calendar || activePicker === NotificationPickerKind.CalendarRequired) {
       const nextCalendar = calendarOptions.find((calendar) => calendar.id === pickerDraftCalendarId) || null;
       setSelectedCalendarId(pickerDraftCalendarId);
       setSelectedCalendarTitle(nextCalendar?.label);
@@ -848,7 +932,7 @@ export function NotificationModal({
                   ) : (
                     <View style={styles.actionButtonHint}>
                       <IconCalendar style={[styles.actionButtonHintIcon, styles.actionButtonHintIconCalendar]} fill={theme.text.primary} />
-                      <Text style={styles.actionButtonHintText}>{t('reminder.datePlaceholder')}</Text>
+                      <Text style={styles.actionButtonHintText}>{datePlaceholderLabel}</Text>
                     </View>
                   )}
                 </Pressable>
@@ -877,14 +961,19 @@ export function NotificationModal({
                   }}
                   disabled={isLoadingCalendarOptions}
                 >
-                  <View style={styles.actionButtonHint}>
+                  <View style={[styles.actionButtonHint, styles.actionButtonHintFullWidth]}>
                     <IconCalendar style={[styles.actionButtonHintIcon, styles.actionButtonHintIconCalendar]} fill={theme.text.primary} />
-                    <Text style={calendarLabel ? styles.actionButtonText : styles.actionButtonHintText}>
+                    <Text
+                      style={[
+                        calendarLabel ? styles.actionButtonText : styles.actionButtonHintText,
+                        styles.actionButtonValueText,
+                      ]}
+                    >
                       {calendarLabel || t('reminder.calendarPlaceholder')}
                     </Text>
                     {!!calendarLabel && (
                       <Pressable
-                        style={styles.clearDateButton}
+                        style={styles.clearCalendarButton}
                         onPress={(event) => {
                           event.stopPropagation();
                           setPickerDraftCalendarId(null);
@@ -901,6 +990,10 @@ export function NotificationModal({
                 {!isCalendarSelectionAvailable && (
                   <Text style={styles.inlineHelperText}>{calendarUnavailableLabel}</Text>
                 )}
+
+                {requiresCalendarForRecurringStartDate && !selectedCalendarId && isCalendarSelectionAvailable && (
+                  <Text style={styles.inlineHelperText}>{calendarRequiredHint}</Text>
+                )}
               </View>
 
             </ScrollView>
@@ -916,12 +1009,14 @@ export function NotificationModal({
         onApply={applyPicker}
         showApply={
           activePicker !== NotificationPickerKind.City &&
-          activePicker !== NotificationPickerKind.Calendar
+          activePicker !== NotificationPickerKind.Calendar &&
+          activePicker !== NotificationPickerKind.CalendarRequired
         }
         closeActionType={activePicker === NotificationPickerKind.Weekdays ? 'back' : null}
         closeByOverlayTap={
           activePicker !== NotificationPickerKind.City &&
-          activePicker !== NotificationPickerKind.Calendar
+          activePicker !== NotificationPickerKind.Calendar &&
+          activePicker !== NotificationPickerKind.CalendarRequired
         }
         customWindowStyle={(isCityPicker || isCalendarPicker) && {
           alignSelf: 'stretch',
@@ -967,6 +1062,11 @@ export function NotificationModal({
             contentContainerStyle={styles.calendarPickerScrollContainer}
           >
             <View style={styles.calendarPicker}>
+              {isCalendarRequiredPicker && (
+                <Text style={styles.calendarRequiredDescription}>
+                  {calendarRequiredDescription}
+                </Text>
+              )}
               {calendarOptions.map((calendar, idx) => {
                 const selected = pickerDraftCalendarId === calendar.id;
 
@@ -1030,6 +1130,9 @@ export function NotificationModal({
               style={styles.datePicker}
               textColor={theme.text.primary}
             />
+            <View style={styles.timePickerLocalTimeBox}>
+              <Text style={styles.timePickerWeekdayText}>{datePickerWeekdayLabel}</Text>
+            </View>
             {!!datePickerPreviewInfo.localDateText && (
               <View style={styles.timePickerLocalTimeBox}>
                 <Text style={styles.timePickerLocalTimeLabel}>{t('common.yourDate')}</Text>
@@ -1315,11 +1418,19 @@ function createStyles(theme: UiTheme) {
   },
   actionButtonHint: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+  },
+  actionButtonHintFullWidth: {
+    width: '100%',
   },
   actionButtonHintText: {
     fontSize: 15,
     color: theme.text.placeholder,
+  },
+  actionButtonValueText: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 10,
   },
   actionButtonHintTextCity: {
     fontSize: theme.typography.control.fontSize,
@@ -1368,6 +1479,12 @@ function createStyles(theme: UiTheme) {
     marginBottom: theme.spacing.lg,
     color: theme.text.placeholder,
     fontSize: 13,
+  },
+  calendarRequiredDescription: {
+    marginBottom: theme.spacing.md,
+    color: theme.text.primary,
+    fontSize: 14,
+    lineHeight: 20,
   },
   notificationTime: {},
   localTimeBox: {
@@ -1502,6 +1619,13 @@ function createStyles(theme: UiTheme) {
     marginRight: 1,
     marginBlock: -1,
   },
+  clearCalendarButton: {
+    width: 20,
+    height: 20,
+    marginRight: 1,
+    marginBlock: -1,
+    flexShrink: 0,
+  },
   timePicker: {
     height: 140,
   },
@@ -1510,11 +1634,17 @@ function createStyles(theme: UiTheme) {
     paddingVertical: theme.spacing.screenX,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: theme.spacing.xs,
   },
   timePickerLocalTimeLabel: {
     fontSize: 14,
     color: theme.text.placeholder,
+  },
+  timePickerWeekdayText: {
+    fontSize: 15,
+    color: theme.text.primary,
+    textTransform: 'capitalize',
   },
   timePickerLocalTime: {
     fontSize: 14,

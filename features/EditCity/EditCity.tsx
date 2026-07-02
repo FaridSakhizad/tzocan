@@ -213,75 +213,63 @@ function formatDateLabel(date: Date, locale: string) {
 }
 
 function getNotificationTriggerDate(cityTz: string, notification: CityNotification) {
+  const nextTriggerDate = getNextNotificationTriggerDate(cityTz, notification);
+
+  if (nextTriggerDate) {
+    return nextTriggerDate;
+  }
+
+  if (notification.year && notification.month && notification.day) {
+    return getTriggerDateForTimezone(
+      cityTz,
+      notification.year,
+      notification.month,
+      notification.day,
+      notification.hour,
+      notification.minute
+    );
+  }
+
   const now = new Date();
+  const cityNow = getDatePartsInTimezone(now, cityTz);
+  let triggerDate = getTriggerDateForTimezone(
+    cityTz,
+    cityNow.year,
+    cityNow.month,
+    cityNow.day,
+    notification.hour,
+    notification.minute
+  );
 
-  let cityYear: number;
-  let cityMonth: number;
-  let cityDay: number;
-  let triggerDate: Date;
-
-  if (notification.year && notification.month && notification.day && !notification.isDaily) {
-    cityYear = notification.year;
-    cityMonth = notification.month;
-    cityDay = notification.day;
-    triggerDate = getTriggerDateForTimezone(cityTz, cityYear, cityMonth, cityDay, notification.hour, notification.minute);
-  } else {
-    const cityNow = getDatePartsInTimezone(now, cityTz);
-    cityYear = cityNow.year;
-    cityMonth = cityNow.month;
-    cityDay = cityNow.day;
-    triggerDate = getTriggerDateForTimezone(cityTz, cityYear, cityMonth, cityDay, notification.hour, notification.minute);
-
-    if (triggerDate.getTime() <= now.getTime()) {
-      const next = new Date(cityYear, cityMonth - 1, cityDay + 1);
-      cityYear = next.getFullYear();
-      cityMonth = next.getMonth() + 1;
-      cityDay = next.getDate();
-      triggerDate = getTriggerDateForTimezone(cityTz, cityYear, cityMonth, cityDay, notification.hour, notification.minute);
-    }
+  if (triggerDate.getTime() <= now.getTime()) {
+    const next = new Date(cityNow.year, cityNow.month - 1, cityNow.day + 1);
+    triggerDate = getTriggerDateForTimezone(
+      cityTz,
+      next.getFullYear(),
+      next.getMonth() + 1,
+      next.getDate(),
+      notification.hour,
+      notification.minute
+    );
   }
 
   return triggerDate;
 }
 
 function getNotificationCityTriggerDateParts(cityTz: string, notification: CityNotification) {
-  const now = new Date();
-  let cityYear: number;
-  let cityMonth: number;
-  let cityDay: number;
+  const nextTriggerDate = getNextNotificationTriggerDate(cityTz, notification);
 
-  if (notification.year && notification.month && notification.day && !notification.isDaily) {
-    cityYear = notification.year;
-    cityMonth = notification.month;
-    cityDay = notification.day;
-  } else {
-    const cityNow = getDatePartsInTimezone(now, cityTz);
-    cityYear = cityNow.year;
-    cityMonth = cityNow.month;
-    cityDay = cityNow.day;
+  if (nextTriggerDate) {
+    const parts = getDatePartsInTimezone(nextTriggerDate, cityTz);
 
-    const sameDayTrigger = getTriggerDateForTimezone(
-      cityTz,
-      cityYear,
-      cityMonth,
-      cityDay,
-      notification.hour,
-      notification.minute
-    );
-
-    if (sameDayTrigger.getTime() <= now.getTime()) {
-      const next = new Date(cityYear, cityMonth - 1, cityDay + 1);
-      cityYear = next.getFullYear();
-      cityMonth = next.getMonth() + 1;
-      cityDay = next.getDate();
-    }
+    return {
+      year: parts.year,
+      month: parts.month,
+      day: parts.day,
+    };
   }
 
-  return {
-    year: cityYear,
-    month: cityMonth,
-    day: cityDay,
-  };
+  return getNotificationAnchorDateParts(cityTz, notification);
 }
 
 function getNotificationLocalDayShiftLabel(cityTz: string, notification: CityNotification, t: (key: string) => string) {
@@ -394,9 +382,10 @@ function getValidCalendarDate(year: number, month: number, day: number) {
 function getNextNotificationTriggerDate(cityTz: string, notification: CityNotification) {
   const now = new Date();
   const repeat = getEffectiveRepeatMode(notification);
-  const cityNow = getDatePartsInTimezone(now, cityTz);
 
   if (repeat === RepeatMode.none) {
+    const cityNow = getDatePartsInTimezone(now, cityTz);
+
     if (notification.year && notification.month && notification.day) {
       const explicitTriggerDate = getTriggerDateForTimezone(
         cityTz,
@@ -434,6 +423,23 @@ function getNextNotificationTriggerDate(cityTz: string, notification: CityNotifi
     return nextTriggerDate;
   }
 
+  const anchorDateParts = getNotificationAnchorDateParts(cityTz, notification);
+  const anchorTriggerDate = notification.year && notification.month && notification.day
+    ? getTriggerDateForTimezone(
+        cityTz,
+        notification.year,
+        notification.month,
+        notification.day,
+        notification.hour,
+        notification.minute
+      )
+    : null;
+  const referenceDate =
+    anchorTriggerDate && anchorTriggerDate.getTime() > now.getTime()
+      ? anchorTriggerDate
+      : now;
+  const cityNow = getDatePartsInTimezone(referenceDate, cityTz);
+
   if (repeat === RepeatMode.daily) {
     let nextTriggerDate = getTriggerDateForTimezone(
       cityTz,
@@ -444,7 +450,7 @@ function getNextNotificationTriggerDate(cityTz: string, notification: CityNotifi
       notification.minute
     );
 
-    if (nextTriggerDate.getTime() <= now.getTime()) {
+    if (nextTriggerDate.getTime() <= referenceDate.getTime()) {
       const nextCityDate = new Date(cityNow.year, cityNow.month - 1, cityNow.day + 1);
       nextTriggerDate = getTriggerDateForTimezone(
         cityTz,
@@ -460,7 +466,6 @@ function getNextNotificationTriggerDate(cityTz: string, notification: CityNotifi
   }
 
   if (repeat === RepeatMode.weekly) {
-    const anchorDateParts = getNotificationAnchorDateParts(cityTz, notification);
     const fallbackWeekday = new Date(
       anchorDateParts.year,
       anchorDateParts.month - 1,
@@ -485,7 +490,7 @@ function getNextNotificationTriggerDate(cityTz: string, notification: CityNotifi
         notification.minute
       );
 
-      if (candidateTriggerDate.getTime() <= now.getTime()) {
+      if (candidateTriggerDate.getTime() <= referenceDate.getTime()) {
         diffDays += 7;
         candidateCityDate = new Date(cityNow.year, cityNow.month - 1, cityNow.day + diffDays);
         candidateTriggerDate = getTriggerDateForTimezone(
@@ -507,7 +512,6 @@ function getNextNotificationTriggerDate(cityTz: string, notification: CityNotifi
   }
 
   if (repeat === RepeatMode.monthly) {
-    const anchorDateParts = getNotificationAnchorDateParts(cityTz, notification);
     let year = cityNow.year;
     let month = cityNow.month;
 
@@ -524,7 +528,7 @@ function getNextNotificationTriggerDate(cityTz: string, notification: CityNotifi
           notification.minute
         );
 
-        if (candidateTriggerDate.getTime() > now.getTime()) {
+        if (candidateTriggerDate.getTime() > referenceDate.getTime()) {
           return candidateTriggerDate;
         }
       }
@@ -537,7 +541,6 @@ function getNextNotificationTriggerDate(cityTz: string, notification: CityNotifi
     return null;
   }
 
-  const anchorDateParts = getNotificationAnchorDateParts(cityTz, notification);
   let year = cityNow.year;
 
   for (let index = 0; index < 10; index += 1) {
@@ -553,7 +556,7 @@ function getNextNotificationTriggerDate(cityTz: string, notification: CityNotifi
         notification.minute
       );
 
-      if (candidateTriggerDate.getTime() > now.getTime()) {
+      if (candidateTriggerDate.getTime() > referenceDate.getTime()) {
         return candidateTriggerDate;
       }
     }

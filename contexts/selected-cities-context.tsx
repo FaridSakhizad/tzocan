@@ -122,6 +122,240 @@ function isPastExplicitOneTimeNotification(
   return triggerDate.getTime() <= Date.now();
 }
 
+function getNotificationAnchorDateParts(
+  city: SelectedCity,
+  year?: number,
+  month?: number,
+  day?: number,
+  createdAt?: number
+) {
+  if (year && month && day) {
+    return { year, month, day };
+  }
+
+  if (typeof createdAt === 'number' && Number.isFinite(createdAt)) {
+    const createdAtParts = getDateTimePartsInTimezone(new Date(createdAt), city.tz);
+
+    return {
+      year: createdAtParts.year,
+      month: createdAtParts.month,
+      day: createdAtParts.day,
+    };
+  }
+
+  const cityNow = getDateTimePartsInTimezone(new Date(), city.tz);
+
+  return {
+    year: cityNow.year,
+    month: cityNow.month,
+    day: cityNow.day,
+  };
+}
+
+function getValidCalendarDate(year: number, month: number, day: number) {
+  const candidate = new Date(year, month - 1, day);
+
+  if (
+    candidate.getFullYear() !== year ||
+    candidate.getMonth() !== month - 1 ||
+    candidate.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return candidate;
+}
+
+function getNextNotificationTriggerDate(
+  city: SelectedCity,
+  hour: number,
+  minute: number,
+  year?: number,
+  month?: number,
+  day?: number,
+  repeat: RepeatMode = RepeatMode.none,
+  weekdays: number[] = [],
+  createdAt?: number
+) {
+  const now = new Date();
+
+  if (repeat === RepeatMode.none) {
+    if (year && month && day) {
+      const explicitTriggerDate = getTriggerDateForTimezone(
+        city.tz,
+        year,
+        month,
+        day,
+        hour,
+        minute
+      );
+
+      return explicitTriggerDate.getTime() > now.getTime() ? explicitTriggerDate : null;
+    }
+
+    const cityNow = getDateTimePartsInTimezone(now, city.tz);
+    let nextTriggerDate = getTriggerDateForTimezone(
+      city.tz,
+      cityNow.year,
+      cityNow.month,
+      cityNow.day,
+      hour,
+      minute
+    );
+
+    if (nextTriggerDate.getTime() <= now.getTime()) {
+      const nextCityDate = new Date(cityNow.year, cityNow.month - 1, cityNow.day + 1);
+      nextTriggerDate = getTriggerDateForTimezone(
+        city.tz,
+        nextCityDate.getFullYear(),
+        nextCityDate.getMonth() + 1,
+        nextCityDate.getDate(),
+        hour,
+        minute
+      );
+    }
+
+    return nextTriggerDate;
+  }
+
+  const anchorDateParts = getNotificationAnchorDateParts(city, year, month, day, createdAt);
+  const anchorTriggerDate = year && month && day
+    ? getTriggerDateForTimezone(city.tz, year, month, day, hour, minute)
+    : null;
+  const referenceDate =
+    anchorTriggerDate && anchorTriggerDate.getTime() > now.getTime()
+      ? anchorTriggerDate
+      : now;
+  const cityNow = getDateTimePartsInTimezone(referenceDate, city.tz);
+
+  if (repeat === RepeatMode.daily) {
+    let nextTriggerDate = getTriggerDateForTimezone(
+      city.tz,
+      cityNow.year,
+      cityNow.month,
+      cityNow.day,
+      hour,
+      minute
+    );
+
+    if (nextTriggerDate.getTime() <= referenceDate.getTime()) {
+      const nextCityDate = new Date(cityNow.year, cityNow.month - 1, cityNow.day + 1);
+      nextTriggerDate = getTriggerDateForTimezone(
+        city.tz,
+        nextCityDate.getFullYear(),
+        nextCityDate.getMonth() + 1,
+        nextCityDate.getDate(),
+        hour,
+        minute
+      );
+    }
+
+    return nextTriggerDate;
+  }
+
+  if (repeat === RepeatMode.weekly) {
+    const fallbackWeekday = new Date(
+      anchorDateParts.year,
+      anchorDateParts.month - 1,
+      anchorDateParts.day
+    ).getDay();
+    const effectiveWeekdays = weekdays.length > 0 ? [...new Set(weekdays)] : [fallbackWeekday];
+    const todayWeekday = new Date(cityNow.year, cityNow.month - 1, cityNow.day).getDay();
+    let nearestTriggerDate: Date | null = null;
+
+    for (const weekday of effectiveWeekdays) {
+      let diffDays = (weekday - todayWeekday + 7) % 7;
+      let candidateCityDate = new Date(cityNow.year, cityNow.month - 1, cityNow.day + diffDays);
+      let candidateTriggerDate = getTriggerDateForTimezone(
+        city.tz,
+        candidateCityDate.getFullYear(),
+        candidateCityDate.getMonth() + 1,
+        candidateCityDate.getDate(),
+        hour,
+        minute
+      );
+
+      if (candidateTriggerDate.getTime() <= referenceDate.getTime()) {
+        diffDays += 7;
+        candidateCityDate = new Date(cityNow.year, cityNow.month - 1, cityNow.day + diffDays);
+        candidateTriggerDate = getTriggerDateForTimezone(
+          city.tz,
+          candidateCityDate.getFullYear(),
+          candidateCityDate.getMonth() + 1,
+          candidateCityDate.getDate(),
+          hour,
+          minute
+        );
+      }
+
+      if (!nearestTriggerDate || candidateTriggerDate.getTime() < nearestTriggerDate.getTime()) {
+        nearestTriggerDate = candidateTriggerDate;
+      }
+    }
+
+    return nearestTriggerDate;
+  }
+
+  if (repeat === RepeatMode.monthly) {
+    let searchYear = cityNow.year;
+    let searchMonth = cityNow.month;
+
+    for (let index = 0; index < 24; index += 1) {
+      const validCalendarDate = getValidCalendarDate(searchYear, searchMonth, anchorDateParts.day);
+
+      if (validCalendarDate) {
+        const candidateTriggerDate = getTriggerDateForTimezone(
+          city.tz,
+          searchYear,
+          searchMonth,
+          anchorDateParts.day,
+          hour,
+          minute
+        );
+
+        if (candidateTriggerDate.getTime() > referenceDate.getTime()) {
+          return candidateTriggerDate;
+        }
+      }
+
+      const nextMonthDate = new Date(searchYear, searchMonth, 1);
+      searchYear = nextMonthDate.getFullYear();
+      searchMonth = nextMonthDate.getMonth() + 1;
+    }
+
+    return null;
+  }
+
+  let searchYear = cityNow.year;
+
+  for (let index = 0; index < 10; index += 1) {
+    const validCalendarDate = getValidCalendarDate(
+      searchYear,
+      anchorDateParts.month,
+      anchorDateParts.day
+    );
+
+    if (validCalendarDate) {
+      const candidateTriggerDate = getTriggerDateForTimezone(
+        city.tz,
+        searchYear,
+        anchorDateParts.month,
+        anchorDateParts.day,
+        hour,
+        minute
+      );
+
+      if (candidateTriggerDate.getTime() > referenceDate.getTime()) {
+        return candidateTriggerDate;
+      }
+    }
+
+    searchYear += 1;
+  }
+
+  return null;
+}
+
 async function scheduleNotification(
   city: SelectedCity,
   hour: number,
@@ -133,7 +367,8 @@ async function scheduleNotification(
   notes?: string,
   url?: string,
   repeat: RepeatMode = RepeatMode.none,
-  weekdays: number[] = []
+  weekdays: number[] = [],
+  createdAt?: number
 ): Promise<string[] | null> {
   const Notifications = await getNotificationsModule();
 
@@ -149,139 +384,22 @@ async function scheduleNotification(
   const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   const cityName = city.customName || city.name;
 
-  const now = new Date();
-  const hasExplicitDate = Boolean(year && month && day);
-  let anchorYear = year;
-  let anchorMonth = month;
-  let anchorDay = day;
-
-  // If date is not provided, anchor to "today in target city"
-  if (!anchorYear || !anchorMonth || !anchorDay) {
-    const parts = getDateTimePartsInTimezone(now, city.tz);
-    anchorYear = parts.year;
-    anchorMonth = parts.month;
-    anchorDay = parts.day;
-  }
-
-  let anchorTrigger = getTriggerDateForTimezone(city.tz, anchorYear, anchorMonth, anchorDay, hour, minute);
-  const localHour = anchorTrigger.getHours();
-  const localMinute = anchorTrigger.getMinutes();
-  const localWeekday = anchorTrigger.getDay() + 1; // 1..7
-  const localDayOfMonth = anchorTrigger.getDate();
-  const localMonth = anchorTrigger.getMonth() + 1;
-
   const body = notes ? `It's ${timeString} in ${cityName}\n${notes}` : `It's ${timeString} in ${cityName}`;
   const title = label || cityName;
+  const nextTriggerDate = getNextNotificationTriggerDate(
+    city,
+    hour,
+    minute,
+    year,
+    month,
+    day,
+    repeat,
+    weekdays,
+    createdAt
+  );
 
-  if (repeat === RepeatMode.none) {
-    if (anchorTrigger.getTime() <= Date.now()) {
-      if (!hasExplicitDate) {
-        const next = new Date(anchorYear, anchorMonth - 1, anchorDay + 1);
-        anchorYear = next.getFullYear();
-        anchorMonth = next.getMonth() + 1;
-        anchorDay = next.getDate();
-        anchorTrigger = getTriggerDateForTimezone(city.tz, anchorYear, anchorMonth, anchorDay, hour, minute);
-      } else {
-        console.warn('Cannot schedule one-time notification in the past');
-        return null;
-      }
-    }
-
-    const notificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body,
-        sound: true,
-        data: { url },
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        date: anchorTrigger,
-      },
-    });
-    return [notificationId];
-  }
-
-  if (repeat === RepeatMode.daily) {
-    const notificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body,
-        sound: true,
-        data: { url },
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: localHour,
-        minute: localMinute,
-      },
-    });
-    return [notificationId];
-  }
-
-  if (repeat === RepeatMode.weekly) {
-    const targetCityWeekdays = weekdays.length > 0 ? weekdays : [new Date().getDay()];
-    const cityTodayWeekday = new Date(anchorYear, anchorMonth - 1, anchorDay).getDay();
-    const uniqueTriggers = new Map<string, { weekday: number; hour: number; minute: number }>();
-
-    for (const targetCityWeekday of targetCityWeekdays) {
-      const diffDays = (targetCityWeekday - cityTodayWeekday + 7) % 7;
-      const cityDateForWeekday = new Date(anchorYear, anchorMonth - 1, anchorDay + diffDays);
-      const localTrigger = getTriggerDateForTimezone(
-        city.tz,
-        cityDateForWeekday.getFullYear(),
-        cityDateForWeekday.getMonth() + 1,
-        cityDateForWeekday.getDate(),
-        hour,
-        minute
-      );
-      const weeklyWeekday = localTrigger.getDay() + 1;
-      const weeklyHour = localTrigger.getHours();
-      const weeklyMinute = localTrigger.getMinutes();
-      uniqueTriggers.set(`${weeklyWeekday}-${weeklyHour}-${weeklyMinute}`, {
-        weekday: weeklyWeekday,
-        hour: weeklyHour,
-        minute: weeklyMinute,
-      });
-    }
-
-    const ids: string[] = [];
-    for (const trigger of uniqueTriggers.values()) {
-      const id = await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body,
-          sound: true,
-          data: { url },
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-          weekday: trigger.weekday,
-          hour: trigger.hour,
-          minute: trigger.minute,
-        },
-      });
-      ids.push(id);
-    }
-    return ids;
-  }
-
-  if (repeat === RepeatMode.monthly) {
-    const notificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body,
-        sound: true,
-        data: { url },
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.MONTHLY,
-        day: localDayOfMonth,
-        hour: localHour,
-        minute: localMinute,
-      },
-    });
-    return [notificationId];
+  if (!nextTriggerDate) {
+    return null;
   }
 
   const notificationId = await Notifications.scheduleNotificationAsync({
@@ -292,11 +410,8 @@ async function scheduleNotification(
       data: { url },
     },
     trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.YEARLY,
-      month: localMonth,
-      day: localDayOfMonth,
-      hour: localHour,
-      minute: localMinute,
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: nextTriggerDate,
     },
   });
   return [notificationId];
@@ -459,10 +574,14 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
     saveCities(cities);
   };
 
-  const reactivateInactiveNotifications = async () => {
-    if (!(await hasNotificationPermissions())) {
-      return;
-    }
+  const reconcileScheduledNotifications = async () => {
+    const permissionGranted = await hasNotificationPermissions();
+    const Notifications = await getNotificationsModule();
+    const scheduledNotificationIdSet = new Set<string>(
+      permissionGranted && Notifications
+        ? (await Notifications.getAllScheduledNotificationsAsync()).map((item) => item.identifier)
+        : []
+    );
 
     const currentCities = selectedCitiesRef.current;
     let didChange = false;
@@ -473,11 +592,70 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       }
 
       const nextNotifications = await Promise.all(city.notifications.map(async (notification) => {
-        if (!notification.enabled || !notification.inactiveReason) {
+        if (!notification.enabled) {
           return notification;
         }
 
-        if (notification.inactiveReason === 'past') {
+        const repeat = getEffectiveRepeatMode(notification);
+        const nextTriggerDate = getNextNotificationTriggerDate(
+          city,
+          notification.hour,
+          notification.minute,
+          notification.year,
+          notification.month,
+          notification.day,
+          repeat,
+          notification.weekdays || [],
+          notification.createdAt
+        );
+
+        if (!nextTriggerDate) {
+          await cancelNotificationIds(notification);
+          const nextInactiveReason: CityNotification['inactiveReason'] = 'past';
+
+          if (notification.inactiveReason === 'past' && !notification.notificationId && !notification.notificationIds?.length) {
+            return notification;
+          }
+
+          didChange = true;
+
+          return {
+            ...notification,
+            inactiveReason: nextInactiveReason,
+            notificationId: undefined,
+            notificationIds: undefined,
+          };
+        }
+
+        if (!permissionGranted) {
+          await cancelNotificationIds(notification);
+          const nextInactiveReason: CityNotification['inactiveReason'] = 'permission';
+
+          if (notification.inactiveReason === 'permission' && !notification.notificationId && !notification.notificationIds?.length) {
+            return notification;
+          }
+
+          didChange = true;
+
+          return {
+            ...notification,
+            inactiveReason: nextInactiveReason,
+            notificationId: undefined,
+            notificationIds: undefined,
+          };
+        }
+
+        const existingIds = notification.notificationIds && notification.notificationIds.length > 0
+          ? notification.notificationIds
+          : notification.notificationId
+            ? [notification.notificationId]
+            : [];
+
+        if (
+          notification.inactiveReason === undefined &&
+          existingIds.length > 0 &&
+          existingIds.every((id) => scheduledNotificationIdSet.has(id))
+        ) {
           return notification;
         }
 
@@ -491,36 +669,16 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
           notification.label,
           notification.notes,
           notification.url,
-          getEffectiveRepeatMode(notification),
-          notification.weekdays || []
+          repeat,
+          notification.weekdays || [],
+          notification.createdAt
         );
 
         if (!notificationIds || notificationIds.length === 0) {
-          const nextInactiveReason: CityNotification['inactiveReason'] = isPastExplicitOneTimeNotification(
-            city,
-            notification.hour,
-            notification.minute,
-            notification.year,
-            notification.month,
-            notification.day,
-            getEffectiveRepeatMode(notification)
-          )
-            ? 'past'
-            : notification.inactiveReason;
-
-          if (nextInactiveReason !== notification.inactiveReason) {
-            didChange = true;
-            return {
-              ...notification,
-              inactiveReason: nextInactiveReason,
-              notificationId: undefined,
-              notificationIds: undefined,
-            };
-          }
-
           return notification;
         }
 
+        await cancelNotificationIds(notification);
         didChange = true;
 
         return {
@@ -548,11 +706,11 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    reactivateInactiveNotifications();
+    reconcileScheduledNotifications();
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
-        reactivateInactiveNotifications();
+        reconcileScheduledNotifications();
       }
     });
 
@@ -599,7 +757,20 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       if (!permissionGranted) {
         inactiveReason = 'permission';
       } else {
-        notificationIds = await scheduleNotification(city, hour, minute, year, month, day, label, notes, url, repeat, weekdays);
+        notificationIds = await scheduleNotification(
+          city,
+          hour,
+          minute,
+          year,
+          month,
+          day,
+          label,
+          notes,
+          url,
+          repeat,
+          weekdays,
+          undefined
+        );
 
         if (!notificationIds || notificationIds.length === 0) {
           return false;
@@ -729,13 +900,24 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
       if (!permissionGranted) {
         inactiveReason = 'permission';
       } else {
-        const newScheduledNotificationIds = await scheduleNotification(city, hour, minute, year, month, day, label, notes, url, repeat, weekdays);
+        newSystemNotificationIds = await scheduleNotification(
+          city,
+          hour,
+          minute,
+          year,
+          month,
+          day,
+          label,
+          notes,
+          url,
+          repeat,
+          weekdays,
+          notification.createdAt
+        );
 
-        if (!newScheduledNotificationIds || newScheduledNotificationIds.length === 0) {
+        if (!newSystemNotificationIds || newSystemNotificationIds.length === 0) {
           return false;
         }
-
-        newSystemNotificationIds = newScheduledNotificationIds;
       }
     }
 
@@ -885,7 +1067,8 @@ export function SelectedCitiesProvider({ children }: { children: ReactNode }) {
             notification.notes,
             notification.url,
             getEffectiveRepeatMode(notification),
-            notification.weekdays || []
+            notification.weekdays || [],
+            notification.createdAt
           );
 
           if (!newNotificationId || newNotificationId.length === 0) {

@@ -42,7 +42,35 @@ type CalendarOptionsResult = {
   options: CalendarOption[];
 };
 
+const DEV_CALENDAR_FIXTURES: CalendarOption[] = __DEV__
+  ? [
+      {
+        id: 'dev-calendar-primary',
+        label: 'TimeCross QA Primary Calendar',
+        hint: 'Fixture',
+      },
+      {
+        id: 'dev-calendar-shared',
+        label: 'Shared Family Planning Calendar',
+        hint: 'Fixture',
+      },
+      {
+        id: 'dev-calendar-long-unbreakable',
+        label: 'Team Shared Archive SuperUltraHyperMegaCalendarNameWithoutAnySpacesOrNaturalBreakPointsSoWeCanInspectTheWorstCaseScenarioInThePicker Final Review',
+        hint: 'Fixture',
+      },
+    ]
+  : [];
+
 let calendarModulePromise: Promise<CalendarModule | null> | null = null;
+
+function appendDevCalendarFixtures(options: CalendarOption[]) {
+  if (!__DEV__) {
+    return options;
+  }
+
+  return [...DEV_CALENDAR_FIXTURES, ...options];
+}
 
 function isUnsupportedCalendarRuntime() {
   return Constants.appOwnership === 'expo';
@@ -285,8 +313,8 @@ export async function getCalendarOptions(): Promise<CalendarOptionsResult> {
 
   if (!Calendar) {
     return {
-      available: false,
-      options: [],
+      available: DEV_CALENDAR_FIXTURES.length > 0,
+      options: appendDevCalendarFixtures([]),
     };
   }
 
@@ -294,8 +322,8 @@ export async function getCalendarOptions(): Promise<CalendarOptionsResult> {
 
   if (!hasPermissions) {
     return {
-      available: false,
-      options: [],
+      available: DEV_CALENDAR_FIXTURES.length > 0,
+      options: appendDevCalendarFixtures([]),
     };
   }
 
@@ -329,14 +357,14 @@ export async function getCalendarOptions(): Promise<CalendarOptionsResult> {
 
     return {
       available: true,
-      options,
+      options: appendDevCalendarFixtures(options),
     };
   } catch (error) {
     console.warn('Failed to load calendar options', error);
 
     return {
-      available: false,
-      options: [],
+      available: DEV_CALENDAR_FIXTURES.length > 0,
+      options: appendDevCalendarFixtures([]),
     };
   }
 }

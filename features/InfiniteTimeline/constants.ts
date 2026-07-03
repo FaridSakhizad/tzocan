@@ -1,0 +1,5 @@
+export const TIMELINE_CELL_WIDTH = 74;
+
+export const DAY_TRANSITION_DURATION_MS = 200;
+export const TIMELINE_EDGE_PULL_MAX = 74;
+export const TIMELINE_EDGE_PULL_TRIGGER = 44;

@@ -45,7 +45,9 @@ export default function HeaderButtons() {
     addFlowModals,
   } = useMainLayoutAddFlows();
 
-  const lastActiveTabPathRef = React.useRef<RouteNamePaths.root | RouteNamePaths.timeline | RouteNamePaths.notifications>(RouteNamePaths.root);
+  const lastActiveTabPathRef = React.useRef<
+    RouteNamePaths.root | RouteNamePaths.timeline | RouteNamePaths.timelineInfinite | RouteNamePaths.notifications
+  >(RouteNamePaths.root);
 
   const isEditCityScreen = pathname === RouteNamePaths.editCity;
   const isContactScreen = pathname === RouteNamePaths.contact;
@@ -54,8 +56,9 @@ export default function HeaderButtons() {
   const isNotificationsScreen = pathname === RouteNamePaths.notifications;
   const isIndexScreen = pathname === RouteNamePaths.root || pathname === RouteNamePaths.cities;
   const isTimelineScreen = pathname === RouteNamePaths.timeline;
+  const isInfiniteTimelineScreen = pathname === RouteNamePaths.timelineInfinite;
 
-  const isSortScreen = isIndexScreen || isTimelineScreen || isNotificationsScreen;
+  const isSortScreen = isIndexScreen || isTimelineScreen || isInfiniteTimelineScreen || isNotificationsScreen;
   const isDetailScreen = isEditCityScreen || isContactScreen || isSettingsScreen || isAboutScreen;
 
   const currentEditCityId = isEditCityScreen && globalParams.cityId ? Number(globalParams.cityId) : null;
@@ -76,12 +79,12 @@ export default function HeaderButtons() {
       return totalNotifications > 0;
     }
 
-    if (isIndexScreen || isTimelineScreen) {
+    if (isIndexScreen || isTimelineScreen || isInfiniteTimelineScreen) {
       return selectedCities.length > 0;
     }
 
     return true;
-  }, [isIndexScreen, isNotificationsScreen, isTimelineScreen, selectedCities.length, totalNotifications]);
+  }, [isIndexScreen, isInfiniteTimelineScreen, isNotificationsScreen, isTimelineScreen, selectedCities.length, totalNotifications]);
 
   const isEditButtonDisabled = !isEditMode && !hasEditableItems;
 
@@ -90,6 +93,7 @@ export default function HeaderButtons() {
       pathname === RouteNamePaths.root ||
       pathname === RouteNamePaths.cities ||
       pathname === RouteNamePaths.timeline ||
+      pathname === RouteNamePaths.timelineInfinite ||
       pathname === RouteNamePaths.notifications
     ) {
       lastActiveTabPathRef.current = pathname === RouteNamePaths.cities ? RouteNamePaths.root : pathname;

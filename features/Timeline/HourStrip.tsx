@@ -21,8 +21,6 @@ import {
   TIMELINE_CELL_WIDTH,
 } from '@/utils/timeline-core';
 import {
-  type HourLabel,
-  type MidnightLabel,
   getDatePartsInTimezone,
   getHourLabelForTimezone,
   getMidnightLabelForTimezone,
@@ -214,7 +212,6 @@ function TimelineHourStripComponent({
     <GestureDetector gesture={pan}>
       <View style={styles.timelineViewport}>
         <Animated.View style={[styles.timelineContent, { width: timelineWidth }, animatedStyle]}>
-
           <View style={[styles.sidePad, styles.sidePadLeft, { width: sidePad }]}>
             <Pressable onPress={onNavigateDayBackward} style={[styles.navBlock, styles.navBlockLeft, { minWidth: sidePad * 2 }]}>
               <View style={styles.navBlockIconBox}>
@@ -328,11 +325,11 @@ export const HourStrip = React.memo(
     prevProps.hourIndices === nextProps.hourIndices &&
     prevProps.timelineWidth === nextProps.timelineWidth &&
     prevProps.timeFormat === nextProps.timeFormat &&
-  prevProps.width === nextProps.width &&
-  prevProps.onUserInteraction === nextProps.onUserInteraction &&
-  prevProps.onScrollSettled === nextProps.onScrollSettled &&
-  prevProps.onNavigateDayBackward === nextProps.onNavigateDayBackward &&
-  prevProps.onNavigateDayForward === nextProps.onNavigateDayForward &&
-  prevProps.onEdgeNavigateDayBackward === nextProps.onEdgeNavigateDayBackward &&
-  prevProps.onEdgeNavigateDayForward === nextProps.onEdgeNavigateDayForward
+    prevProps.width === nextProps.width &&
+    prevProps.onUserInteraction === nextProps.onUserInteraction &&
+    prevProps.onScrollSettled === nextProps.onScrollSettled &&
+    prevProps.onNavigateDayBackward === nextProps.onNavigateDayBackward &&
+    prevProps.onNavigateDayForward === nextProps.onNavigateDayForward &&
+    prevProps.onEdgeNavigateDayBackward === nextProps.onEdgeNavigateDayBackward &&
+    prevProps.onEdgeNavigateDayForward === nextProps.onEdgeNavigateDayForward
 );

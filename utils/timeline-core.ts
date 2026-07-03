@@ -2,6 +2,7 @@ export const TIMELINE_HOUR_MS = 60 * 60 * 1000;
 export const TIMELINE_DAY_HOURS = 24;
 export const TIMELINE_VISIBLE_HOURS = TIMELINE_DAY_HOURS;
 export const TIMELINE_CELL_WIDTH = 74;
+export const TIMELINE_SCROLL_BUFFER_DAYS = 7;
 
 export function getHourIndexForDate(date: Date) {
   return Math.floor(date.getTime() / TIMELINE_HOUR_MS);
@@ -29,6 +30,20 @@ export function getTimelineHourIndicesForDay(day: Date) {
   return Array.from(
     { length: TIMELINE_VISIBLE_HOURS },
     (_, index) => dayStartHourIndex + index
+  );
+}
+
+export function getTimelineHourIndicesAroundHour(
+  centerHourIndex: number,
+  bufferDays = TIMELINE_SCROLL_BUFFER_DAYS
+) {
+  const bufferHours = bufferDays * TIMELINE_DAY_HOURS;
+  const startHourIndex = centerHourIndex - bufferHours;
+  const totalHours = bufferHours * 2 + TIMELINE_DAY_HOURS;
+
+  return Array.from(
+    { length: totalHours },
+    (_, index) => startHourIndex + index
   );
 }
 

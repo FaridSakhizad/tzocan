@@ -20,6 +20,7 @@ import IconNotificationFilled from '@/assets/images/icon--notification-1--filled
 import IconMainMenuOutlined from '@/assets/images/icon--menu-3--outlined.svg';
 import IconMainMenuFilled from '@/assets/images/icon--menu-3--filled.svg';
 
+import { INFINITE_TIMELINE_ENABLED } from '@/constants/app-config';
 import { RouteNames, RouteNamePaths } from '@/types/router';
 
 import HeaderButtons from './HeaderButtons';
@@ -123,6 +124,30 @@ export default function TabLayout() {
             ),
           }}
         />
+
+        {INFINITE_TIMELINE_ENABLED && (
+          <Tabs.Screen
+            name={RouteNames.timelineInfinite}
+            options={{
+              title: '',
+              tabBarIcon: ({ color, focused }) => (
+                <View style={styles.iconBox}>
+                  {focused ? (
+                    <IconTimelineFilled
+                      style={styles.icon}
+                      fill={theme.text.primary}
+                    />
+                  ) : (
+                    <IconTimelineOutlined
+                      style={styles.icon}
+                      fill={theme.text.primary}
+                    />
+                  )}
+                </View>
+              ),
+            }}
+          />
+        )}
 
         <Tabs.Screen
           name={RouteNames.notifications}

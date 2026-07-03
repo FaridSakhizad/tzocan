@@ -53,7 +53,6 @@ import Arrow1 from '@/assets/images/icon--arrow-1.svg';
 import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
 import IconDelete from '@/assets/images/icon--delete-3.svg';
 import IconReset from '@/assets/images/icon--reset-1.svg';
-
 import IconCalendar from '@/assets/images/icon--calendar-2--outlined.svg';
 
 import { createStyles } from './Timeline.styles';
@@ -168,6 +167,10 @@ export default function TimelineScreen() {
   });
 
   const nowDate = useMemo(() => new Date(nowMs), [nowMs]);
+  const focusedDateTime = useMemo(
+    () => getFocusedDateTimeFromHourIndex(focusedHourIndex),
+    [focusedHourIndex]
+  );
 
   const localTimezone = useMemo(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
@@ -517,11 +520,6 @@ export default function TimelineScreen() {
     closeSortPicker();
   }, [closeSortPicker, draftCityOrder, setSortState, sortState]);
 
-  const focusedDateTime = useMemo(
-    () => getFocusedDateTimeFromHourIndex(focusedHourIndex),
-    [focusedHourIndex]
-  );
-
   const selectedDayLabel = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const includeYear = focusedDateTime.getFullYear() !== currentYear;
@@ -556,9 +554,7 @@ export default function TimelineScreen() {
             : `, ${timezoneOffset}`;
 
       return (
-        <View
-          style={[styles.listItem, options?.isActive && styles.listItemDragging]}
-        >
+        <View style={[styles.listItem, options?.isActive && styles.listItemDragging]}>
           <View style={styles.listItemHeader}>
             <Animated.View
               pointerEvents={isEditMode && canDrag ? 'auto' : 'none'}
@@ -682,159 +678,165 @@ export default function TimelineScreen() {
     );
   }, [handleOpenAddCityModal, styles]);
 
+  const hasCities = selectedCities.length > 0;
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.supportButtonRow}>
         <SupportCtaButton onPress={openSupportModal} />
       </View>
-      <Animated.View style={[styles.timelineContent, { opacity: contentOpacity }]}>
-        <View style={styles.referenceRow}>
-          <View style={styles.referenceRowHeader}>
-            <Text style={styles.referenceRowTitle} numberOfLines={1}>
-              {t('common.yourTime')}
-            </Text>
+      {hasCities ? (
+        <>
+          <Animated.View style={[styles.timelineContent, { opacity: contentOpacity }]}>
+            <View style={styles.referenceRow}>
+              <View style={styles.referenceRowHeader}>
+                <Text style={styles.referenceRowTitle} numberOfLines={1}>
+                  {t('common.yourTime')}
+                </Text>
 
-            <Text style={styles.referenceRowCurrentTime} numberOfLines={1}>
-              {getCurrentTimeInTimezone(localTimezone, locale, timeFormat, nowDate)}
-            </Text>
-          </View>
+                <Text style={styles.referenceRowCurrentTime} numberOfLines={1}>
+                  {getCurrentTimeInTimezone(localTimezone, locale, timeFormat, nowDate)}
+                </Text>
+              </View>
 
-          <View style={styles.timelineRowContainer}>
-            <LocalReferenceStrip
-              x={x}
-              edgePull={edgePull}
-              minX={minScrollX}
-              maxX={maxScrollX}
-              enabled={!dragging && !isEditMode}
-              locale={locale}
-              sidePad={sidePad}
-              hourIndices={hourIndices}
-              timelineWidth={timelineWidth}
-              timeFormat={timeFormat}
-              timezone={localTimezone}
-              width={width}
-              onUserInteraction={handleTimelineInteraction}
-              onScrollSettled={handleTimelineScrollSettled}
-              onNavigateDayBackward={() => shiftDayBy(-1)}
-              onNavigateDayForward={() => shiftDayBy(1)}
-              onEdgeNavigateDayBackward={handleEdgeNavigateDayBackward}
-              onEdgeNavigateDayForward={handleEdgeNavigateDayForward}
-            />
-          </View>
-        </View>
-
-        <View style={styles.listContentContainer} onLayout={handleContainerLayout}>
-          {selectedCities.length < 1 ? (
-            <View style={styles.emptyStateContainer}>
-              <Pressable onPress={handleOpenAddCityModal} style={styles.emptyStateButton}>
-                <IconAddCity
-                  style={styles.emptyStateButtonIcon}
-                  fill={theme.surface.button.primary}
+              <View style={styles.timelineRowContainer}>
+                <LocalReferenceStrip
+                  x={x}
+                  edgePull={edgePull}
+                  minX={minScrollX}
+                  maxX={maxScrollX}
+                  enabled={!dragging && !isEditMode}
+                  locale={locale}
+                  sidePad={sidePad}
+                  hourIndices={hourIndices}
+                  timelineWidth={timelineWidth}
+                  timeFormat={timeFormat}
+                  timezone={localTimezone}
+                  width={width}
+                  onUserInteraction={handleTimelineInteraction}
+                  onScrollSettled={handleTimelineScrollSettled}
+                  onNavigateDayBackward={() => shiftDayBy(-1)}
+                  onNavigateDayForward={() => shiftDayBy(1)}
+                  onEdgeNavigateDayBackward={handleEdgeNavigateDayBackward}
+                  onEdgeNavigateDayForward={handleEdgeNavigateDayForward}
                 />
-                <Text style={styles.emptyStateButtonText}>{t('common.addCity')}</Text>
-              </Pressable>
+              </View>
             </View>
-          ) : sortState.cityOrder === 'none' ? (
-            <DraggableFlatList
-              contentContainerStyle={styles.listContent}
-              data={selectedCities}
-              keyExtractor={(city) => `${city.id}`}
-              renderItem={renderItem}
-              ListFooterComponent={renderAddCityFooter}
-              onContentSizeChange={handleContentSizeChange}
-              onDragBegin={() => setDragging(true)}
-              onDragEnd={({ data }) => {
-                reorderCities(data);
-                setDragging(false);
-              }}
-              activationDistance={12}
-              scrollEnabled={scrollEnabled && (!isEditMode || !dragging)}
+
+            <View style={styles.listContentContainer} onLayout={handleContainerLayout}>
+              {sortState.cityOrder === 'none' ? (
+                <DraggableFlatList
+                  contentContainerStyle={styles.listContent}
+                  data={selectedCities}
+                  keyExtractor={(city) => `${city.id}`}
+                  renderItem={renderItem}
+                  ListFooterComponent={renderAddCityFooter}
+                  onContentSizeChange={handleContentSizeChange}
+                  onDragBegin={() => setDragging(true)}
+                  onDragEnd={({ data }) => {
+                    reorderCities(data);
+                    setDragging(false);
+                  }}
+                  activationDistance={12}
+                  scrollEnabled={scrollEnabled && (!isEditMode || !dragging)}
+                />
+              ) : (
+                <ScrollView
+                  contentContainerStyle={styles.listContent}
+                  onContentSizeChange={handleContentSizeChange}
+                  scrollEnabled={scrollEnabled}
+                >
+                  {displayedCities.map((city) => (
+                    <View key={`sorted-city-${city.id}`}>{renderCityRow(city)}</View>
+                  ))}
+                  {renderAddCityFooter()}
+                </ScrollView>
+              )}
+            </View>
+
+            <View
+              pointerEvents="none"
+              style={[
+                styles.middleMarker,
+                {
+                  left: width / 2 - TIMELINE_CELL_WIDTH / 2,
+                },
+              ]}
             />
-          ) : (
-            <ScrollView
-              contentContainerStyle={styles.listContent}
-              onContentSizeChange={handleContentSizeChange}
-              scrollEnabled={scrollEnabled}
+          </Animated.View>
+
+          <View style={styles.daySelectorBar}>
+            <Pressable
+              style={styles.daySwitchButton}
+              onPress={() => shiftDayBy(-1)}
+              disabled={isDayTransitioning}
             >
-              {displayedCities.map((city) => (
-                <View key={`sorted-city-${city.id}`}>{renderCityRow(city)}</View>
-              ))}
-              {renderAddCityFooter()}
-            </ScrollView>
-          )}
+              <View style={styles.daySwitchButtonBg}>
+                <Arrow1
+                  style={[styles.daySelectorButtonIcon, styles.daySelectorButtonIconRight]}
+                  fill={theme.text.primary}
+                />
+              </View>
+            </Pressable>
+
+            <Pressable style={styles.resetButton} onPress={handleResetTimeline}>
+              <View style={styles.resetButtonBg}>
+                <IconReset
+                  style={styles.resetButtonIcon}
+                  fill={theme.text.primary}
+                />
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={styles.daySelectorCenter}
+              onPress={handleOpenDayPicker}
+              disabled={isDayTransitioning}
+            >
+              <Text style={styles.daySelectorWeekdayText}>
+                {focusedDateTime.toLocaleDateString(locale, {
+                  weekday: 'long',
+                })}
+              </Text>
+              <Text style={styles.daySelectorDateText}>{selectedDayLabel.monthDay}</Text>
+              {selectedDayLabel.year && <Text style={styles.daySelectorYearText}>{selectedDayLabel.year}</Text>}
+            </Pressable>
+
+            <Pressable
+              style={styles.selectDayButton}
+              onPress={handleOpenDayPicker}
+              disabled={isDayTransitioning}
+            >
+              <View style={styles.selectDayButtonBg}>
+                <IconCalendar
+                  style={styles.selectDayButtonIcon}
+                  fill={theme.text.primary}
+                />
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={styles.daySwitchButton}
+              onPress={() => shiftDayBy(1)}
+              disabled={isDayTransitioning}
+            >
+              <View style={styles.daySwitchButtonBg}>
+                <Arrow1 style={styles.daySelectorButtonIcon} fill={theme.text.primary} />
+              </View>
+            </Pressable>
+          </View>
+        </>
+      ) : (
+        <View style={styles.emptyStateContainer}>
+          <Pressable onPress={handleOpenAddCityModal} style={styles.emptyStateButton}>
+            <IconAddCity
+              style={styles.emptyStateButtonIcon}
+              fill={theme.surface.button.primary}
+            />
+            <Text style={styles.emptyStateButtonText}>{t('common.addCity')}</Text>
+          </Pressable>
         </View>
-
-        <View
-          pointerEvents="none"
-          style={[
-            styles.middleMarker,
-            {
-              left: width / 2 - TIMELINE_CELL_WIDTH / 2,
-            },
-          ]}
-        />
-      </Animated.View>
-
-      <View style={styles.daySelectorBar}>
-        <Pressable
-          style={styles.daySwitchButton}
-          onPress={() => shiftDayBy(-1)}
-          disabled={isDayTransitioning}
-        >
-          <View style={styles.daySwitchButtonBg}>
-            <Arrow1
-              style={[styles.daySelectorButtonIcon, styles.daySelectorButtonIconRight]}
-              fill={theme.text.primary}
-            />
-          </View>
-        </Pressable>
-
-        <Pressable style={styles.resetButton} onPress={handleResetTimeline}>
-          <View style={styles.resetButtonBg}>
-            <IconReset
-              style={styles.resetButtonIcon}
-              fill={theme.text.primary}
-            />
-          </View>
-        </Pressable>
-
-        <Pressable
-          style={styles.daySelectorCenter}
-          onPress={handleOpenDayPicker}
-          disabled={isDayTransitioning}
-        >
-          <Text style={styles.daySelectorWeekdayText}>
-            {focusedDateTime.toLocaleDateString(locale, {
-              weekday: 'long',
-            })}
-          </Text>
-          <Text style={styles.daySelectorDateText}>{selectedDayLabel.monthDay}</Text>
-          {selectedDayLabel.year && (<Text style={styles.daySelectorYearText}>{selectedDayLabel.year}</Text>)}
-        </Pressable>
-
-        <Pressable
-          style={styles.selectDayButton}
-          onPress={handleOpenDayPicker}
-          disabled={isDayTransitioning}
-        >
-          <View style={styles.selectDayButtonBg}>
-            <IconCalendar
-              style={styles.selectDayButtonIcon}
-              fill={theme.text.primary}
-            />
-          </View>
-        </Pressable>
-
-        <Pressable
-          style={styles.daySwitchButton}
-          onPress={() => shiftDayBy(1)}
-          disabled={isDayTransitioning}
-        >
-          <View style={styles.daySwitchButtonBg}>
-            <Arrow1 style={styles.daySelectorButtonIcon} fill={theme.text.primary} />
-          </View>
-        </Pressable>
-      </View>
+      )}
 
       <AddCityModal
         visible={isAddCityModalVisible}

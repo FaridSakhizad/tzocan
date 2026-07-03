@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
 import { Animated, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
@@ -107,6 +108,7 @@ function getCurrentTimeInTimezone(
 }
 
 export default function TimelineScreen() {
+  const router = useRouter();
   const { theme } = useAppTheme();
   const { locale, t } = useI18n();
   const { selectedCities, reorderCities, addCity, removeCity } = useSelectedCities();
@@ -327,6 +329,14 @@ export default function TimelineScreen() {
     setCityPendingDelete(city);
   }, []);
 
+  const handleEditCity = useCallback((cityId: number) => {
+    if (isEditMode) {
+      return;
+    }
+
+    router.replace({ pathname: '/edit-city', params: { cityId: cityId.toString() } });
+  }, [isEditMode, router]);
+
   const handleCloseDeleteCityModal = useCallback(() => {
     setCityPendingDelete(null);
   }, []);
@@ -546,9 +556,7 @@ export default function TimelineScreen() {
             : `, ${timezoneOffset}`;
 
       return (
-        <Pressable
-          onLongPress={canDrag ? options?.drag : undefined}
-          delayLongPress={150}
+        <View
           style={[styles.listItem, options?.isActive && styles.listItemDragging]}
         >
           <View style={styles.listItemHeader}>
@@ -568,15 +576,17 @@ export default function TimelineScreen() {
               </Pressable>
             </Animated.View>
 
-            <Text style={styles.listItemTitle} numberOfLines={1}>
-              <Text style={styles.listItemTitleCity}>
-                {getCityDisplayName(city, localizedCityNames[city.cityId])}
-                {city.customName && (
-                  <> ({getCityBaseName(city, localizedCityNames[city.cityId])})</>
-                )}
+            <Pressable onPress={() => handleEditCity(city.id)} disabled={isEditMode} style={styles.listItemTitle}>
+              <Text style={styles.listItemTitle} numberOfLines={1}>
+                <Text style={styles.listItemTitleCity}>
+                  {getCityDisplayName(city, localizedCityNames[city.cityId])}
+                  {city.customName && (
+                    <> ({getCityBaseName(city, localizedCityNames[city.cityId])})</>
+                  )}
+                </Text>
+                <Text style={styles.listItemTitleTimeOffset}>{timeZoneLabel}</Text>
               </Text>
-              <Text style={styles.listItemTitleTimeOffset}>{timeZoneLabel}</Text>
-            </Text>
+            </Pressable>
 
             <Text style={styles.listItemCurrentTime} numberOfLines={1}>
               {getCurrentTimeInTimezone(city.tz, locale, timeFormat, nowDate)}
@@ -625,11 +635,12 @@ export default function TimelineScreen() {
               onEdgeNavigateDayForward={handleEdgeNavigateDayForward}
             />
           </View>
-        </Pressable>
+        </View>
       );
     },
     [
       dragging,
+      handleEditCity,
       handleOpenDeleteCityModal,
       handleTimelineInteraction,
       handleTimelineScrollSettled,

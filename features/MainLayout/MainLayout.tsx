@@ -86,7 +86,7 @@ export default function TabLayout() {
             title: '',
             tabBarIcon: ({ color, focused }) => (
               <View style={styles.iconBox}>
-                {(focused || pathname === RouteNamePaths.editCity) ? (
+                {focused ? (
                   <IconCitiesFilled
                     style={styles.icon}
                     fill={theme.text.primary}

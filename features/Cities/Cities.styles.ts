@@ -47,6 +47,9 @@ export function createStyles(theme: UiTheme) {
       borderTopWidth: 1,
       borderColor: theme.surface.fieldStrong,
     },
+    addCityFooterButtonDisabled: {
+      opacity: 0.5,
+    },
     addCityFooterIconBox: {
       width: 20,
       height: 20,

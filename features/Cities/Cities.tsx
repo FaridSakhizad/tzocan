@@ -201,7 +201,14 @@ export default function Cities() {
 
   const renderAddCityButton = () => {
     return (
-      <Pressable onPress={handleOpenAddCityModal} style={styles.addCityFooterButton}>
+      <Pressable
+        onPress={handleOpenAddCityModal}
+        disabled={isEditMode}
+        style={[
+          styles.addCityFooterButton,
+          isEditMode && styles.addCityFooterButtonDisabled,
+        ]}
+      >
         <Text style={styles.addCityFooterText}>{t('common.addCity')}</Text>
       </Pressable>
     );

@@ -1556,7 +1556,14 @@ export default function Notifications() {
 
   const renderAddNotificationFooter = () => {
     return (
-      <Pressable onPress={handleOpenAddNotificationModal} style={styles.addNotificationFooterButton}>
+      <Pressable
+        onPress={handleOpenAddNotificationModal}
+        disabled={isEditMode}
+        style={[
+          styles.addNotificationFooterButton,
+          isEditMode && styles.addNotificationFooterButtonDisabled,
+        ]}
+      >
         <Text style={styles.addNotificationFooterText}>{t('common.addReminder')}</Text>
       </Pressable>
     );

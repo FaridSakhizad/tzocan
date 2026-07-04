@@ -43,23 +43,39 @@ type CalendarOptionsResult = {
 };
 
 const DEV_CALENDAR_FIXTURES: CalendarOption[] = __DEV__
-  ? [
-      {
-        id: 'dev-calendar-primary',
-        label: 'TimeCross QA Primary Calendar',
+  ? Array.from({ length: 30 }, (_, index) => {
+      const fixtureNumber = index + 1;
+
+      if (fixtureNumber === 1) {
+        return {
+          id: 'dev-calendar-primary',
+          label: 'TimeCross QA Primary Calendar',
+          hint: 'Fixture',
+        };
+      }
+
+      if (fixtureNumber === 2) {
+        return {
+          id: 'dev-calendar-shared',
+          label: 'Shared Family Planning Calendar',
+          hint: 'Fixture',
+        };
+      }
+
+      if (fixtureNumber === 3) {
+        return {
+          id: 'dev-calendar-long-unbreakable',
+          label: 'Three Words First SuperUltraHyperMegaCalendarNameWithoutAnySpacesOrNaturalBreakPointsSoWeCanInspectTheWorstCaseScenarioInThePicker Two Words',
+          hint: 'Fixture',
+        };
+      }
+
+      return {
+        id: `dev-calendar-${fixtureNumber}`,
+        label: `TimeCross QA Calendar ${fixtureNumber}`,
         hint: 'Fixture',
-      },
-      {
-        id: 'dev-calendar-shared',
-        label: 'Shared Family Planning Calendar',
-        hint: 'Fixture',
-      },
-      {
-        id: 'dev-calendar-long-unbreakable',
-        label: 'Team Shared Archive SuperUltraHyperMegaCalendarNameWithoutAnySpacesOrNaturalBreakPointsSoWeCanInspectTheWorstCaseScenarioInThePicker Final Review',
-        hint: 'Fixture',
-      },
-    ]
+      };
+    })
   : [];
 
 let calendarModulePromise: Promise<CalendarModule | null> | null = null;

@@ -43,13 +43,18 @@ import {
   getHourIndexForDate,
   getLocalDayStart,
   getScrollOffsetForHourIndex,
+  getTimelineTimezoneShiftX,
   getTimelineHourIndicesAroundHour,
   getTimelineHourIndicesForDay,
   TIMELINE_DAY_HOURS,
   shiftLocalDay,
   TIMELINE_CELL_WIDTH,
 } from '@/utils/timeline-core';
-import { formatInTimezone, formatPartsInTimezone } from '@/utils/abstract-timezone';
+import {
+  formatInTimezone,
+  formatPartsInTimezone,
+  getDateTimePartsInTimezone,
+} from '@/utils/abstract-timezone';
 
 import Arrow1 from '@/assets/images/icon--arrow-1.svg';
 import IconAddCity from '@/assets/images/icon--cities--outlined.svg';
@@ -64,7 +69,7 @@ function clampOffset(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-function getTimezoneOffsetHours(timezone: string, now = new Date()) {
+function getTimezoneOffsetMinutes(timezone: string, now = new Date()) {
   const localParts = new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
     minute: 'numeric',
@@ -93,7 +98,24 @@ function getTimezoneOffsetHours(timezone: string, now = new Date()) {
     diffMinutes += 24 * 60;
   }
 
-  return diffMinutes / 60;
+  return diffMinutes;
+}
+
+function formatTimezoneOffsetLabel(offsetMinutes: number, sameLabel: string) {
+  if (offsetMinutes === 0) {
+    return `, ${sameLabel}`;
+  }
+
+  const sign = offsetMinutes > 0 ? '+' : '-';
+  const absoluteMinutes = Math.abs(offsetMinutes);
+  const hours = Math.floor(absoluteMinutes / 60);
+  const minutes = absoluteMinutes % 60;
+
+  if (minutes === 0) {
+    return `, ${sign}${hours}`;
+  }
+
+  return `, ${sign}${hours}:${minutes.toString().padStart(2, '0')}`;
 }
 
 function getCurrentTimeInTimezone(
@@ -205,11 +227,23 @@ export default function TimelineScreen() {
     const nextMap = new Map<number, number>();
 
     displayedCities.forEach((city) => {
-      nextMap.set(city.id, getTimezoneOffsetHours(city.tz, nowDate));
+      nextMap.set(city.id, getTimezoneOffsetMinutes(city.tz, nowDate));
     });
 
     return nextMap;
   }, [displayedCities, nowDate]);
+
+  const timelineShiftMap = useMemo(() => {
+    const nextMap = new Map<number, number>();
+    const { minute: localMinute } = getDateTimePartsInTimezone(nowDate, localTimezone);
+
+    displayedCities.forEach((city) => {
+      const { minute } = getDateTimePartsInTimezone(nowDate, city.tz);
+      nextMap.set(city.id, getTimelineTimezoneShiftX(minute - localMinute));
+    });
+
+    return nextMap;
+  }, [displayedCities, localTimezone, nowDate]);
 
   useEffect(() => {
     if (!isFocused) {
@@ -635,14 +669,10 @@ export default function TimelineScreen() {
       city: SelectedCity,
       options?: { drag?: () => void; isActive?: boolean; draggable?: boolean }
     ) => {
-      const timezoneOffset = offsetsMap.get(city.id) || 0;
+      const timezoneOffsetMinutes = offsetsMap.get(city.id) || 0;
+      const timezoneShiftX = timelineShiftMap.get(city.id) || 0;
       const canDrag = Boolean(options?.draggable && sortState.cityOrder === 'none');
-      const timeZoneLabel =
-        timezoneOffset === 0
-          ? `, ${t('common.same')}`
-          : timezoneOffset > 0
-            ? `, +${timezoneOffset}`
-            : `, ${timezoneOffset}`;
+      const timeZoneLabel = formatTimezoneOffsetLabel(timezoneOffsetMinutes, t('common.same'));
 
       return (
         <View
@@ -714,6 +744,7 @@ export default function TimelineScreen() {
               sidePad={sidePad}
               city={city}
               hourIndices={hourIndices}
+              timezoneShiftX={timezoneShiftX}
               timelineWidth={timelineWidth}
               timeFormat={timeFormat}
               width={width}
@@ -742,6 +773,7 @@ export default function TimelineScreen() {
       minScrollX,
       nowDate,
       offsetsMap,
+      timelineShiftMap,
       shiftDayBy,
       sidePad,
       sortState.cityOrder,
@@ -805,6 +837,7 @@ export default function TimelineScreen() {
                   locale={locale}
                   sidePad={sidePad}
                   hourIndices={hourIndices}
+                  timezoneShiftX={0}
                   timelineWidth={timelineWidth}
                   timeFormat={timeFormat}
                   timezone={localTimezone}

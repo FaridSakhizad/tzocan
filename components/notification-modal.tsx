@@ -1057,41 +1057,46 @@ export function NotificationModal({
         )}
 
         {isCalendarPicker && (
-          <ScrollView
-            style={styles.calendarPickerScroll}
-            contentContainerStyle={styles.calendarPickerScrollContainer}
-          >
-            <View style={styles.calendarPicker}>
-              {isCalendarRequiredPicker && (
+          <>
+            {isCalendarRequiredPicker && (
+              <View style={styles.calendarPicker}>
                 <Text style={styles.calendarRequiredDescription}>
                   {calendarRequiredDescription}
                 </Text>
-              )}
-              {calendarOptions.map((calendar, idx) => {
-                const selected = pickerDraftCalendarId === calendar.id;
+              </View>
+            )}
 
-                return (
-                  <Pressable
-                    key={`calendar-picker-${calendar.id}`}
-                    style={[
-                      styles.cityPickerItem,
-                      selected && styles.cityPickerItemActive,
-                      (1 + idx) === calendarOptions.length && styles.cityPickerItemLast,
-                    ]}
-                    onPress={() => {
-                      setPickerDraftCalendarId(calendar.id);
-                      setSelectedCalendarId(calendar.id);
-                      setSelectedCalendarTitle(calendar.label);
-                      closePicker();
-                    }}
-                  >
-                    <Text style={styles.cityPickerItemText}>{calendar.label}</Text>
-                    {!!calendar.hint && <Text style={styles.cityPickerItemHint}>{calendar.hint}</Text>}
-                  </Pressable>
-                );
-              })}
-            </View>
-          </ScrollView>
+            <ScrollView
+              style={styles.calendarPickerScroll}
+              contentContainerStyle={styles.calendarPickerScrollContainer}
+            >
+              <View style={styles.calendarPicker}>
+                {calendarOptions.map((calendar, idx) => {
+                  const selected = pickerDraftCalendarId === calendar.id;
+
+                  return (
+                    <Pressable
+                      key={`calendar-picker-${calendar.id}`}
+                      style={[
+                        styles.cityPickerItem,
+                        selected && styles.cityPickerItemActive,
+                        (1 + idx) === calendarOptions.length && styles.cityPickerItemLast,
+                      ]}
+                      onPress={() => {
+                        setPickerDraftCalendarId(calendar.id);
+                        setSelectedCalendarId(calendar.id);
+                        setSelectedCalendarTitle(calendar.label);
+                        closePicker();
+                      }}
+                    >
+                      <Text style={styles.cityPickerItemText}>{calendar.label}</Text>
+                      {!!calendar.hint && <Text style={styles.cityPickerItemHint}>{calendar.hint}</Text>}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </>
         )}
 
         {activePicker === NotificationPickerKind.Time && (
@@ -1477,7 +1482,7 @@ function createStyles(theme: UiTheme) {
   inlineHelperText: {
     marginTop: -6,
     marginBottom: theme.spacing.lg,
-    color: theme.text.placeholder,
+    color: theme.text.warning,
     fontSize: 13,
   },
   calendarRequiredDescription: {

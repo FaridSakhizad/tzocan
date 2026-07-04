@@ -108,6 +108,9 @@ export function createStyles(theme: UiTheme) {
       paddingVertical: 18,
       marginBottom: 12,
     },
+    addNotificationFooterButtonDisabled: {
+      opacity: 0.5,
+    },
     addNotificationFooterIcon: {
       width: 20,
       height: 20,

@@ -71,3 +71,10 @@ export function getScrollOffsetForHourIndex(
   const localSlotIndex = hourIndex - startHourIndex;
   return sidePad + (localSlotIndex + 0.5) * cellWidth - viewportWidth / 2;
 }
+
+export function getTimelineTimezoneShiftX(
+  minute: number,
+  cellWidth = TIMELINE_CELL_WIDTH
+) {
+  return -(minute / 60) * cellWidth;
+}

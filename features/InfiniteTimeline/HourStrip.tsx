@@ -49,6 +49,7 @@ type TimelineHourStripProps = {
   sidePad: number;
   city: SelectedCity;
   hourIndices: number[];
+  timezoneShiftX?: number;
   timelineWidth: number;
   timeFormat: string;
   width: number;
@@ -71,6 +72,7 @@ function TimelineHourStripComponent({
   sidePad,
   city,
   hourIndices,
+  timezoneShiftX = 0,
   timelineWidth,
   timeFormat,
   width,
@@ -203,7 +205,7 @@ function TimelineHourStripComponent({
   ]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: -x.value + edgePull.value }],
+    transform: [{ translateX: -x.value + edgePull.value + timezoneShiftX }],
   }));
 
   const leftSidePadIconStyle = useAnimatedStyle(() => ({
@@ -339,13 +341,14 @@ export const HourStrip = React.memo(
     prevProps.sidePad === nextProps.sidePad &&
     prevProps.city === nextProps.city &&
     prevProps.hourIndices === nextProps.hourIndices &&
+    prevProps.timezoneShiftX === nextProps.timezoneShiftX &&
     prevProps.timelineWidth === nextProps.timelineWidth &&
     prevProps.timeFormat === nextProps.timeFormat &&
-  prevProps.width === nextProps.width &&
-  prevProps.onUserInteraction === nextProps.onUserInteraction &&
-  prevProps.onScrollSettled === nextProps.onScrollSettled &&
-  prevProps.onNavigateDayBackward === nextProps.onNavigateDayBackward &&
-  prevProps.onNavigateDayForward === nextProps.onNavigateDayForward &&
-  prevProps.onEdgeNavigateDayBackward === nextProps.onEdgeNavigateDayBackward &&
-  prevProps.onEdgeNavigateDayForward === nextProps.onEdgeNavigateDayForward
+    prevProps.width === nextProps.width &&
+    prevProps.onUserInteraction === nextProps.onUserInteraction &&
+    prevProps.onScrollSettled === nextProps.onScrollSettled &&
+    prevProps.onNavigateDayBackward === nextProps.onNavigateDayBackward &&
+    prevProps.onNavigateDayForward === nextProps.onNavigateDayForward &&
+    prevProps.onEdgeNavigateDayBackward === nextProps.onEdgeNavigateDayBackward &&
+    prevProps.onEdgeNavigateDayForward === nextProps.onEdgeNavigateDayForward
 );

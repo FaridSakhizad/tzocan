@@ -1,4 +1,6 @@
 import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Application from 'expo-application';
+import Constants from 'expo-constants';
 
 import { DetailScreenShell, useDetailScreenStyles } from '@/components/detail-screen-shell';
 import { useI18n } from '@/hooks/use-i18n';
@@ -13,6 +15,26 @@ export default function About() {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const { t } = useI18n();
+  const appVersionText = useMemo(() => {
+    const configVersion = Constants.expoConfig?.version;
+    const isExpoGo = Constants.executionEnvironment === 'storeClient';
+    const version = configVersion ?? (!isExpoGo ? Application.nativeApplicationVersion : null);
+    const build = !isExpoGo ? Application.nativeBuildVersion : null;
+
+    if (version && build) {
+      return `v${version} (${build})`;
+    }
+
+    if (version) {
+      return `v${version}`;
+    }
+
+    if (build) {
+      return `build ${build}`;
+    }
+
+    return null;
+  }, []);
 
   const openExternalLink = async (url: string) => {
     try {
@@ -62,6 +84,10 @@ export default function About() {
             {t('about.privacyPolicy')}
           </Text>
         </Pressable>
+
+        {appVersionText && (
+          <Text style={styles.versionText}>{appVersionText}</Text>
+        )}
       </View>
     </DetailScreenShell>
   );
@@ -87,6 +113,13 @@ function createStyles(theme: UiTheme) {
     },
     linkButtonText: {
       color: theme.text.warning
+    },
+    versionText: {
+      marginTop: 8,
+      fontSize: 11,
+      lineHeight: 14,
+      textAlign: 'center',
+      color: theme.text.placeholder,
     },
   });
 }

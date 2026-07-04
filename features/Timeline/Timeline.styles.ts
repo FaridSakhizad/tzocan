@@ -102,6 +102,9 @@ export function createStyles(theme: UiTheme) {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    addCityTileDisabled: {
+      opacity: 0.5,
+    },
     addCityTileText: {
       fontSize: 36,
       lineHeight: 36,

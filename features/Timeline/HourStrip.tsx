@@ -45,6 +45,7 @@ type TimelineHourStripProps = {
   sidePad: number;
   city: SelectedCity;
   hourIndices: number[];
+  timezoneShiftX?: number;
   timelineWidth: number;
   timeFormat: string;
   width: number;
@@ -66,6 +67,7 @@ function TimelineHourStripComponent({
   sidePad,
   city,
   hourIndices,
+  timezoneShiftX = 0,
   timelineWidth,
   timeFormat,
   width,
@@ -189,7 +191,7 @@ function TimelineHourStripComponent({
   ]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: -x.value + edgePull.value }],
+    transform: [{ translateX: -x.value + edgePull.value + timezoneShiftX }],
   }));
 
   const leftSidePadIconStyle = useAnimatedStyle(() => ({
@@ -323,6 +325,7 @@ export const HourStrip = React.memo(
     prevProps.sidePad === nextProps.sidePad &&
     prevProps.city === nextProps.city &&
     prevProps.hourIndices === nextProps.hourIndices &&
+    prevProps.timezoneShiftX === nextProps.timezoneShiftX &&
     prevProps.timelineWidth === nextProps.timelineWidth &&
     prevProps.timeFormat === nextProps.timeFormat &&
     prevProps.width === nextProps.width &&

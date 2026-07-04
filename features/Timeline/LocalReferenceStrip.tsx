@@ -37,6 +37,7 @@ type LocalReferenceStripProps = {
   locale: string;
   sidePad: number;
   hourIndices: number[];
+  timezoneShiftX?: number;
   timelineWidth: number;
   timeFormat: string;
   timezone: string;
@@ -58,6 +59,7 @@ function LocalReferenceStripComponent({
   locale,
   sidePad,
   hourIndices,
+  timezoneShiftX = 0,
   timelineWidth,
   timeFormat,
   timezone,
@@ -208,7 +210,7 @@ function LocalReferenceStripComponent({
   );
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: -x.value + edgePull.value }],
+    transform: [{ translateX: -x.value + edgePull.value + timezoneShiftX }],
   }));
 
   return (
@@ -283,6 +285,7 @@ export const LocalReferenceStrip = React.memo(
     prevProps.locale === nextProps.locale &&
     prevProps.sidePad === nextProps.sidePad &&
     prevProps.hourIndices === nextProps.hourIndices &&
+    prevProps.timezoneShiftX === nextProps.timezoneShiftX &&
     prevProps.timelineWidth === nextProps.timelineWidth &&
     prevProps.timeFormat === nextProps.timeFormat &&
     prevProps.timezone === nextProps.timezone &&

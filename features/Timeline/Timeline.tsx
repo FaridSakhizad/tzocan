@@ -539,6 +539,11 @@ export default function TimelineScreen() {
     };
   }, [focusedDateTime, locale]);
 
+  const pickerWeekdayLabel = useMemo(
+    () => pickerDraftDay.toLocaleDateString(locale, { weekday: 'long' }),
+    [locale, pickerDraftDay]
+  );
+
   const renderCityRow = useCallback(
     (
       city: SelectedCity,
@@ -870,14 +875,19 @@ export default function TimelineScreen() {
           onClose={handleCloseDayPicker}
           onApply={handleApplyPickedDay}
         >
-          <DateTimePicker
-            value={pickerDraftDay}
-            mode="date"
-            display="spinner"
-            onChange={handlePickerDayChange}
-            style={styles.datePicker}
-            textColor={theme.text.primary}
-          />
+          <View>
+            <DateTimePicker
+              value={pickerDraftDay}
+              mode="date"
+              display="spinner"
+              onChange={handlePickerDayChange}
+              style={styles.datePicker}
+              textColor={theme.text.primary}
+            />
+            <View style={styles.datePickerWeekdayBox}>
+              <Text style={styles.datePickerWeekdayText}>{pickerWeekdayLabel}</Text>
+            </View>
+          </View>
         </NotificationPickerModal>
       ) : null}
 

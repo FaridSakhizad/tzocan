@@ -125,29 +125,28 @@ export default function TabLayout() {
           }}
         />
 
-        {INFINITE_TIMELINE_ENABLED && (
-          <Tabs.Screen
-            name={RouteNames.timelineInfinite}
-            options={{
-              title: '',
-              tabBarIcon: ({ color, focused }) => (
-                <View style={styles.iconBox}>
-                  {focused ? (
-                    <IconTimelineFilled
-                      style={styles.icon}
-                      fill={theme.text.primary}
-                    />
-                  ) : (
-                    <IconTimelineOutlined
-                      style={styles.icon}
-                      fill={theme.text.primary}
-                    />
-                  )}
-                </View>
-              ),
-            }}
-          />
-        )}
+        <Tabs.Screen
+          name={RouteNames.timelineInfinite}
+          options={{
+            title: '',
+            href: INFINITE_TIMELINE_ENABLED ? undefined : null,
+            tabBarIcon: ({ color, focused }) => (
+              <View style={styles.iconBox}>
+                {focused ? (
+                  <IconTimelineFilled
+                    style={styles.icon}
+                    fill={theme.text.primary}
+                  />
+                ) : (
+                  <IconTimelineOutlined
+                    style={styles.icon}
+                    fill={theme.text.primary}
+                  />
+                )}
+              </View>
+            ),
+          }}
+        />
 
         <Tabs.Screen
           name={RouteNames.notifications}

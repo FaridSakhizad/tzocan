@@ -274,5 +274,16 @@ export function createStyles(theme: UiTheme) {
     datePicker: {
       height: 140,
     },
+    datePickerWeekdayBox: {
+      paddingHorizontal: theme.spacing.screenX,
+      paddingVertical: theme.spacing.screenX,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    datePickerWeekdayText: {
+      fontSize: 15,
+      color: theme.text.primary,
+      textTransform: 'capitalize',
+    },
   });
 }

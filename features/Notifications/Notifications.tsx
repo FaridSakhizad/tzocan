@@ -33,12 +33,15 @@ import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import { useScrollFit } from '@/hooks/use-scroll-fit';
 import { useSupportModal } from '@/contexts/support-modal-context';
 import type { UiTheme } from '@/constants/ui-theme.types';
-import { getCityDisplayName } from '@/utils/city-display';
+import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
 import { RepeatMode, getEffectiveRepeatMode } from '@/types/notifications';
 import {
   formatInTimezone,
+  formatGmtOffsetLabel,
   getDatePartsInTimezone as getAbstractDatePartsInTimezone,
+  getAbstractTimezoneOffsetMinutes,
   getDateTimePartsInTimezone,
+  isAbstractTimezoneValue,
 } from '@/utils/abstract-timezone';
 
 import ClockIcon from '../../assets/images/icon--clock-2--outlined.svg';
@@ -1043,8 +1046,12 @@ export default function Notifications() {
 
   const notificationCityOptions = selectedCities.map((city) => ({
     id: city.id,
-    label: getCityDisplayName(city, localizedCityNames[city.cityId]),
-    hint: city.tz,
+    label: city.customName
+      ? `${getCityDisplayName(city, localizedCityNames[city.cityId])} (${getCityBaseName(city, localizedCityNames[city.cityId])})`
+      : getCityDisplayName(city, localizedCityNames[city.cityId]),
+    hint: isAbstractTimezoneValue(city.tz)
+      ? formatGmtOffsetLabel(getAbstractTimezoneOffsetMinutes(city.tz) || 0)
+      : city.tz,
     timezone: city.tz,
   }));
 

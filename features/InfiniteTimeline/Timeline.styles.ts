@@ -148,9 +148,13 @@ export function createStyles(theme: UiTheme) {
       justifyContent: 'center',
     },
     deleteButtonIcon: {},
-    listItemTitle: {
+    listItemTitleBox: {
       flex: 1,
     },
+    listItemTitlePressable: {
+      alignSelf: 'flex-start',
+    },
+    listItemTitle: {},
     listItemTitleCity: {
       fontSize: 16,
       lineHeight: 20,

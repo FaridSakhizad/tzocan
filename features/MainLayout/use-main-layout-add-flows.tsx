@@ -7,7 +7,12 @@ import { useEditMode } from '@/contexts/edit-mode-context';
 import { useSelectedCities } from '@/contexts/selected-cities-context';
 import { useLocalizedCityNames } from '@/hooks/use-localized-city-names';
 import { RouteNamePaths } from '@/types/router';
-import { getCityDisplayName } from '@/utils/city-display';
+import { getCityBaseName, getCityDisplayName } from '@/utils/city-display';
+import {
+  formatGmtOffsetLabel,
+  getAbstractTimezoneOffsetMinutes,
+  isAbstractTimezoneValue,
+} from '@/utils/abstract-timezone';
 
 type UseMainLayoutAddFlowsOptions = {
   onBeforeOpenAddCity?: () => void;
@@ -33,8 +38,12 @@ export function useMainLayoutAddFlows({
   const reminderCityOptions = React.useMemo(
     () => selectedCities.map((city) => ({
       id: city.id,
-      label: getCityDisplayName(city, localizedCityNames[city.cityId]),
-      hint: city.tz,
+      label: city.customName
+        ? `${getCityDisplayName(city, localizedCityNames[city.cityId])} (${getCityBaseName(city, localizedCityNames[city.cityId])})`
+        : getCityDisplayName(city, localizedCityNames[city.cityId]),
+      hint: isAbstractTimezoneValue(city.tz)
+        ? formatGmtOffsetLabel(getAbstractTimezoneOffsetMinutes(city.tz) || 0)
+        : city.tz,
       timezone: city.tz,
     })),
     [localizedCityNames, selectedCities]

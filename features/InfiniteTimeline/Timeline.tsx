@@ -675,7 +675,9 @@ export default function TimelineScreen() {
       const timeZoneLabel = formatTimezoneOffsetLabel(timezoneOffsetMinutes, t('common.same'));
 
       return (
-        <View
+        <Pressable
+          onLongPress={canDrag ? options?.drag : undefined}
+          disabled={options?.isActive}
           style={[styles.listItem, options?.isActive && styles.listItemDragging]}
         >
           <View style={styles.listItemHeader}>
@@ -690,22 +692,32 @@ export default function TimelineScreen() {
                 },
               ]}
             >
-              <Pressable onPress={options?.drag} disabled={!isEditMode || !canDrag} style={styles.dragHandle}>
+              <Pressable
+                onPressIn={isEditMode && canDrag ? options?.drag : undefined}
+                disabled={!isEditMode || !canDrag}
+                style={styles.dragHandle}
+              >
                 <Text style={styles.dragHandleText}>☰</Text>
               </Pressable>
             </Animated.View>
 
-            <Pressable onPress={() => handleEditCity(city.id)} disabled={isEditMode} style={styles.listItemTitle}>
-              <Text style={styles.listItemTitle} numberOfLines={1}>
-                <Text style={styles.listItemTitleCity}>
-                  {getCityDisplayName(city, localizedCityNames[city.cityId])}
-                  {city.customName && (
-                    <> ({getCityBaseName(city, localizedCityNames[city.cityId])})</>
-                  )}
+            <View style={styles.listItemTitleBox}>
+              <Pressable
+                onPress={() => handleEditCity(city.id)}
+                disabled={isEditMode}
+                style={styles.listItemTitlePressable}
+              >
+                <Text style={styles.listItemTitle} numberOfLines={1}>
+                  <Text style={styles.listItemTitleCity}>
+                    {getCityDisplayName(city, localizedCityNames[city.cityId])}
+                    {city.customName && (
+                      <> ({getCityBaseName(city, localizedCityNames[city.cityId])})</>
+                    )}
+                  </Text>
+                  <Text style={styles.listItemTitleTimeOffset}>{timeZoneLabel}</Text>
                 </Text>
-                <Text style={styles.listItemTitleTimeOffset}>{timeZoneLabel}</Text>
-              </Text>
-            </Pressable>
+              </Pressable>
+            </View>
 
             <Text style={styles.listItemCurrentTime} numberOfLines={1}>
               {getCurrentTimeInTimezone(city.tz, locale, timeFormat, nowDate)}
@@ -756,7 +768,7 @@ export default function TimelineScreen() {
               onEdgeNavigateDayForward={handleEdgeNavigateDayForward}
             />
           </View>
-        </View>
+        </Pressable>
       );
     },
     [
